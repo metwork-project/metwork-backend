@@ -1,0 +1,15 @@
+{
+"versionMetExploreViz":"1.2.6",
+"linkStyle":{"size":25,"lineWidth":2,"markerWidth":5,"markerHeight":5,"markerInColor":"red","markerOutColor":"green","markerStrokeColor":"black","markerStrokeWidth":"0.7","strokeColor":"black"},
+"reactionStyle":{"height":15,"width":30,"rx":3,"ry":3,"label":"dbIdentifier","strokeColor":"black","fontSize":9,"strokeWidth":1},
+"biosource":{"id":1757,"name":"Acinetobacter baumannii (Strain: 6013113) (Source: BioCyc, Version: 18.0)","version":"v2.13.21"},
+"generalStyle":{"websiteName":"MetExplore","colorMinMappingContinuous":"yellow","colorMaxMappingContinuous":"blue","maxReactionThreshold":500,"displayLabelsForOpt":false,"displayLinksForOpt":false,"displayConvexhulls":false,"eventForNodeInfo":true,"loadButtonHidden":false,"windowsAlertDisable":false},
+"metaboliteStyle":{"height":14,"width":14,"rx":7,"ry":7,"strokeWidth":1,"fontSize":7,"label":"name","strokeColor":"#b2ae92"},
+"comparedPanels":[],
+"linkedByTypeOfMetabolite":false,
+"sessions":{
+"viz":{
+"id":"viz",
+"animated": false ,
+"d3Data":{
+    "id":"viz",

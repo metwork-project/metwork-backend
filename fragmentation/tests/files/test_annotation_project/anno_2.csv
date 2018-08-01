@@ -1,0 +1,4 @@
+nodeId,name,smiles,source,sourceId
+1,,OC=CCO,test,1
+6,,C=CCC,test,6
+5,,C=Cc1c[nH]c(N)n1,test,5

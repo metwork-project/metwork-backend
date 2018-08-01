@@ -1,0 +1,13 @@
+django=2.0.7
+django-extensions=2.1.0
+djangorestframework=3.8.2
+pygraphviz
+psycopg2=2.7.5
+celery=4.1.0
+scipy=1.1.0
+kombu=4.1.0
+python-memcached=1.59
+ncurses=6.0
+rdkit=2018.03.3.0
+postgresql=10.3
+rdkit-postgresql=2018.03.3.0

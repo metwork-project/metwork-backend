@@ -1,0 +1,4 @@
+django-cors-headers
+djangorestframework-jsonapi
+django-celery-results
+django-polymorphic
