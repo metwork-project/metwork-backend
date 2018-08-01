@@ -1,5 +1,5 @@
 
-from defaults import *
+from .defaults import *
 DEBUG = False
 
 # Rdkit warnings
@@ -11,7 +11,7 @@ DATABASES = {
 		'NAME': os.environ['METWORK_DB_NAME'],
 		'USER': 'metwork',
 		'PASSWORD': os.environ['METWORK_DB_PASSWORD'],
-		'HOST': os.environ['METWORK_DB_HOST']
+		'HOST': os.environ['METWORK_DB_HOST'],
 		'PORT': '5432',
 	}
 }
