@@ -26,6 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 
 SECRET_KEY = os.environ['METWORK_SECRET_KEY']
+SECRET_KEY='SECRET_KEY'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -55,7 +56,6 @@ INSTALLED_APPS = [
 	'metabolization',
 	'fragmentation',
 	'django.contrib.admin',
-
 ]
 
 MIDDLEWARE = [
@@ -134,7 +134,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
+# All settings common to all environments
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+
 DATA_FILES_PATH = os.environ['METWORK_DATA_FILES_PATH']
 APP_CONFIG = os.environ['METWORK_APP_CONFIG']
 
@@ -202,9 +206,11 @@ CELERY_TRACK_STARTED = True
 CELERY_TASK_DEFAULT_QUEUE = 'default.' + APP_VERSION
 CELERY_RUN_QUEUE = 'run.' + APP_VERSION
 CELERY_QUEUES = {
-		CELERY_TASK_DEFAULT_QUEUE: 
-			{"exchange": CELERY_TASK_DEFAULT_QUEUE,
-			"routing_key": CELERY_TASK_DEFAULT_QUEUE},
-		CELERY_RUN_QUEUE: 
-			{"exchange": CELERY_RUN_QUEUE,
-			"routing_key": CELERY_RUN_QUEUE}}
+	CELERY_TASK_DEFAULT_QUEUE: 
+		{"exchange": CELERY_TASK_DEFAULT_QUEUE,
+		"routing_key": CELERY_TASK_DEFAULT_QUEUE},
+	CELERY_RUN_QUEUE: 
+		{"exchange": CELERY_RUN_QUEUE,
+		"routing_key": CELERY_RUN_QUEUE}}
+			
+

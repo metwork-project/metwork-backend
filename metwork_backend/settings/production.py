@@ -24,4 +24,5 @@ CACHES = {
 	}
 }
 
-CELERY_BROKER_URL = 'pyamqp://metwork:' + os.environ['METWORK_BROKER_PASSWORD'] + '!@' + os.environ['METWORK_BROKER_HOST'] + '/metwork'
+CELERY_BROKER_URL = 'pyamqp://metwork:' + os.environ['METWORK_BROKER_PASSWORD'] + '@' + os.environ['METWORK_BROKER_HOST'] + '/metwork'
+
