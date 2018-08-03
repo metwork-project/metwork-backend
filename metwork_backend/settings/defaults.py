@@ -13,6 +13,35 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 import sys
 from rdkit import RDLogger
+import json
+import re
+
+from django.core.exceptions import ImproperlyConfigured
+
+configs = {}
+for path in re.split(',', os.environ.get('METWORK_CONFIG')):
+	with open(path, 'r') as f:
+	 #configs = { **configs ,**json.loads(f.read())}
+	 configs = { 
+	 	**configs , 
+	 	**{data[0]:data[1] for data in [
+	 		l.replace('\n','').split('=') for l in f.readlines() ] }
+	 }
+
+def get_env(setting, configs=configs):
+ try:
+     val = configs[setting]
+     if val == 'True':
+         val = True
+     elif val == 'False':
+         val = False
+     return val
+ except KeyError:
+     error_msg = "ImproperlyConfigured: Set {0} environment      variable".format(setting)
+     raise ImproperlyConfigured(error_msg)
+
+#get secret key
+SECRET_KEY = get_env("METWORK_SECRET_KEY")
 
 with open(os.environ['METWORK_BACKEND_PATH'] + '/VERSION') as f:
 	APP_VERSION = f.read().strip()
@@ -25,8 +54,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-SECRET_KEY = os.environ['METWORK_SECRET_KEY']
-SECRET_KEY='SECRET_KEY'
+#SECRET_KEY = os.environ['METWORK_SECRET_KEY']
+#SECRET_KEY='SECRET_KEY'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -35,7 +64,7 @@ DEBUG = True
 #RDLogger.logger().setLevel(RDLogger.ERROR)
 RDLogger.logger().setLevel(RDLogger.CRITICAL)
 
-ALLOWED_HOSTS = [os.environ['METWORK_ALLOWED_HOSTS']]
+ALLOWED_HOSTS = [get_env("METWORK_ALLOWED_HOSTS")]
 
 # Application definition
 
@@ -139,8 +168,8 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
-DATA_FILES_PATH = os.environ['METWORK_DATA_FILES_PATH']
-APP_CONFIG = os.environ['METWORK_APP_CONFIG']
+DATA_FILES_PATH = get_env('METWORK_DATA_FILES_PATH')
+APP_CONFIG = get_env('METWORK_APP_CONFIG')
 
 AUTH_USER_MODEL = 'base.User'
 
@@ -193,7 +222,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'metwork.dev@gmail.com'
-EMAIL_HOST_PASSWORD = os.environ['METWORK_EMAIL_HOST_PASSWORD']
+EMAIL_HOST_PASSWORD = get_env('METWORK_EMAIL_HOST_PASSWORD')
 
 # Celery settings
 
@@ -212,5 +241,5 @@ CELERY_QUEUES = {
 	CELERY_RUN_QUEUE: 
 		{"exchange": CELERY_RUN_QUEUE,
 		"routing_key": CELERY_RUN_QUEUE}}
-			
 
+CFM_ID_PATH=get_env("METWORK_CFM_ID_PATH")

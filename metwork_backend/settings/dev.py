@@ -20,9 +20,9 @@ except:
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': os.environ['METWORK_DB_NAME'],
+		'NAME': get_env('METWORK_DB_NAME'),
 		'USER': 'metwork',
-		'PASSWORD': os.environ['METWORK_DB_PASSWORD'], #'*metwork@db*',
+		'PASSWORD': get_env('METWORK_DB_PASSWORD'), #'*metwork@db*',
 		'HOST': SERVICES_IP['db'],#'localhost',
 		'PORT': '5432',
 	}
@@ -35,4 +35,4 @@ CACHES = {
 	}
 }
 
-CELERY_BROKER_URL = 'pyamqp://metwork:' + os.environ['METWORK_BROKER_PASSWORD'] + '@' + SERVICES_IP['broker'] +'/metwork'
+CELERY_BROKER_URL = 'pyamqp://metwork:' + get_env('METWORK_BROKER_PASSWORD') + '@' + SERVICES_IP['broker'] +'/metwork'
