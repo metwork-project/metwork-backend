@@ -6,7 +6,7 @@ This code corespond to the backend part of [MetWork](https://metwork.pharmacie.p
 
 It's recommended to use python dedicated environment with tool such as [miniconda](https://conda.io/miniconda.html). Python version tested is 3.6.4.
 
-## Depedencies
+## Dependencies
 
 Python libraries used are specify in conda-requirements.txt for those to be installed by conda and pip-requirements.txt for those to be installed by pip. The [django_rdkit](https://django-rdkit.readthedocs.io/en/latest/) app is also used.
 
@@ -31,10 +31,7 @@ The following environment variables have to be set :
 
 This app need to run :
 
-- A postgreSQL databae with the [RDKit cartridge](http://www.rdkit.org/docs/Cartridge.html)
+- A postgreSQL database with the [RDKit cartridge](http://www.rdkit.org/docs/Cartridge.html)
 - A Memcached service
 - A Rabbitmq service
 - Celery workers connected to the queues of the CELERY_QUEUES django settings
-
-
-

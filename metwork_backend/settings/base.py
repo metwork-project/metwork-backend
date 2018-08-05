@@ -22,8 +22,8 @@ configs = {}
 for path in re.split(',', os.environ.get('METWORK_CONFIG')):
 	with open(path, 'r') as f:
 	 #configs = { **configs ,**json.loads(f.read())}
-	 configs = { 
-	 	**configs , 
+	 configs = {
+	 	**configs ,
 	 	**{data[0]:data[1] for data in [
 	 		l.replace('\n','').split('=') for l in f.readlines() ] }
 	 }
@@ -45,7 +45,7 @@ SECRET_KEY = get_env("METWORK_SECRET_KEY")
 
 with open(os.environ['METWORK_BACKEND_PATH'] + '/VERSION') as f:
 	APP_VERSION = f.read().strip()
-	
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -171,12 +171,35 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 DATA_FILES_PATH = get_env('METWORK_DATA_FILES_PATH')
 APP_CONFIG = get_env('METWORK_APP_CONFIG')
 
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.postgresql_psycopg2',
+		'NAME': get_env('METWORK_DB_NAME'),
+		'USER': 'metwork',
+		'PASSWORD': get_env('METWORK_DB_PASSWORD'),
+		'HOST': get_env('METWORK_DB_HOST'),
+		'PORT': '5432',
+	}
+}
+
+# Cache
+CACHES = {
+	'default': {
+		'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+		'LOCATION': get_env('METWORK_CACHE_HOST') + ':11211',
+	}
+}
+
+CELERY_BROKER_URL = \
+	'pyamqp://metwork:' + get_env('METWORK_BROKER_PASSWORD') \
+	+ '@' + get_env('METWORK_BROKER_HOST') + '/metwork'
+
 AUTH_USER_MODEL = 'base.User'
 
 REST_FRAMEWORK = {
 	#'DEFAULT_PERMISSION_CLASSES': (
 	#   'rest_framework.permissions.AllowAny',
-	#),  
+	#),
 	'DEFAULT_AUTHENTICATION_CLASSES': (
 		'rest_framework.authentication.TokenAuthentication',
 		'rest_framework.authentication.SessionAuthentication',
@@ -235,10 +258,10 @@ CELERY_TRACK_STARTED = True
 CELERY_TASK_DEFAULT_QUEUE = 'default.' + APP_VERSION
 CELERY_RUN_QUEUE = 'run.' + APP_VERSION
 CELERY_QUEUES = {
-	CELERY_TASK_DEFAULT_QUEUE: 
+	CELERY_TASK_DEFAULT_QUEUE:
 		{"exchange": CELERY_TASK_DEFAULT_QUEUE,
 		"routing_key": CELERY_TASK_DEFAULT_QUEUE},
-	CELERY_RUN_QUEUE: 
+	CELERY_RUN_QUEUE:
 		{"exchange": CELERY_RUN_QUEUE,
 		"routing_key": CELERY_RUN_QUEUE}}
 
