@@ -52,6 +52,10 @@ class FragSample(models.Model):
 	def __str__(self):
 		return self.name
 
+	def obsolete(self):
+		return True in ( fms.obsolete() \
+			for fms in self.fragmolsample_set.all() )
+
 	def has_no_project(self):
 		return self.sampleannotationproject_set.count() == 0
 
@@ -104,42 +108,41 @@ class FragSample(models.Model):
 		import re
 		error_log = []
 
-		for l in data:
-			l = l.replace('\n','')
-			#try:
-			av = re.split('=', l)
-			peak = re.match(u'([\d]*\.+[\d]*) ([\d]*\.+[\d]*)', l, re.U)
+		for ion in re.findall("(?<=BEGIN IONS\|)(.+?)(?=END IONS)", ''.join(data).replace('\n', '|'), re.U):
 
-			# Create sample mol if begin line
-			if l == 'BEGIN IONS':
-				spectrum = []
+			params = re.findall( "([^|]*)=([^|]*)" , ion, re.U)
+			peaks = re.findall( "([\d]*\.+[\d]*) ([\d]*\.+[\d]*)" , ion, re.U)
+			has_pepmass = 'PEPMASS' in [ v[0] for v in params ]
+			has_id = 'SCANS' in [ v[0] for v in params ]
+			has_peaks = len(peaks) > 1
+
+			if has_pepmass and has_id and has_peaks:
 				fsm = FragMolSample.objects.create(frag_sample = self)
 				p = 1
-
-			# Add attribute
-			elif len(av) == 2:
-				if av[0] == 'PEPMASS':
-					fsm.parent_mass = float(av[1])
-					# fsm.mass = Decimal(av[1])
-					fsm.save()
-				elif av[0] == 'SCANS':
-					fsm.ion_id = int(av[1])
-					fsm.save()
-				else:
-					FragMolAttribute.objects.create(
-						frag_mol = fsm,\
-						title = av[0],\
-						value = av[1],\
-						position = p)
-				p +=1
-			if peak:
-				spectrum.append([float(peak.group(1)), float(peak.group(2))])
-			if l == 'END IONS':
-				fms = FragMolSpectrum.objects.create(
+				for param in params:
+					if param[0] == 'PEPMASS':
+						fsm.parent_mass = float(param[1])
+						# fsm.mass = Decimal(av[1])
+						fsm.save()
+					elif param[0] == 'SCANS':
+						fsm.ion_id = int(param[1])
+						fsm.save()
+					else:
+						FragMolAttribute.objects.create(
+							frag_mol = fsm,\
+							title = param[0],\
+							value = param[1],\
+							position = p)
+					p +=1
+				FragMolSpectrum.objects.create(
 					frag_mol = fsm,
-					spectrum = spectrum,
+					spectrum = \
+						[ [float(peak[0]), float(peak[1])] \
+						for peak in peaks ],
 					energy = energy,
 					)
+			else:
+				self.ions_total -= 1
 			#except:
 			#	error_log.append(l)
 		if len(error_log) > 0 : print ('ERROR LOG', error_log )

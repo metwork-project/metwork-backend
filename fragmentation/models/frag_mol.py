@@ -120,3 +120,7 @@ class FragMolSample(FragMol):
 
 	def get_attributes(self):
 		return[ ( at.title, at.value ) for at in self.fragmolattribute_set.order_by('position') ]
+
+	def obsolete(self):
+		return self.fragmolspectrum_set.count() == 0 \
+			or self.parent_mass == 0
