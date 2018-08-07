@@ -15,25 +15,25 @@ from django.db.models import Q
 class SampleAnnotationProject(Project):
 
 	reactions_conf = models.ForeignKey(
-						ReactionsConf, on_delete=models.PROTECT, 
-						default=None, 
+						ReactionsConf, on_delete=models.PROTECT,
+						default=None,
 						null= True)
 	frag_sample = models.ForeignKey(
-						FragSample, 
-						on_delete=models.PROTECT, 
-						default=None, 
+						FragSample,
+						on_delete=models.PROTECT,
+						default=None,
 						null= True)
 	frag_annotations_init = models.ManyToManyField(
 						FragAnnotationDB)
 	frag_sim_conf = models.ForeignKey(
-						FragSimConf, 
-						on_delete=models.PROTECT, 
-						default=None, 
+						FragSimConf,
+						on_delete=models.PROTECT,
+						default=None,
 						null= True)
 	frag_compare_conf = models.ForeignKey(
-						FragCompareConf, 
-						on_delete=models.PROTECT, 
-						default=None, 
+						FragCompareConf,
+						on_delete=models.PROTECT,
+						default=None,
 						null= True)
 	depth_total = models.IntegerField(
 						default = 0)
@@ -72,10 +72,10 @@ class SampleAnnotationProject(Project):
 			# ===> Allow to change name ?
 
 		self.refresh_from_db()
-		return self  
+		return self
 
 	def clone_project(self):
-		fields = [	
+		fields = [
 			'description',
 			'depth_total',
 			'depth_last_match',
@@ -244,10 +244,10 @@ class SampleAnnotationProject(Project):
 	def molecules_init_and_matching(self):
 	  return self.molecules_("init_and_matching")
 
-	def molecules_matching_count(self): 
+	def molecules_matching_count(self):
 		return self.molecules_matching().count()
 
-	def molecules_all_count(self): 
+	def molecules_all_count(self):
 		return self.molecules.count()
 
 	def ms1_not_init(self):
@@ -258,10 +258,10 @@ class SampleAnnotationProject(Project):
 		fms = FragMolSample.objects\
 			.filter(frag_sample = self.frag_sample)\
 			.exclude(ion_id__in = fm_init)\
-			.order_by("mass")
+			.order_by("parent_mass")
 		return (
 			[ fm.id for fm in fms ],
-			np.array([ float(fm.mass) for fm in fms ]) )
+			np.array([ float(fm.parent_mass) for fm in fms ]) )
 
 	def finish_run(self, *args, **kwargs):
 		from django.core.cache import cache
@@ -273,7 +273,7 @@ class SampleAnnotationProject(Project):
 
 		# Send email to user
 		self.user.email_user(
-			subject = "MetWork run finished", 
+			subject = "MetWork run finished",
 			message = "The run of the project {0} is finished.".format(self.name) )
 
 	def gen_all_molecules(self):
@@ -283,7 +283,7 @@ class SampleAnnotationProject(Project):
 
 	def gen_annotations(self):
 		fas = FragAnnotationCompare.objects.filter(project=self, frag_mol_compare__match=True).order_by('-frag_mol_compare__cosine')
-		res={}		
+		res={}
 		for fa in fas:
 			ion_id = fa.frag_mol_sample.ion_id
 			if ion_id in res:
@@ -292,7 +292,7 @@ class SampleAnnotationProject(Project):
 				res[ion_id] = {
 					'smiles':[fa.molecule.smiles()],
 					'best_cosine': fa.frag_mol_compare.cosine }
-		res= '\n'.join([ 
+		res= '\n'.join([
 					','.join([ str(ion_id), '|'.join(res[ion_id]['smiles']), str(res[ion_id]['best_cosine']) ,'metwork', str(ion_id) ])
 					for ion_id in res ])
 		with open(self.item_path() + '/metwork_annotations.csv', 'w') as fw:
@@ -305,8 +305,8 @@ class SampleAnnotationProject(Project):
 			fw.writelines(res)
 
 	def gen_annotations_details(self):
-		fas = FragAnnotationCompare.objects.filter(project=self, frag_mol_compare__match=True).order_by('-frag_mol_compare__cosine')  
-		res= '\n'.join([ 
+		fas = FragAnnotationCompare.objects.filter(project=self, frag_mol_compare__match=True).order_by('-frag_mol_compare__cosine')
+		res= '\n'.join([
 					','.join([ str(fa.frag_mol_sample.ion_id), fa.molecule.smiles(), str(fa.frag_mol_compare.cosine) ,'metwork', str(fa.frag_mol_sample.ion_id) ])
 					for fa in fas])
 		with open(self.item_path() + '/metwork_annotations_details.csv', 'w') as fw:

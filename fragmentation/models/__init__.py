@@ -6,3 +6,4 @@ from .frag_mol_peak import FragMolPeak
 from .frag_compare_conf import FragCompareConf
 from .frag_mol_compare import FragMolCompare
 from .frag_annotation import FragAnnotation, FragAnnotationDB, FragAnnotationCompare
+from .frag_mol_spectrum import FragMolSpectrum

@@ -18,25 +18,25 @@ class FragSample(models.Model):
 		ordering = ('name', )
 
 	user = models.ForeignKey(
-				settings.AUTH_USER_MODEL, 
-				on_delete=models.PROTECT, 
+				settings.AUTH_USER_MODEL,
+				on_delete=models.PROTECT,
 				default=None)
 	name = models.CharField(
-					max_length=128, 
+					max_length=128,
 					default='')
 	file_name = models.CharField(
-					max_length=255, 
+					max_length=255,
 					default='')
 	description = models.CharField(
-					max_length=255, 
+					max_length=255,
 					default='',
 					null= True,
 					blank=True)
 	ions_total = models.PositiveSmallIntegerField(
-					default=0, 
+					default=0,
 					db_index = True)
 	status_code = models.PositiveIntegerField(
-					default=0, 
+					default=0,
 					db_index = True)
 
 	# Limit the number of ions per sample
@@ -76,20 +76,19 @@ class FragSample(models.Model):
 	def import_sample(cls, file_object, user, name='', file_name='', description='', energy=1, task=False):
 		from fragmentation.models import FragMolSample
 		from fragmentation.tasks import import_sample_task
-		
+
 		data = [l.decode('utf-8') for l in file_object.readlines()]
 		#data = file_object.readlines()
 		error_log = []
 		total_ions = data.count('BEGIN IONS\n')
-		
 		if total_ions > FragSample.IONS_LIMIT:
 			raise IntegrityError(
 				'{0} ions max authorized, {1} in the sample.'.format(FragSample.IONS_LIMIT, total_ions))
 		fs = FragSample.objects.create(
-			user = user, 
-			name = name, 
-			file_name = file_name, 
-			description = description, 
+			user = user,
+			name = name,
+			file_name = file_name,
+			description = description,
 			status_code = 1,
 			ions_total = total_ions)
 		fs.status_code = 2
@@ -101,7 +100,7 @@ class FragSample(models.Model):
 		return fs
 
 	def import_sample_(self, data, energy):
-		from fragmentation.models import FragMolSample, FragMolAttribute, FragMolPeak
+		from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
 		import re
 		error_log = []
 
@@ -113,16 +112,17 @@ class FragSample(models.Model):
 
 			# Create sample mol if begin line
 			if l == 'BEGIN IONS':
-
+				spectrum = []
 				fsm = FragMolSample.objects.create(frag_sample = self)
 				p = 1
 
 			# Add attribute
 			elif len(av) == 2:
 				if av[0] == 'PEPMASS':
-					fsm.mass = Decimal(av[1])
+					fsm.parent_mass = float(av[1])
+					# fsm.mass = Decimal(av[1])
 					fsm.save()
-				elif av[0] == 'SCANS': 
+				elif av[0] == 'SCANS':
 					fsm.ion_id = int(av[1])
 					fsm.save()
 				else:
@@ -133,13 +133,13 @@ class FragSample(models.Model):
 						position = p)
 				p +=1
 			if peak:
-				FragMolPeak.objects.create(
-						frag_mol = fsm,
-						energy = energy,
-						mz = Decimal(peak.group(1)),
-						intensity = Decimal(peak.group(2)))
+				spectrum.append([float(peak.group(1)), float(peak.group(2))])
 			if l == 'END IONS':
-				p = 1
+				fms = FragMolSpectrum.objects.create(
+					frag_mol = fsm,
+					spectrum = spectrum,
+					energy = energy,
+					)
 			#except:
 			#	error_log.append(l)
 		if len(error_log) > 0 : print ('ERROR LOG', error_log )
@@ -161,7 +161,6 @@ class FragSample(models.Model):
 	def import_annotation_file(self, file_object, file_format='default'):
 		from fragmentation.models import FragMolSample, FragAnnotationDB
 		fls = [l.decode('utf-8') for l in file_object.readlines()]
-		#fls = file_object.readlines()
 		for fl in fls[1:]:
 			if file_format == 'default':
 				ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
