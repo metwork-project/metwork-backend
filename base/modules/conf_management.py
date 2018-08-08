@@ -6,11 +6,7 @@ from django.conf import settings
 
 
 class ConfManagement(object):
-        
-    def delete(self, *args, **kwargs):
-        from base.models import DefaultConf
-        DefaultConf.objects.filter(
-            conf_class_name = self.__class__.__name__,
-            conf_default_id = self.id)\
-            .delete()
-        super(ConfManagement, self).delete(*args, **kwargs)
+
+    def check_obsolete(self):
+        if self.project_set.count() == 0:
+            self.delete()

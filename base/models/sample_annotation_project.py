@@ -90,7 +90,7 @@ class SampleAnnotationProject(Project):
 		)
 		clone.save()
 		for f in fields:
-			setattr(clone, f, getattr(self, f))
+			clone.__setattr__( f, self.__getattribute__(f) )
 		clone.save()
 		for fai in self.frag_annotations_init.all():
 			clone.frag_annotations_init.add(fai)
@@ -145,7 +145,6 @@ class SampleAnnotationProject(Project):
 		else:
 			self.status_code = 0
 		return self
-
 
 	def annotation_init_ids(self):
 		if self.reactions_conf != None:
