@@ -8,5 +8,5 @@ from django.conf import settings
 class ConfManagement(object):
 
     def check_obsolete(self):
-        if self.project_set.count() == 0:
+        if self.sampleannotationproject_set.count() == 0:
             self.delete()

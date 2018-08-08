@@ -78,6 +78,13 @@ class ProjectViewSet(ModelAuthViewSet):
 		project.toggle_item(field, item_id)
 		return Response({'project_id': project.id})
 
+	@detail_route(methods=['patch'])
+	def update_frag_compare_conf(self, request, pk=None):
+		project = self.get_object()
+		params = JSONParser().parse(request)
+		project.update_conf('frag_compare_conf',params)
+		return Response({'frag_compare_conf':project.frag_compare_conf.id})
+
 	@detail_route(methods=['post'])
 	def start_run(self, request, pk=None):
 		project = self.get_object()

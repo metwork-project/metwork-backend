@@ -68,6 +68,19 @@ class Project(FileManagement, PolymorphicModel):
 				print(self.__getattribute__(f.name))
 		return self
 
+	def update_conf(self,conf_name,params):
+		prev_conf = self.__getattribute__(conf_name)
+		conf_class = prev_conf.__class__
+		query = conf_class.objects.filter(**params)#.filter(**params)
+		if query.count() > 0:
+			conf = query.first()
+		else:
+			conf = conf_class.objects.create(**params)
+		self.__setattr__(conf_name, conf)
+		self.save()
+		prev_conf.check_obsolete()
+		return self
+
 	def delete(self, *args, **kwargs):
 	# When deleting a project, delete conf associated to project
 	# if they are not associate with other project.
