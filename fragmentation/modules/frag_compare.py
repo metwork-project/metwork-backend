@@ -57,7 +57,19 @@ class FragCompare:
             for p in params]
 #filter_data(data, mz_parent, min_intensity, parent_filter_tolerance, matched_peaks_window,min_matched_peaks_search)
         spectrum = [
-            filter_data(np.array(spectrum[i]),parent_mass[i],0,0,0,1) \
+            filter_data(
+                np.array(spectrum[i]),
+                parent_mass[i],
+                self.frag_compare_conf.filter_min_intensity,
+                self.frag_compare_conf.filter_parent_filter_tolerance,
+                self.frag_compare_conf.filter_matched_peaks_window,
+                self.frag_compare_conf.filter_min_matched_peaks_search) \
             for i in range(2)]
 #cosine_score(spectrum1_mz, spectrum1_data, spectrum2_mz, spectrum2_data, mz_tolerance, min_matched_peaks)
-        return cosine_score(parent_mass[0], spectrum[0], parent_mass[1], spectrum[1], 10, 1)
+        return cosine_score(
+                parent_mass[0],
+                spectrum[0],
+                parent_mass[1],
+                spectrum[1],
+                self.frag_compare_conf.cosine_mz_tolerance,
+                self.frag_compare_conf.cosine_min_matched_peaks)
