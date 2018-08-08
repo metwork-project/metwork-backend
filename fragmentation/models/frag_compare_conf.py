@@ -11,7 +11,7 @@ from base.modules import ConfManagement
 class FragCompareConf(ConfManagement, models.Model):
 
     class JSONAPIMeta:
-        resource_name = "fragcompareconf"
+        resource_name = "frag-compare-confs"
 
     filter_min_intensity = models.FloatField(default=0.0)
     filter_parent_filter_tolerance = models.FloatField(default=0.0)
@@ -21,4 +21,5 @@ class FragCompareConf(ConfManagement, models.Model):
     cosine_mz_tolerance = models.FloatField(default=0.02)
     cosine_min_matched_peaks = models.PositiveSmallIntegerField(default=6)
     cosine_threshold = models.FloatField(default=0.2)
+    #Obsolete
     ppm_tolerance = models.DecimalField(max_digits=6, decimal_places=4, default=5)

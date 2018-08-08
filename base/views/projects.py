@@ -18,17 +18,18 @@ class ProjectSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = SampleAnnotationProject
 		fields = (
-			'name', 
-			'description', 
-			'frag_sample', 
-			'status_code', 
+			'name',
+			'description',
+			'frag_sample',
+			'status_code',
 			'reaction_ids',
 			'REACTIONS_LIMIT',
 			'annotation_init_ids',
 			'depth_total',
-			'depth_last_match', 
-			'molecules_matching_count', 
-			'molecules_all_count' )
+			'depth_last_match',
+			'molecules_matching_count',
+			'molecules_all_count',
+			'frag_compare_conf_id', )
 
 class ProjectViewSet(ModelAuthViewSet):
 	serializer_class = ProjectSerializer
@@ -50,7 +51,7 @@ class ProjectViewSet(ModelAuthViewSet):
 			return Response({'clone_id': clone.id})
 		except:
 			return Response({'error': 'error while cloning project'})
-	
+
 	@detail_route(methods=['patch'])
 	def update_frag_sample(self, request, pk=None):
 		from fragmentation.models import FragSample
@@ -121,4 +122,3 @@ class ProjectViewSet(ModelAuthViewSet):
 		project = self.get_object()
 		data = project.cytoscapejs_data()
 		return JsonResponse(data, safe=False)
-
