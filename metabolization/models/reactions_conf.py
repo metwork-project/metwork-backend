@@ -17,7 +17,5 @@ class ReactionsConf(ConfManagement, models.Model):
 
     reactions = models.ManyToManyField(Reaction)
     method_priority = models.CharField(max_length=32, \
-            choices = METHODS_CHOICES, 
+            choices = METHODS_CHOICES,
             default='reaction') # cls. methods_allowed
-
-

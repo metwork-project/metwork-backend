@@ -30,6 +30,7 @@ router.register(r'projects', ProjectViewSet)
 router.register(r'fragsamples', FragSampleViewSet)
 router.register(r'frag-annotations', FragAnnotationViewSet)
 router.register(r'reactions', ReactionViewSet)
+router.register(r'frag-compare-confs', FragCompareConfViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

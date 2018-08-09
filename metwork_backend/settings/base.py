@@ -85,6 +85,7 @@ INSTALLED_APPS = [
 	'metabolization',
 	'fragmentation',
 	'django.contrib.admin',
+	'libmetgem',
 ]
 
 MIDDLEWARE = [

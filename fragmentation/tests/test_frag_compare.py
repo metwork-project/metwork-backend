@@ -34,7 +34,7 @@ class FragCompareModelTests(TransactionTestCase):
 				fm.append(fs.fragmolsample_set.first())
 		fmc = fc.compare_frag_mols(fm)
 		self.assertNotEqual(fmc, None)
-
+		#print(fmc.cosine)
 		#self.assertTrue(fmtch.match)
 		#print fmc.cosine, fmc.num_frag_match
 		#self.assertEqual(fmc.cosine , Decimal('0.863593'), fmc.cosine)
@@ -54,13 +54,5 @@ class FragCompareModelTests(TransactionTestCase):
 		fsim = FragCommonTests.new_frag_sim()
 		fms = fsim.frag_molecule(m)
 		fmc = fc.compare_frag_mols([fsample.fragmolsample_set.first(), fms])
-		#print fmc.cosine, fmc.num_frag_match
-		self.assertTrue(fmc.cosine >= Decimal('0.2'), fmc.cosine)
-
-
-
-
-
-
-
-
+		print(fmc.cosine)#, fmc.num_frag_match
+		self.assertTrue(fmc.cosine >= 0.2, fmc.cosine)
