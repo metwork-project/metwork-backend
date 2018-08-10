@@ -25,7 +25,7 @@ for path in re.split(',', os.environ.get('METWORK_CONFIG')):
 	 configs = {
 	 	**configs ,
 	 	**{data[0]:data[1] for data in [
-	 		l.replace('\n','').split('=') for l in f.readlines() ] }
+	 		l.replace('\n','').split('=') for l in f.readlines() if l !='\n' ] }
 	 }
 
 def get_env(setting, configs=configs):
@@ -256,12 +256,13 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'django-cache'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TRACK_STARTED = True
-CELERY_TASK_DEFAULT_QUEUE = 'default.' + APP_VERSION
+CELERY_WEB_QUEUE = 'web.' + APP_VERSION
 CELERY_RUN_QUEUE = 'run.' + APP_VERSION
+CELERY_TASK_DEFAULT_QUEUE = CELERY_RUN_QUEUE
 CELERY_QUEUES = {
-	CELERY_TASK_DEFAULT_QUEUE:
-		{"exchange": CELERY_TASK_DEFAULT_QUEUE,
-		"routing_key": CELERY_TASK_DEFAULT_QUEUE},
+	CELERY_WEB_QUEUE:
+		{"exchange": CELERY_WEB_QUEUE,
+		"routing_key": CELERY_WEB_QUEUE},
 	CELERY_RUN_QUEUE:
 		{"exchange": CELERY_RUN_QUEUE,
 		"routing_key": CELERY_RUN_QUEUE}}

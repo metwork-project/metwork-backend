@@ -98,7 +98,7 @@ class FragSample(models.Model):
 		fs.status_code = 2
 		fs.save()
 		if task:
-			import_sample_task.apply_async(args = [fs.id, data, energy], queue = settings.CELERY_TASK_DEFAULT_QUEUE)
+			import_sample_task.apply_async(args = [fs.id, data, energy], queue = settings.CELERY_WEB_QUEUE)
 		else:
 			fs.import_sample_(data, energy)
 		return fs

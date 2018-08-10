@@ -103,7 +103,7 @@ class Project(FileManagement, PolymorphicModel):
 		key = self.process_count_key()
 		cache.decr(key)
 		if cache.get(key) == 0:
-			finish_run.apply_async( args= [self.id], queue = settings.CELERY_TASK_DEFAULT_QUEUE)
+			finish_run.apply_async( args= [self.id], queue = settings.CELERY_WEB_QUEUE)
 			cache.delete(key)
 		return self
 
