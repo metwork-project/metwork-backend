@@ -8,5 +8,5 @@ class FragMolAttribute(models.Model):
 
     frag_mol = models.ForeignKey(FragMol, default=None, on_delete=models.CASCADE)
     title = models.CharField(max_length=32, default='')
-    value = models.CharField(max_length=32, default='')
+    value = models.CharField(max_length=128, default='')
     position = models.PositiveSmallIntegerField(default=0)

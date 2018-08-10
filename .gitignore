@@ -55,3 +55,8 @@ Thumbs.db
 ######################
 *.pid
 
+# Static files
+metwork_backend/settings/static
+
+# Other
+all_molecules.csv

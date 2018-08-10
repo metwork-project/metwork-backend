@@ -145,8 +145,8 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
 	#for mass_exact in [m.mass_exact()]:
 	mass_exact = m.mass_exact() + 1.007
 	mass_var = float(p.frag_compare_conf.ppm_tolerance) * 10**-6
-	mass_window = ( 
-		mass_exact * ( 1 - mass_var) , 
+	mass_window = (
+		mass_exact * ( 1 - mass_var) ,
 		mass_exact * (1 + mass_var) )
 
 	ms1 = cache.get( 'project_ms1_not_init_' + str(project_id) )

@@ -13,10 +13,39 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 import sys
 from rdkit import RDLogger
+import json
+import re
+
+from django.core.exceptions import ImproperlyConfigured
+
+configs = {}
+for path in re.split(',', os.environ.get('METWORK_CONFIG')):
+	with open(path, 'r') as f:
+	 #configs = { **configs ,**json.loads(f.read())}
+	 configs = {
+	 	**configs ,
+	 	**{data[0]:data[1] for data in [
+	 		l.replace('\n','').split('=') for l in f.readlines() if l !='\n' ] }
+	 }
+
+def get_env(setting, configs=configs):
+ try:
+     val = configs[setting]
+     if val == 'True':
+         val = True
+     elif val == 'False':
+         val = False
+     return val
+ except KeyError:
+     error_msg = "ImproperlyConfigured: Set {0} environment      variable".format(setting)
+     raise ImproperlyConfigured(error_msg)
+
+#get secret key
+SECRET_KEY = get_env("METWORK_SECRET_KEY")
 
 with open(os.environ['METWORK_BACKEND_PATH'] + '/VERSION') as f:
 	APP_VERSION = f.read().strip()
-	
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +54,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-SECRET_KEY = os.environ['METWORK_SECRET_KEY']
+#SECRET_KEY = os.environ['METWORK_SECRET_KEY']
+#SECRET_KEY='SECRET_KEY'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -34,7 +64,7 @@ DEBUG = True
 #RDLogger.logger().setLevel(RDLogger.ERROR)
 RDLogger.logger().setLevel(RDLogger.CRITICAL)
 
-ALLOWED_HOSTS = [os.environ['METWORK_ALLOWED_HOSTS']]
+ALLOWED_HOSTS = [get_env("METWORK_ALLOWED_HOSTS")]
 
 # Application definition
 
@@ -55,7 +85,7 @@ INSTALLED_APPS = [
 	'metabolization',
 	'fragmentation',
 	'django.contrib.admin',
-
+	'libmetgem',
 ]
 
 MIDDLEWARE = [
@@ -134,16 +164,43 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
+# All settings common to all environments
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC_URL = '/static/'
-DATA_FILES_PATH = os.environ['METWORK_DATA_FILES_PATH']
-APP_CONFIG = os.environ['METWORK_APP_CONFIG']
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+
+DATA_FILES_PATH = get_env('METWORK_DATA_FILES_PATH')
+APP_CONFIG = get_env('METWORK_APP_CONFIG')
+
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.postgresql_psycopg2',
+		'NAME': get_env('METWORK_DB_NAME'),
+		'USER': 'metwork',
+		'PASSWORD': get_env('METWORK_DB_PASSWORD'),
+		'HOST': get_env('METWORK_DB_HOST'),
+		'PORT': '5432',
+	}
+}
+
+# Cache
+CACHES = {
+	'default': {
+		'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+		'LOCATION': get_env('METWORK_CACHE_HOST') + ':11211',
+	}
+}
+
+CELERY_BROKER_URL = \
+	'pyamqp://metwork:' + get_env('METWORK_BROKER_PASSWORD') \
+	+ '@' + get_env('METWORK_BROKER_HOST') + '/metwork'
 
 AUTH_USER_MODEL = 'base.User'
 
 REST_FRAMEWORK = {
 	#'DEFAULT_PERMISSION_CLASSES': (
 	#   'rest_framework.permissions.AllowAny',
-	#),  
+	#),
 	'DEFAULT_AUTHENTICATION_CLASSES': (
 		'rest_framework.authentication.TokenAuthentication',
 		'rest_framework.authentication.SessionAuthentication',
@@ -189,7 +246,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'metwork.dev@gmail.com'
-EMAIL_HOST_PASSWORD = os.environ['METWORK_EMAIL_HOST_PASSWORD']
+EMAIL_HOST_PASSWORD = get_env('METWORK_EMAIL_HOST_PASSWORD')
 
 # Celery settings
 
@@ -199,12 +256,15 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'django-cache'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TRACK_STARTED = True
-CELERY_TASK_DEFAULT_QUEUE = 'default.' + APP_VERSION
+CELERY_WEB_QUEUE = 'web.' + APP_VERSION
 CELERY_RUN_QUEUE = 'run.' + APP_VERSION
+CELERY_TASK_DEFAULT_QUEUE = CELERY_RUN_QUEUE
 CELERY_QUEUES = {
-		CELERY_TASK_DEFAULT_QUEUE: 
-			{"exchange": CELERY_TASK_DEFAULT_QUEUE,
-			"routing_key": CELERY_TASK_DEFAULT_QUEUE},
-		CELERY_RUN_QUEUE: 
-			{"exchange": CELERY_RUN_QUEUE,
-			"routing_key": CELERY_RUN_QUEUE}}
+	CELERY_WEB_QUEUE:
+		{"exchange": CELERY_WEB_QUEUE,
+		"routing_key": CELERY_WEB_QUEUE},
+	CELERY_RUN_QUEUE:
+		{"exchange": CELERY_RUN_QUEUE,
+		"routing_key": CELERY_RUN_QUEUE}}
+
+CFM_ID_PATH=get_env("METWORK_CFM_ID_PATH")

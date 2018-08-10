@@ -18,15 +18,15 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 		for app_name, conf_class_name, p_conf_name in [
 			("metabolization", "ReactionsConf", "reactions_conf"),
 			("fragmentation", "FragSimConf", "frag_sim_conf"),
-			("fragmentation", "FragCompareConf", "frag_compare_conf")]:	  
-			rc_filter = DefaultConf.objects.filter(
-				project_class_name = project_class_name,
-				app_name = app_name,
-				conf_class_name = conf_class_name)
-			self.assertNotEqual( rc_filter.count(), 0)
+			("fragmentation", "FragCompareConf", "frag_compare_conf")]:
+			# rc_filter = DefaultConf.objects.filter(
+			# 	project_class_name = project_class_name,
+			# 	app_name = app_name,
+			# 	conf_class_name = conf_class_name)
+			# self.assertNotEqual( rc_filter.count(), 0)
 			self.assertNotEqual( getattr(p , p_conf_name).id, 0)
 		self.assertEqual(
-			set([ r.id for r in p.reactions_conf.reactions.all() ]), 
+			set([ r.id for r in p.reactions_conf.reactions.all() ]),
 			set([ r.id for r in Reaction.objects.all() ]) )
 		# test keep custom conf while save
 		rc = ReactionsConf.objects.create()
@@ -98,8 +98,8 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 		pc = p.clone_project()
 		self.assertNotEqual(pc, p)
 		self.assertEqual(pc.name, p.name + clone_suffix)
-		fields = [	
-			'user', 
+		fields = [
+			'user',
 			'description',
 			'depth_total',
 			'depth_last_match',
@@ -114,5 +114,3 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 		def fais(project):
 			return { fai.id for fai in project.frag_annotations_init.all() }
 		self.assertEqual(fais(pc), fais(p))
-
-

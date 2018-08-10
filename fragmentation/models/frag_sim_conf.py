@@ -13,7 +13,7 @@ class FragSimConf(ConfManagement, models.Model):
         resource_name = "fragsimconf"
 
     PARAM_FILES = ['param', 'conf']
-    CFM_ID_FOLDER = os.environ['METWORK_CFM_ID_PATH']
+    CFM_ID_FOLDER = settings.CFM_ID_PATH
 
     threshold = models.DecimalField(max_digits=7, decimal_places=6, default=0.003)
     param_path = models.CharField(max_length=255, default='param/param_output0.log')

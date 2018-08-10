@@ -16,21 +16,21 @@ from django.core.cache import cache
 class Project(FileManagement, PolymorphicModel):
 
 	name = models.CharField(
-					max_length=64, 
+					max_length=64,
 					default='')
 	description = models.CharField(
-					max_length=255, 
+					max_length=255,
 					default='',
 					null= True,
 					blank=True)
 	user = models.ForeignKey(
-					settings.AUTH_USER_MODEL, 
-					on_delete=models.CASCADE, 
+					settings.AUTH_USER_MODEL,
+					on_delete=models.CASCADE,
 					db_index = True)
 	molecules = models.ManyToManyField(
 					Molecule)
 	status_code = models.PositiveSmallIntegerField(
-					default=0, 
+					default=0,
 					db_index = True)
 
 	class JSONAPIMeta:
@@ -48,64 +48,48 @@ class Project(FileManagement, PolymorphicModel):
 		return self.name
 
 	def load_default_conf(self):
-	# give the default confs for *_conf filed
-	# create default if not exist
-	# ===> To be simplified !
-		from base.models import DefaultConf
-		project_class_name = self.__class__.__name__
 		for f in self._meta.local_fields:
-			f_name = f.name
-			if f_name.endswith('_conf'):
-				#default_conf = None # ??
-				conf_default_id = 0
+			if f.name.endswith('_conf'):
 				model = f.related_model
-				app_name = model._meta.app_label
-				conf_class_name = model.__name__
-				conf_class = apps.get_model(app_name, conf_class_name)
-				id_lookup =  DefaultConf.objects\
-							.filter( 
-								project_class_name = project_class_name,
-								app_name = app_name,
-								conf_class_name = conf_class_name)
-				id_lookup_count = id_lookup.count()
-				if id_lookup_count > 0:
-					conf_default_id = id_lookup.first().conf_default_id
-				if conf_default_id == 0:
-					if conf_class.objects.count() == 0:
-						default_conf = conf_class.objects.create()
-					else:
-						default_conf = conf_class.objects.first()
-					conf_default_id = default_conf.id
+				conf = model()
+				query = model.objects.all()
+				for conf_field_name in [ lf.name for lf in conf._meta.local_fields if lf.name !='id']:
+					query = query.filter(**{ conf_field_name : conf.__getattribute__(conf_field_name) })
+				for conf_field in conf._meta.many_to_many:
+					query = query.filter( **{ conf_field.name : None } )
+				if query.count() > 0:
+					conf = query.first()
 				else:
-					default_conf = conf_class.objects.get(id = conf_default_id)
-				setattr(self, f_name, default_conf)
-				if id_lookup_count == 0: 
-					default_conf = DefaultConf(
-							project_class_name = project_class_name,
-							app_name = app_name,
-							conf_class_name = conf_class_name)
-				default_conf.conf_default_id = conf_default_id
-				default_conf.save()
+					conf.save()
+				self.__setattr__( f.name, conf)
 		self.save()
+		for f in self._meta.local_fields:
+			if hasattr( self.__getattribute__(f.name) , 'IS_CONF'):
+				print(self.__getattribute__(f.name))
+		return self
+
+	def update_conf(self,conf_name,params):
+		prev_conf = self.__getattribute__(conf_name)
+		conf_class = prev_conf.__class__
+		query = conf_class.objects.filter(**params)#.filter(**params)
+		if query.count() > 0:
+			conf = query.first()
+		else:
+			conf = conf_class.objects.create(**params)
+		self.__setattr__(conf_name, conf)
+		self.save()
+		prev_conf.check_obsolete()
 		return self
 
 	def delete(self, *args, **kwargs):
-	# When deleting a project, delete conf associated to project 
+	# When deleting a project, delete conf associated to project
 	# if they are not associate with other project.
-	# ===> To add : not delete if default conf
-		confs = [(f.related_model, self.__getattribute__(f.attname)) \
-			for f in self._meta.local_fields if f.name.endswith('_conf')]
+		prev_confs = [self.__getattribute__(f.name) \
+			for f in self._meta.local_fields \
+			if hasattr( self.__getattribute__(f.name) , 'IS_CONF') ]
 		super(Project, self).delete(*args, **kwargs)
-		for cl, conf_id in confs:
-			conf = cl.objects.get(id=conf_id)
-			for ro in conf._meta.related_objects:
-				accessor = ro.get_accessor_name()
-				if accessor.endswith('project_set') \
-					and conf.__getattribute__(accessor).count() == 0:
-					try:
-						conf.delete()
-					except:
-						pass
+		for conf in prev_confs:
+			conf.check_obsolete()
 
 	def process_count_key(self):
 		return 'project_process_' + str(self.id)
@@ -119,7 +103,7 @@ class Project(FileManagement, PolymorphicModel):
 		key = self.process_count_key()
 		cache.decr(key)
 		if cache.get(key) == 0:
-			finish_run.apply_async( args= [self.id], queue = settings.CELERY_TASK_DEFAULT_QUEUE)
+			finish_run.apply_async( args= [self.id], queue = settings.CELERY_WEB_QUEUE)
 			cache.delete(key)
 		return self
 
@@ -140,4 +124,3 @@ class Project(FileManagement, PolymorphicModel):
 			else:
 				self.refresh_from_db()
 		return self
-
