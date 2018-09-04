@@ -39,16 +39,17 @@ class MetGraph:
 			'data': {
 				'id': node_id('react', rp),
 				'name': rp.reaction.name,
-				'shape': 'roundrectangle',
+				'nodeType': 'reaction',
 			}
-		} for rp in self.rps] 
+		} for rp in self.rps]
 
 		nodes += [{
 			'group': 'nodes',
 			'data': {
 				'id': node_id('mol', m),
 				'name': str(round( m.mass_exact(), 3 )) ,
-				'shape': 'ellipse',
+				'nodeType': 'molecule',
+				'annotation': 'init' if m in self.project.molecules_init() else 'proposal'
 			}
 		} for m in self.mols]
 
@@ -78,7 +79,7 @@ class MetGraph:
 	def gen_metexplore(self):
 		res = ''
 
-		nodes = [{'name': rp.reaction.name, "biologicalType":"reaction"} for rp in self.rps] 
+		nodes = [{'name': rp.reaction.name, "biologicalType":"reaction"} for rp in self.rps]
 		nodes += [{'name': str(round(m.mass_exact(),3)), "biologicalType":"metabolite", "labelVisible":False} for m in self.mols]
 		links = [{
 			'id': "{0} -- {1}".format(self.mols_dic[m.id], self.rps_dic[rp.id]),
@@ -87,7 +88,7 @@ class MetGraph:
 			"interaction":"in",
 			"reversible":"false"}
 			for rp in self.rps for  m in rp.reactants.all() ]
-		links += [{  
+		links += [{
 				"id": "{0} -- {1}".format(self.rps_dic[rp.id], self.mols_dic[m.id]),
 				"source": self.rps_dic[rp.id],
 				"target": self.mols_dic[m.id],
