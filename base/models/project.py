@@ -16,7 +16,7 @@ from django.core.cache import cache
 class Project(FileManagement, PolymorphicModel):
 
 	name = models.CharField(
-					max_length=64,
+					max_length=128,
 					default='')
 	description = models.CharField(
 					max_length=255,
