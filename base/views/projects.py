@@ -62,6 +62,7 @@ class ProjectViewSet(ModelAuthViewSet):
 			project.update_frag_sample(fs)
 		return Response(ProjectSerializer(project).data)
 
+# To delete ???
 	@detail_route(methods=['get'])
 	def reactions(self, request, pk=None):
 		from metabolization.views import ReactionSerializer

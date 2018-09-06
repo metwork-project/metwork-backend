@@ -268,3 +268,5 @@ CELERY_QUEUES = {
 		"routing_key": CELERY_RUN_QUEUE}}
 
 CFM_ID_PATH=get_env("METWORK_CFM_ID_PATH")
+
+GUEST_USER_EMAIL='metwork.dev@gmail.com'
