@@ -25,12 +25,14 @@ class UserViewSet(ModelAuthViewSet):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-            return get_user_model().objects.filter(id = self.request.user.id)
+        return get_user_model().objects.filter(id = self.request.user.id)
 
-    # def update(self, instance, validated_data):
-    #     #if  self.request.user.email != settings.GUEST_USER_EMAIL:
-    #     super(UserViewSet, self).update(self, instance, validated_data)
-    #     return instance
+    def update(self, *args, **kwargs):
+        data = args[0].data
+        print(data)
+        if  data['email'] != settings.GUEST_USER_EMAIL:
+            super(UserViewSet, self).update( *args, **kwargs )
+        return Response( UserSerializer( get_user_model().objects.get(id=data['id']) ).data )
 
     @detail_route(methods=['patch'])
     def change_password(self, request, pk=None):
