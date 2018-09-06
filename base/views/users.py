@@ -29,7 +29,6 @@ class UserViewSet(ModelAuthViewSet):
 
     def update(self, *args, **kwargs):
         data = args[0].data
-        print(data)
         if  data['email'] != settings.GUEST_USER_EMAIL:
             super(UserViewSet, self).update( *args, **kwargs )
         return Response( UserSerializer( get_user_model().objects.get(id=data['id']) ).data )
@@ -42,28 +41,6 @@ class UserViewSet(ModelAuthViewSet):
             user.set_password(password)
             user.save()
             return Response({'success': 'Password changed'})
-
-@require_http_methods(["POST"])
-@csrf_exempt
-def betatest_register(request):
-    """
-    API endpoint to register a new user.
-    """
-    try:
-        payload = json.loads(request.body)
-    except ValueError:
-        return JsonResponse({"error": "Unable to parse request body"}, status=400)
-
-    form = BetaTestRegistrationForm(payload)
-
-    if form.is_valid():
-        get_user_model().betatest_register(
-            {'email': form.cleaned_data["email"],
-            'name': form.cleaned_data["name"],
-            'organization': form.cleaned_data["organization"]})
-        return JsonResponse({"success": "User registered for betatest."}, status=201)
-
-    return HttpResponse(form.errors.as_json(), status=400, content_type="application/json")
 
 @require_http_methods(["POST"])
 @csrf_exempt
@@ -126,9 +103,9 @@ def password_reset(request):
         user.save()
 
         user.email_user(
-            subject = 'MetWork beta test password',
-            message = 'Welcome to MetWork {0} !\n\nYou can now begin beta test on https://metwork.pharmacie.parisdescartes.fr\n\nYour email for login is : {1}\nYour password : {2}\n\nHave fun !\nThe MetWork Team'.format(user.first_name, user.email, temp_pwd))
+            subject = '[MetWork] Password reset',
+            message = 'Your new password for MetWork is : {0}\n\nThe MetWork Team'.format(temp_pwd) )
 
-        return JsonResponse({"success": "Reset paswword email sent"}, status=201)
+        return JsonResponse({"success": "Reset password email sent"}, status=201)
 
     return HttpResponse(form.errors.as_json(), status=400, content_type="application/json")
