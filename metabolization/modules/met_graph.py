@@ -49,7 +49,8 @@ class MetGraph:
 				'id': node_id('mol', m),
 				'name': str(round( m.mass_exact(), 3 )) ,
 				'nodeType': 'molecule',
-				'annotation': 'init' if m in self.project.molecules_init() else 'proposal'
+				'annotation': 'init' if m in self.project.molecules_init() else 'proposal',
+				'smiles': m.smiles(),
 			}
 		} for m in self.mols]
 
