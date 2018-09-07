@@ -11,6 +11,7 @@ from metabolization.models import *
 from base.models import Molecule
 from fragmentation.models import *
 from django.db.models import Q
+import re
 
 class SampleAnnotationProject(Project):
 
@@ -84,8 +85,17 @@ class SampleAnnotationProject(Project):
 			'frag_compare_conf',
 			'frag_sample',
 		]
+		re_find = re.findall('(.*)(?:\sCOPY)[\s]?([\d]*)', self.name)
+		if len(re_find) > 0:
+			if re_find[0][1] == '':
+				number = 1
+			else:
+				number = int(re_find[0][1]) + 1
+			name = re_find[0][0] + ' COPY ' + str(number)
+		else:
+			name = self.name + ' COPY'
 		clone = SampleAnnotationProject(
-			name = self.name + ' COPY',
+			name = name,
 			user = self.user
 		)
 		clone.save()
