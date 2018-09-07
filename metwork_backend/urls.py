@@ -40,8 +40,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api-auth-token/', obtain_auth_token),
     url(r'^api-auth/', include('rest_framework.urls', namespace='')),
-    #url(r'^api-register/', register),
-    url(r'^betatest-register/', betatest_register),
+    url(r'^api-register/', register),
     url(r'^api-password-reset/', password_reset),
     url(r'^download_all_molecules', download_all_molecules),
 ]

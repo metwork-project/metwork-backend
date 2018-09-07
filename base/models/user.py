@@ -13,13 +13,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
                 unique=True)
     username = models.CharField(
-                max_length=30, 
+                max_length=30,
                 blank=True)
     first_name = models.CharField(
-                max_length=30, 
+                max_length=30,
                 blank=True)
     last_name = models.CharField(
-                max_length=30, 
+                max_length=30,
                 blank=True)
     organization = models.CharField(
                 max_length=30)
@@ -53,15 +53,3 @@ class User(AbstractBaseUser, PermissionsMixin):
         Sends an email to this User.
         '''
         send_mail(subject, message, from_email, [self.email], **kwargs)
-
-    @classmethod
-    def betatest_register(cls, info):
-        subject = "register beta test"
-        message = "name: {0} \norganization: {1} \nemail: {2} \n".format(info['name'], info['organization'], info['email'])
-        for email in ["pro@yannbeauxis.net", "gregory.genta-jouve@parisdescartes.fr"]:
-            try:
-                user = User.objects.get(email=email)
-                user.email_user(subject, message, from_email="metwork@pharmacie.parisdescartes.fr")
-            except:
-                pass
-
