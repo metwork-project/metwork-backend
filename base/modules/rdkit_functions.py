@@ -18,6 +18,10 @@ class RDKit:
         return Chem.MolToSmiles(mol_rdkit, isomericSmiles = True, kekuleSmiles = kekulize)
 
     @classmethod
+    def mol_to_molfile(self, mol_rdkit):
+        return Chem.MolToMolBlock(mol_rdkit)
+
+    @classmethod
     def mol_to_inchi(self, mol_rdkit):
         return Chem.MolToInchi(mol_rdkit)
 
