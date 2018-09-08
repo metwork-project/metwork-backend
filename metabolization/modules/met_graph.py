@@ -40,6 +40,7 @@ class MetGraph:
 				'id': node_id('react', rp),
 				'name': rp.reaction.name,
 				'nodeType': 'reaction',
+				'reactionId': rp.reaction.id,
 			}
 		} for rp in self.rps]
 
@@ -51,6 +52,7 @@ class MetGraph:
 				'nodeType': 'molecule',
 				'annotation': 'init' if m in self.project.molecules_init() else 'proposal',
 				'smiles': m.smiles(),
+				'molFile': m.mol_file(),
 			}
 		} for m in self.mols]
 
