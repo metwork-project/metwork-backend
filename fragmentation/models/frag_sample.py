@@ -157,12 +157,11 @@ class FragSample(models.Model):
         self.status_code = 3
         self.save()
 
+    def ions_list(self):
+        return self.fragmolsample_set.all().order_by('ion_id').distinct()
+
     def gen_cosine_matrix(self):
-        query = self.fragmolsample_set.all().order_by('ion_id').distinct()
-
-        # return query.last().fragmolspectrum_set.get(energy = 1).spectrum
-
-        # return np.array([ fms.fragmolspectrum_set.get(energy = 1).spectrum for fms in query ])
+        query = self.ions_list()
 
         return compute_distance_matrix(
             [ fms.parent_mass for fms in query ],
