@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import os, json
-
+from libmetgem.network_generation import generate_network
 
 class MolGraph:
 
@@ -22,20 +22,17 @@ class MolGraph:
         cosine_matrix = self.frag_sample.cosine_matrix
         matrix_size = len(cosine_matrix)
 
-        edges = []
-
-        for i in range(matrix_size):
-            for j in range( i + 1, matrix_size ) :
-                cosine = cosine_matrix[i][j]
-                if  cosine > 0.8:
-                    edges.append({
-                        'group': 'edges',
-                        'data': {
-                            'id': "{0} -- {1}".format(i, j),
-                            'source': i,
-                            'target': j,
-                            'cosine': cosine
-                        }
-                    })
+        edges = [
+            {
+                'group': 'edges',
+                'data': {
+                    'id': "{0} -- {1}".format(i[0], i[1]),
+                    'source': i[0],
+                    'target': i[1],
+                    'cosine': i[3]
+                }
+            }
+        for i in generate_network(cosine_matrix, self.frag_sample.mzs(), 10, 0.65).tolist()
+        if i[0] != i[1]]
 
         return nodes + edges
