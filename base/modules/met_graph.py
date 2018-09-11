@@ -37,7 +37,7 @@ class MetGraph:
             fac.frag_mol_compare.cosine) \
             for fac in query.all() ])
 
-    def cytoscapejs_data(self):
+    def metabolization_network(self):
 
         def node_id(node_type, element):
             if node_type == 'mol':
