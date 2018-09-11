@@ -27,7 +27,7 @@ class MolGraph:
         for i in range(matrix_size):
             for j in range( i + 1, matrix_size ) :
                 cosine = cosine_matrix[i][j]
-                if  cosine > 0.9:
+                if  cosine > 0.8:
                     edges.append({
                         'group': 'edges',
                         'data': {
@@ -37,7 +37,5 @@ class MolGraph:
                             'cosine': cosine
                         }
                     })
-
-        print(len(edges))
 
         return nodes + edges

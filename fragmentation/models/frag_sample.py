@@ -151,7 +151,7 @@ class FragSample(models.Model):
             #except:
             #    error_log.append(l)
 
-        self.cosine_matrix = self.compute_distance_matrix()
+        self.gen_cosine_matrix()
 
         if len(error_log) > 0 : print ('ERROR LOG', error_log )
         self.status_code = 3
@@ -162,8 +162,7 @@ class FragSample(models.Model):
 
     def gen_cosine_matrix(self):
         query = self.ions_list()
-
-        return compute_distance_matrix(
+        self.cosine_matrix = compute_distance_matrix(
             [ fms.parent_mass for fms in query ],
             [ filter_data(
                 np.array(fms.fragmolspectrum_set.get(energy = 1).spectrum),
@@ -173,10 +172,11 @@ class FragSample(models.Model):
             0.002,
             5
         ).tolist()
+        self.save()
+        return self
 
     def molecular_network(self):
         if self.cosine_matrix is None:
-            print('gen matrix')
             self.gen_cosine_matrix()
         from fragmentation.modules import MolGraph
         mg = MolGraph(self)
