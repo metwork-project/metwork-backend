@@ -13,10 +13,11 @@ class MolGraph:
         nodes = [{
             'group': 'nodes',
             'data': {
-                'id': ion.ion_id,
+                'id': id,
+                'name': ion.parent_mass,
                 'parent_mass': ion.parent_mass,
             }
-        } for ion in self.frag_sample.ions_list()]
+        } for id, ion in enumerate(self.frag_sample.ions_list())]
 
         cosine_matrix = self.frag_sample.cosine_matrix
         matrix_size = len(cosine_matrix)
@@ -24,9 +25,9 @@ class MolGraph:
         edges = []
 
         for i in range(matrix_size):
-            for j in range( matrix_size - i - 1 ) :
+            for j in range( i + 1, matrix_size ) :
                 cosine = cosine_matrix[i][j]
-                if  cosine > 0:
+                if  cosine > 0.9:
                     edges.append({
                         'group': 'edges',
                         'data': {
@@ -36,5 +37,7 @@ class MolGraph:
                             'cosine': cosine
                         }
                     })
+
+        print(len(edges))
 
         return nodes + edges

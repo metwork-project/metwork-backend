@@ -174,6 +174,14 @@ class FragSample(models.Model):
             5
         ).tolist()
 
+    def molecular_network(self):
+        if self.cosine_matrix is None:
+            print('gen matrix')
+            self.gen_cosine_matrix()
+        from fragmentation.modules import MolGraph
+        mg = MolGraph(self)
+        return mg.gen_molecular_network()
+
     def wait_import_done(self, timeout=360):
         begin = time.time()
         while self.status_code == FragSample.status.RUNNING:
