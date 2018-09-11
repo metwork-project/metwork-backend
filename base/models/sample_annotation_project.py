@@ -328,11 +328,11 @@ class SampleAnnotationProject(Project):
 			fw.writelines(res)
 
 	def gen_metexplore(self):
-		from metabolization.modules import MetGraph
+		from base.modules import MetGraph
 		mg = MetGraph(self)
 		mg.gen_metexplore()
 
 	def cytoscapejs_data(self):
-		from metabolization.modules import MetGraph
+		from base.modules import MetGraph
 		mg = MetGraph(self)
 		return mg.cytoscapejs_data()
