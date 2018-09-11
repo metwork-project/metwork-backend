@@ -160,6 +160,9 @@ class FragSample(models.Model):
     def ions_list(self):
         return self.fragmolsample_set.all().order_by('ion_id').distinct()
 
+    def mzs(self):
+        return [ fms.parent_mass for fms in self.ions_list() ]
+
     def gen_cosine_matrix(self):
         query = self.ions_list()
         self.cosine_matrix = compute_distance_matrix(
