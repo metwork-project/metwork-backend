@@ -2,11 +2,18 @@
 from __future__ import unicode_literals
 import os, json
 from libmetgem.network_generation import generate_network
+from fragmentation.models import FragAnnotationDB, FragAnnotationCompare
 
 class MolGraph:
 
     def __init__(self, frag_sample):
         self.frag_sample = frag_sample
+
+    def annotationType(self, ion):
+        if ion.fragannotation_set.instance_of(FragAnnotationDB).count() > 0:
+            return "init"
+        elif ion.fragannotation_set.instance_of(FragAnnotationCompare).count() > 0:
+            return 'proposal'
 
     def gen_molecular_network(self):
 
@@ -16,6 +23,8 @@ class MolGraph:
                 'id': id,
                 'name': ion.parent_mass,
                 'parent_mass': ion.parent_mass,
+                'nodeType': 'molecule',
+                'annotation': self.annotationType(ion),
             }
         } for id, ion in enumerate(self.frag_sample.ions_list())]
 
