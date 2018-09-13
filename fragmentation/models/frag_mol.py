@@ -29,14 +29,20 @@ class FragMol(PolymorphicModel):
 
 	MASS_DECIMALS = 10
 
-	def gen_mgf(self, energy = 2, decimal = 6):
-		from fragmentation.models import FragMolSpectrum
+	def gen_info(self, decimal = 6):
 		getcontext().prec = decimal + 10
 		DECIMALS = Decimal(10) ** (-1 * (decimal))
-		res = 'BEGIN IONS\n' + \
-				'PEPMASS={0}\n'.format( Decimal(self.parent_mass).quantize(DECIMALS) )
+		res = 'PEPMASS={0}\n'.format( Decimal(self.parent_mass).quantize(DECIMALS) )
 		res += '\n'.join([ '{0}={1}'.format(*at) for at in self.get_attributes()]) + '\n'
-		res += 'SCANS={0}\n'.format(self.scan_id())
+		res += 'SCANS={0}'.format(self.scan_id())
+		return res
+
+	def gen_mgf(self, energy = 2, decimal = 6):
+		getcontext().prec = decimal + 10
+		DECIMALS = Decimal(10) ** (-1 * (decimal))
+		res = 'BEGIN IONS\n'
+		res += gen_info(decimal)
+		res += '\n'
 		res += '\n'.join([ \
 			' '.join([ str( Decimal(v).quantize(DECIMALS) ) for v in peak ])
 			for peak in self.fragmolspectrum_set.filter(energy = energy).first().spectrum ]) + '\n'
@@ -124,3 +130,16 @@ class FragMolSample(FragMol):
 	def obsolete(self):
 		return self.fragmolspectrum_set.count() == 0 \
 			or self.parent_mass == 0
+
+	def best_annotation(self):
+		from fragmentation.models import FragAnnotationDB, FragAnnotationCompare
+		query_init = self.fragannotation_set.instance_of(FragAnnotationDB)
+		query_annot = self.fragannotation_set.instance_of(FragAnnotationCompare)\
+			.order_by('-fragannotationcompare__frag_mol_compare__cosine')
+		if query_init.count() > 0:
+			return (query_init.first().molecule, None)
+		elif query_annot.count() > 0:
+			annot = query_annot.first()
+			return (annot.molecule, str(annot.frag_mol_compare.cosine))
+		else:
+			return (None,None)

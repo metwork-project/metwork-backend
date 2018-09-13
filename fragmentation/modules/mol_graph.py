@@ -15,6 +15,24 @@ class MolGraph:
         elif ion.fragannotation_set.instance_of(FragAnnotationCompare).count() > 0:
             return 'proposal'
 
+    def best_annotation(self,ion):
+        best_annot = ion.best_annotation()
+        mol = best_annot[0]
+        if mol is not None:
+            smiles = mol.smiles()
+        else:
+            smiles = None
+
+        return {
+            'smiles': smiles,
+            'cosine': best_annot[1]
+        }
+
+    def mol_file(self,ion):
+        best_annot = ion.best_annotation()[0]
+        if best_annot is not None:
+            return best_annot.mol_file()
+
     def gen_molecular_network(self):
 
         nodes = [{
@@ -23,8 +41,11 @@ class MolGraph:
                 'id': id,
                 'name': ion.parent_mass,
                 'parent_mass': ion.parent_mass,
-                'nodeType': 'molecule',
-                'annotation': self.annotationType(ion),
+                'nodeType': 'ion',
+                'annotationType': self.annotationType(ion),
+                'bestAnnotation': self.best_annotation(ion),
+                'info': ion.gen_info().replace('\n','<br/>'),
+                'molFile': self.mol_file(ion),
             }
         } for id, ion in enumerate(self.frag_sample.ions_list())]
 
