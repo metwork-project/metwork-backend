@@ -4,3 +4,4 @@ from .test_management import TestManagement
 from .conf_management import ConfManagement
 from .cache_management import *
 from .met_graph import MetGraph
+from .chem_doodle import ChemDoodle
