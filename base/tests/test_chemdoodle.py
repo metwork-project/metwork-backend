@@ -8,7 +8,7 @@ class ChemDoodleTests(TransactionTestCase):
 
     def test_json_to_mol(self):
         # smiles = 'C/C=C/[C@@](C)(N)c1ccc(O)cc1'
-        smiles = 'C/C(F)=C/[C@@](C)(N)C1=CC=C(O)C=C1'
+        smiles = 'C/C(F)=C/[C@@](C)(N)c1ccc(O)cc1'
         json_path = 'base/tests/files/chemdoodle_mol_1.json'
         cd  = ChemDoodle()
         with open(json_path, 'r') as fjson:
