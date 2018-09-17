@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.test import TransactionTestCase
+from base.models import Molecule
 from base.modules import ChemDoodle, ChemDoodleJSONError
 from metabolization.models import Reaction
 import json
@@ -69,7 +70,6 @@ class ChemDoodleTests(TransactionTestCase):
             name = 'test ChemDoodle import')
 
     def test_mol_to_json(self):
-        from base.models import Molecule
         smiles = 'C/C(F)=C/[C@@](C)(N)c1ccc(O)cc1'
         mol = Molecule.load_from_smiles(smiles)
         json_path = 'base/tests/files/chemdoodle_mol_1.json'
@@ -79,3 +79,17 @@ class ChemDoodleTests(TransactionTestCase):
             json_mol = json.loads(json_str)[0]['m'][0]
         json_res = cd.mol_to_json(mol)
         self.assertEqual(cd.json_to_mol(json_res).smiles(),smiles)
+
+    def test_react_to_json(self):
+        smarts ='[#6:1]-[#6:2](-[N,O,S])=[#8:3].[#7:4]-[#6:5]>>[#6:1]-[#6:2](-[#7:4]-[#6:5])=[#8:3]'
+        json_path = 'base/tests/files/chemdoodle_amide_formation_2.json'
+        cd  = ChemDoodle()
+        u = get_user_model().objects.create(email = 'user@test.com')
+        r = Reaction.create_from_smarts(
+            smarts = smarts,
+            user = u,
+            name = 'test ChemDoodle import')
+
+        json_res = cd.react_to_json(r)
+        print(json.dumps(json_res))
+        self.assertEqual(cd.json_to_react(json_res),smarts)

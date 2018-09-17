@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 from rdkit import Chem
-import math
+import math, re
 # from sympy import intersection
 from sympy.geometry import Point, Line, Segment, intersection
 from sympy.vector import Vector, CoordSys3D
@@ -254,21 +254,25 @@ class ChemDoodle(object):
         return mol
 
     def mol_to_json(self, mol):
-        json_mol = {
+        return self.mol_rdkit_to_json(mol.mol_rdkit)
+
+    def mol_rdkit_to_json(self,
+            mr,
+            begin_id={'a': 0, 'b': 0}):
+        json_res = {
             'a': [],
             'b': []
         }
-        mr = mol.mol_rdkit
         Chem.rdDepictor.Compute2DCoords(mr)
-        zoom = 10
+        ZOOM = 20
         positions = mr.GetConformer().GetPositions()
-        bond_type_dic  = {
+        BOND_TYPE_DIC  = {
             Chem.rdchem.BondType.SINGLE: 1,
             Chem.rdchem.BondType.DOUBLE: 2,
             Chem.rdchem.BondType.TRIPLE: 3,
         }
         chiral_bonds = {}
-        chiral_config = {
+        CHIRAL_CONFIG = {
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW: {
                 0:'protruding',
                 2: 'recessed' },
@@ -279,30 +283,84 @@ class ChemDoodle(object):
 
         for i, a in enumerate(mr.GetAtoms()):
             mol_json = {
-                'i': 'a{0}'.format(i),
-                'x': zoom * positions[i][0],
-                'y': zoom * positions[i][1] }
-            symbol = a.GetSymbol()
-
-            if symbol != 'C':
-                mol_json['l'] = symbol
-            elif a.GetChiralTag() != Chem.rdchem.ChiralType.CHI_UNSPECIFIED:
-                ct = a.GetChiralTag()
-                for i, b in enumerate(a.GetBonds()):
-                    if i in chiral_config[ct]:
-                        chiral_bonds[b.GetIdx()] = chiral_config[ct][i]
-            json_mol['a'].append(mol_json)
+                'i': 'a{0}'.format(i + begin_id['a']),
+                'x': ZOOM * positions[i][0],
+                'y': ZOOM * positions[i][1] }
+            symbols = re.findall( '\[([^:]*?)(?:\:\d)?\]',a.GetSmarts()  )[0].split(',')
+            if len(symbols) > 1:
+                v = []
+                if '*' in symbols:
+                    v = ['a']
+                else :
+                    for sy in symbols:
+                        find_number = re.findall('#(\d)', sy)
+                        if len(find_number) == 1:
+                            v.append(Chem.Atom(find_number[0]).GetSymbol())
+                        else:
+                            v.append(sy)
+                mol_json['q'] = {'as': {'v': v, 'n': False} }
+            else:
+                symbol = a.GetSymbol()
+                if symbol != 'C':
+                    mol_json['l'] = symbol
+                elif a.GetChiralTag() != Chem.rdchem.ChiralType.CHI_UNSPECIFIED:
+                    ct = a.GetChiralTag()
+                    for i, b in enumerate(a.GetBonds()):
+                        if i in CHIRAL_CONFIG[ct]:
+                            chiral_bonds[b.GetIdx()] = CHIRAL_CONFIG[ct][i]
+            json_res['a'].append(mol_json)
 
         for i, b in enumerate(mr.GetBonds()):
             b_id = b.GetIdx()
             bond_json = {
-                'i': 'b{0}'.format(i),
+                'i': 'b{0}'.format(i + begin_id['b']),
                 'b': b.GetBeginAtomIdx(),
                 'e': b.GetEndAtomIdx()}
             bond_type = b.GetBondType()
             if bond_type != Chem.rdchem.BondType.SINGLE:
-                bond_json['o'] = bond_type_dic[bond_type]
+                bond_json['o'] = BOND_TYPE_DIC[bond_type]
             if b_id in chiral_bonds:
                 bond_json['s'] = chiral_bonds[b_id]
-            json_mol['b'].append(bond_json)
-        return json_mol
+            json_res['b'].append(bond_json)
+        return json_res
+
+    def react_to_json(self, reaction):
+        PADDING = 80
+        ARROW_LENGTH = 60
+        json_res = {
+            'm': [],
+            's': [],
+        }
+        rr = reaction.react_rdkit()
+        x_bound = 0
+
+        def append_mol(m):
+            m_json = self.mol_rdkit_to_json(m)
+            x_max = 0
+            for a in m_json['a']:
+                x_max = max(x_max, a['x'])
+                a['x'] += x_bound
+            json_res['m'].append(m_json)
+            return x_max
+
+        # Reactants
+        for m in rr.GetReactants():
+            x_bound += append_mol(m) + PADDING
+
+        # Arrow
+        x_bound -= PADDING/2
+        json_res['s'].append({
+            'i': "s0",
+            't': "Line",
+            'x1': x_bound,
+            'y1': 0,
+            'x2': x_bound + ARROW_LENGTH,
+            'y2': 0,
+            'a': 'synthetic'} )
+        x_bound += ARROW_LENGTH + PADDING
+
+        # Products
+        for m in rr.GetProducts():
+            append_mol(m)
+
+        return json_res
