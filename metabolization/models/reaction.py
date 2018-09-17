@@ -7,7 +7,7 @@ import os.path
 import hashlib
 import subprocess
 
-from rdkit.Chem import rdChemReactions
+from base.modules import RDKit
 from django.conf import settings
 from base.modules import FileManagement
 
@@ -23,42 +23,42 @@ class Reaction(FileManagement, models.Model):
 		('rdkit', 'RDKit'),)
 
 	name = models.CharField(
-			max_length=128, 
-			default='new_reaction', 
+			max_length=128,
+			default='new_reaction',
 			unique=True)
 	description = models.CharField(
-					max_length=255, 
+					max_length=255,
 					default='',
 					null= True,
 					blank=True)
 	user = models.ForeignKey(
-					settings.AUTH_USER_MODEL, 
-					on_delete=models.CASCADE, 
+					settings.AUTH_USER_MODEL,
+					on_delete=models.CASCADE,
 					db_index = True)
 	file_hash = models.CharField(
-			max_length=32, 
+			max_length=32,
 			default='')
 	reactants_number = models.SmallIntegerField(
 			default=0)
 	method_priority = models.CharField(
 			max_length=32,
-			choices = METHODS_CHOICES, 
+			choices = METHODS_CHOICES,
 			default='reactor') # cls. methods_allowed
 	smarts = models.CharField(
-			max_length=1024, 
+			max_length=1024,
 			default='') # smarts used by rdkit method
 
 	def __str__(self):
 		return self.name
 
 	def save(self, *args, **kwargs):
-		if self.smarts == '': 
+		if self.smarts == '':
 			self.smarts = self.get_smarts_from_mrv()
 		if self.reactants_number == 0:
 			self.reactants_number = self.get_reactants_number_from_mrv()
 		super(Reaction, self).save(*args, **kwargs)
 		return self
-	
+
 	def gen_image(self):
 		svg = subprocess.check_output(["molconvert", "svg:w400h200", self.mrv_path()]).decode('utf-8')
 		with open( self.image_path(), 'w') as fw:
@@ -78,23 +78,41 @@ class Reaction(FileManagement, models.Model):
 		r.save()
 		r.gen_image()
 		return r
-	
+
+	@classmethod
+	def create_from_smarts(cls, smarts, name, user, description=None):
+		try:
+			smarts = RDKit.reaction_to_smarts(
+						RDKit.reaction_from_smarts(smarts))
+		except:
+			return 'error'
+		print (smarts)
+		r = cls(
+			name = name,
+			user=user,
+			description=description,
+			smarts=smarts,
+			method_priority='rdkit')
+		r.save()
+		print (r.methods_available())
+		return r
+
 	def has_no_project(self):
 		from metabolization.models import ReactionsConf
 		return ReactionsConf.objects.filter(reactions__in = [self]).count() == 0
 
 	def mrv_path(self):
 		return '/'.join([
-			self.item_path(), 
+			self.item_path(),
 			'reaction.mrv'])
 
 	def image_path(self):
 		return '/'.join([
-			self.item_path(), 
+			self.item_path(),
 			'image.svg'])
 
 	def mrv_exist(self):
-		return os.path.isfile(self.mrv_path()) 
+		return os.path.isfile(self.mrv_path())
 
 	def method_to_apply(self):
 		prio = self.method_priority
@@ -131,7 +149,7 @@ class Reaction(FileManagement, models.Model):
 
 	def react_rdkit_(self, smarts):
 		if smarts != '':
-			return rdChemReactions.ReactionFromSmarts(smarts)
+			return RDKit.reaction_from_smarts(smarts)
 
 	def get_reactants_number_from_mrv(self):
 		smarts = self.get_smarts_from_mrv()
@@ -161,4 +179,3 @@ class Reaction(FileManagement, models.Model):
 		return self.name
 
 ####
-

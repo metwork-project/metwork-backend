@@ -5,8 +5,12 @@ import math
 # from sympy import intersection
 from sympy.geometry import Point, Line, Segment, intersection
 from sympy.vector import Vector, CoordSys3D
-
+from base.modules import RDKit
 #Chem.rdDepictor.Compute2DCoords(mr)
+
+class ChemDoodleJSONError(Exception):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
 
 class ChemDoodle(object):
 
@@ -17,11 +21,76 @@ class ChemDoodle(object):
         }
         return value_dic[value]
 
-    def json_to_mol(self, json):
+    def json_to_mol(self, json_data):
         from base.models import Molecule
-        return Molecule.load_from_rdkit( self.json_to_rdkit(json) )
+        return Molecule.load_from_rdkit( self.json_to_rdkit(json_data) )
 
-    def json_to_rdkit(self, json, map={}, mol_type='reactant'):
+    def json_to_smarts(self, json_data, map, mol_type):
+        return Chem.MolToSmarts( self.json_to_rdkit(json_data, map, mol_type) )
+
+    def json_to_react(self, json_data):
+        line_x = None
+        if 's' in json_data:
+            for s in (json_data['s']):
+                if s['t'] == 'Line':
+                    if line_x is not None:
+                        raise ChemDoodleJSONError('More than one line')
+                    line_x = (s['x1'],s['x2'])
+                    if line_x[0] > line_x[1]:
+                        raise ChemDoodleJSONError('Line in wrong direction')
+        if line_x is None:
+            raise ChemDoodleJSONError('No Line')
+        mols = []
+        if 'm' in json_data:
+            mols = json_data['m']
+        if len(mols) < 2:
+            raise ChemDoodleJSONError('Not enough mols')
+        if len(mols) > 3:
+            raise ChemDoodleJSONError('Too many mols')
+        reactants = []
+        product = None
+        for m in mols:
+            xs = None
+            for a in m['a']:
+                if xs is None:
+                    xs = (a['x'], a['x'])
+                else:
+                    xs = (min(a['x'], xs[0]), max(a['x'], xs[1]))
+            if not False in (xs[i] < line_x[0] for i in range(2)):
+                reactants.append(m)
+            elif not False in (xs[i] > line_x[1] for i in range(2)):
+                if product is not None:
+                    raise ChemDoodleJSONError('Too many products')
+                product = m
+            else:
+                raise ChemDoodleJSONError('Ambiguous molecule')
+        if product is None:
+            raise ChemDoodleJSONError('No product')
+        if len(reactants) > 2:
+            raise ChemDoodleJSONError('too many reactants')
+
+        map = json_data['s']
+
+        try:
+            smarts = \
+                '{0}>>{1}'.format(
+                    '.'.join((
+                        self.json_to_smarts( m, map=map, mol_type='reactant') \
+                        for m in reactants
+                    )),
+                    self.json_to_smarts( product, map=map, mol_type='product')
+                )
+        except:
+            raise ChemDoodleJSONError('Error while converting molecules')
+
+        try:
+            react = RDKit.reaction_from_smarts(smarts)
+            Chem.rdChemReactions.ReactionToSmarts(react)
+        except:
+            raise ChemDoodleJSONError('Error in RDKit with smarts generated')
+        return smarts
+
+    def json_to_rdkit(self, json_data, map={}, mol_type='reactant'):
         from base.models import Molecule
 
         m0 = Chem.MolFromSmarts('')
@@ -30,7 +99,7 @@ class ChemDoodle(object):
         atoms_cd = {}
         query_atoms = []
 
-        for atom in json['a']:
+        for atom in json_data['a']:
             atom_id = atom['i']
             # Query atoms
             if 'q' in atom:
@@ -48,7 +117,7 @@ class ChemDoodle(object):
                 symbol = 'C' if 'l' not in atom else atom['l']
                 a = Chem.Atom(symbol)
             atoms_cd[atom_id] = mw.AddAtom(a)
-        for bond in json['b']:
+        for bond in json_data['b']:
             bond_id = bond['i']
             if 'o' in bond:
                 bond_type = self.bond_type(bond['o'])
@@ -58,19 +127,19 @@ class ChemDoodle(object):
 
         bonds_cd1 = {
             i: mw.GetBondBetweenAtoms(b_cd['b'],b_cd['e']).GetIdx()
-            for i,b_cd in enumerate(json['b'])
+            for i,b_cd in enumerate(json_data['b'])
         }
 
         bonds_cd = {
             '{0}-{1}'.format(b_cd['b'], b_cd['e']): i
-            for i,b_cd in enumerate(json['b'])
+            for i,b_cd in enumerate(json_data['b'])
         }
 
         atoms_rd = {v: k for k, v in atoms_cd.items()}
         bonds_rd = {v: k for k, v in bonds_cd.items()}
 
         def a_point(atom_rd):
-            x, y = ( json['a'][atom_rd][d] for d in ['x','y'] )
+            x, y = ( json_data['a'][atom_rd][d] for d in ['x','y'] )
             return Point( x,y )
 
         def mol_atom(idx):
@@ -86,9 +155,9 @@ class ChemDoodle(object):
                                         b.GetBeginAtomIdx(),
                                         b.GetEndAtomIdx() )
                     if id_1 in bonds_cd:
-                        b_cd = json['b'][ bonds_cd[id_1] ]
+                        b_cd = json_data['b'][ bonds_cd[id_1] ]
                     else:
-                        b_cd = json['b'][ bonds_cd['{1}-{0}'.format(
+                        b_cd = json_data['b'][ bonds_cd['{1}-{0}'.format(
                                             b.GetBeginAtomIdx(),
                                             b.GetEndAtomIdx() )] ]
                     if 's' in b_cd:
@@ -129,7 +198,9 @@ class ChemDoodle(object):
     ### Manage stereo
 
         for bond in mw.GetBonds():
-            if bond.GetBondType() == Chem.rdchem.BondType.DOUBLE:
+            if bond.GetBondType() == Chem.rdchem.BondType.DOUBLE \
+                and bond.GetBeginAtom().GetSymbol() == 'C' \
+                and bond.GetEndAtom().GetSymbol() == 'C':
                 carbons = [ bond.GetBeginAtomIdx(), bond.GetEndAtomIdx() ]
                 # Check if stero can be applied
                 if True in [ len(mol_atom(c).GetBonds()) > 1 for c in carbons ]:
@@ -167,8 +238,10 @@ class ChemDoodle(object):
         i = 1
         for m in map:
             if m['t'] == 'AtomMapping':
-                a_rd_id = atoms_cd[ m[ dic_type[mol_type] ] ]
-                mw.GetAtoms()[a_rd_id].SetAtomMapNum(i)
+                a_target = m[ dic_type[mol_type] ]
+                if a_target in atoms_cd:
+                    a_rd_id = atoms_cd[ a_target ]
+                    mw.GetAtoms()[a_rd_id].SetAtomMapNum(i)
                 i += 1
 
 
