@@ -86,7 +86,6 @@ class Reaction(FileManagement, models.Model):
 						RDKit.reaction_from_smarts(smarts))
 		except:
 			return 'error'
-		print (smarts)
 		r = cls(
 			name = name,
 			user=user,
@@ -94,7 +93,6 @@ class Reaction(FileManagement, models.Model):
 			smarts=smarts,
 			method_priority='rdkit')
 		r.save()
-		print (r.methods_available())
 		return r
 
 	def has_no_project(self):
