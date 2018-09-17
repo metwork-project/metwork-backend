@@ -333,19 +333,33 @@ class ChemDoodle(object):
         }
         rr = reaction.react_rdkit()
         x_bound = 0
+        atom_maping = {}
+        begin_id = {'a': 0, 'b': 0}
 
-        def append_mol(m):
-            m_json = self.mol_rdkit_to_json(m)
+        def append_mol(m, mol_type):
+            m_json = self.mol_rdkit_to_json(m, begin_id)
             x_max = 0
             for a in m_json['a']:
                 x_max = max(x_max, a['x'])
                 a['x'] += x_bound
+            for i, a in enumerate(m.GetAtoms()):
+                map_num = a.GetAtomMapNum()
+                if map_num > 0:
+                    atom_id = 'a{0}'.format(i + begin_id['a'])
+                    if mol_type == 'reactant':
+                        atom_maping[map_num] = \
+                            [atom_id,None]
+                    elif mol_type == 'product':
+                        atom_maping[map_num][1] = atom_id
             json_res['m'].append(m_json)
+            begin_id['a'] += len(m_json['a'])
+            begin_id['b'] += len(m_json['b'])
+
             return x_max
 
         # Reactants
         for m in rr.GetReactants():
-            x_bound += append_mol(m) + PADDING
+            x_bound += append_mol(m, 'reactant') + PADDING
 
         # Arrow
         x_bound -= PADDING/2
@@ -361,6 +375,14 @@ class ChemDoodle(object):
 
         # Products
         for m in rr.GetProducts():
-            append_mol(m)
+            append_mol(m, 'product')
 
+        # AtomMapping
+        for i, map in atom_maping.items():
+            json_res['s'].append({
+                'i': "s{0}".format(i),
+                't': "AtomMapping",
+                'a1': map[0],
+                'a2': map[1]} )
+                
         return json_res
