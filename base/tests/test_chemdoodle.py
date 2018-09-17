@@ -67,3 +67,15 @@ class ChemDoodleTests(TransactionTestCase):
             smarts = react,
             user = u,
             name = 'test ChemDoodle import')
+
+    def test_mol_to_json(self):
+        from base.models import Molecule
+        smiles = 'C/C(F)=C/[C@@](C)(N)c1ccc(O)cc1'
+        mol = Molecule.load_from_smiles(smiles)
+        json_path = 'base/tests/files/chemdoodle_mol_1.json'
+        cd  = ChemDoodle()
+        with open(json_path, 'r') as fjson:
+            json_str = '[{0}]'.format(fjson.readline())
+            json_mol = json.loads(json_str)[0]['m'][0]
+        json_res = cd.mol_to_json(mol)
+        self.assertEqual(cd.json_to_mol(json_res).smiles(),smiles)

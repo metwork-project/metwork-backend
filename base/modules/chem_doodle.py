@@ -252,3 +252,57 @@ class ChemDoodle(object):
         Chem.rdDepictor.Compute2DCoords(mol)
 
         return mol
+
+    def mol_to_json(self, mol):
+        json_mol = {
+            'a': [],
+            'b': []
+        }
+        mr = mol.mol_rdkit
+        Chem.rdDepictor.Compute2DCoords(mr)
+        zoom = 10
+        positions = mr.GetConformer().GetPositions()
+        bond_type_dic  = {
+            Chem.rdchem.BondType.SINGLE: 1,
+            Chem.rdchem.BondType.DOUBLE: 2,
+            Chem.rdchem.BondType.TRIPLE: 3,
+        }
+        chiral_bonds = {}
+        chiral_config = {
+            Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW: {
+                0:'protruding',
+                2: 'recessed' },
+            Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW: {
+                0:'recessed',
+                2: 'protruding' }
+        }
+
+        for i, a in enumerate(mr.GetAtoms()):
+            mol_json = {
+                'i': 'a{0}'.format(i),
+                'x': zoom * positions[i][0],
+                'y': zoom * positions[i][1] }
+            symbol = a.GetSymbol()
+
+            if symbol != 'C':
+                mol_json['l'] = symbol
+            elif a.GetChiralTag() != Chem.rdchem.ChiralType.CHI_UNSPECIFIED:
+                ct = a.GetChiralTag()
+                for i, b in enumerate(a.GetBonds()):
+                    if i in chiral_config[ct]:
+                        chiral_bonds[b.GetIdx()] = chiral_config[ct][i]
+            json_mol['a'].append(mol_json)
+
+        for i, b in enumerate(mr.GetBonds()):
+            b_id = b.GetIdx()
+            bond_json = {
+                'i': 'b{0}'.format(i),
+                'b': b.GetBeginAtomIdx(),
+                'e': b.GetEndAtomIdx()}
+            bond_type = b.GetBondType()
+            if bond_type != Chem.rdchem.BondType.SINGLE:
+                bond_json['o'] = bond_type_dic[bond_type]
+            if b_id in chiral_bonds:
+                bond_json['s'] = chiral_bonds[b_id]
+            json_mol['b'].append(bond_json)
+        return json_mol
