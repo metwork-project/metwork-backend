@@ -91,7 +91,6 @@ class ChemDoodle(object):
         return smarts
 
     def json_to_rdkit(self, json_data, map={}, mol_type='reactant'):
-        from base.models import Molecule
 
         m0 = Chem.MolFromSmarts('')
         mw = Chem.RWMol(m0)
@@ -286,7 +285,9 @@ class ChemDoodle(object):
                 'i': 'a{0}'.format(i + begin_id['a']),
                 'x': ZOOM * positions[i][0],
                 'y': ZOOM * positions[i][1] }
-            symbols = re.findall( '\[([^:]*?)(?:\:\d)?\]',a.GetSmarts()  )[0].split(',')
+            symbols = re.findall( '\[([^:]*?)(?:\:\d)?\]',a.GetSmarts()  )
+            if len(symbols) > 0:
+                symbols = symbols[0].split(',')
             if len(symbols) > 1:
                 v = []
                 if '*' in symbols:
@@ -384,5 +385,5 @@ class ChemDoodle(object):
                 't': "AtomMapping",
                 'a1': map[0],
                 'a2': map[1]} )
-                
+
         return json_res
