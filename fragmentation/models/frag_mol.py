@@ -41,7 +41,7 @@ class FragMol(PolymorphicModel):
 		getcontext().prec = decimal + 10
 		DECIMALS = Decimal(10) ** (-1 * (decimal))
 		res = 'BEGIN IONS\n'
-		res += gen_info(decimal)
+		res += self.gen_info(decimal)
 		res += '\n'
 		res += '\n'.join([ \
 			' '.join([ str( Decimal(v).quantize(DECIMALS) ) for v in peak ])

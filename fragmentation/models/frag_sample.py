@@ -165,17 +165,20 @@ class FragSample(models.Model):
 
     def gen_cosine_matrix(self):
         query = self.ions_list()
-        self.cosine_matrix = compute_distance_matrix(
-            [ fms.parent_mass for fms in query ],
-            [ filter_data(
-                np.array(fms.fragmolspectrum_set.get(energy = 1).spectrum),
-                fms.parent_mass,
-                0.0, 0.0, 0.0, 0)
-                for fms in query ],
-            0.002,
-            5
-        ).tolist()
-        self.save()
+        try:
+            self.cosine_matrix = compute_distance_matrix(
+                [ fms.parent_mass for fms in query ],
+                [ filter_data(
+                    np.array(fms.fragmolspectrum_set.get(energy = 1).spectrum),
+                    fms.parent_mass,
+                    0.0, 0.0, 0.0, 0)
+                    for fms in query ],
+                0.002,
+                5
+            ).tolist()
+            self.save()
+        except:
+            pass
         return self
 
     def molecular_network(self):
