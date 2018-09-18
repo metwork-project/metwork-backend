@@ -294,9 +294,13 @@ class ChemDoodle(object):
                     v = ['a']
                 else :
                     for sy in symbols:
-                        find_number = re.findall('#(\d)', sy)
-                        if len(find_number) == 1:
-                            v.append(Chem.Atom(find_number[0]).GetSymbol())
+                        find_at = re.findall('#(\d)', sy)
+                        if len(find_at) == 1:
+                            try:
+                                at_value = int(find_at[0])
+                            except:
+                                at_value = find_at[0]
+                            v.append(Chem.Atom(at_value).GetSymbol())
                         else:
                             v.append(sy)
                 mol_json['q'] = {'as': {'v': v, 'n': False} }
@@ -332,7 +336,7 @@ class ChemDoodle(object):
             'm': [],
             's': [],
         }
-        rr = reaction.react_rdkit()
+        rr = reaction#.react_rdkit()
         x_bound = 0
         atom_maping = {}
         begin_id = {'a': 0, 'b': 0}
