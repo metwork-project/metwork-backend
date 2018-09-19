@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-# from base.models import *
-# from metabolization.models import *
 from django.db.models import Count
 import os, json
 from django.db.models import Q
+from django.conf import settings
 
 class MetGraph:
 
@@ -60,7 +59,7 @@ class MetGraph:
             'group': 'nodes',
             'data': {
                 'id': node_id('mol', m),
-                'name': str(round( m.mass_exact(), 3 )) ,
+                'name': str(round( m.mass_exact() + settings.PROTON_MASS, 3 )) ,
                 'nodeType': 'molecule',
                 'annotationType': 'init' if m in self.project.molecules_init() else 'proposal',
                 'smiles': m.smiles(),
