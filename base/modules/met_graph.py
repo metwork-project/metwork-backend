@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.db.models import Count
 import os, json
 from django.db.models import Q
-from django.conf import settings
+from django.db.models import Max
 
 class MetGraph:
 
@@ -36,6 +36,14 @@ class MetGraph:
             fac.frag_mol_compare.cosine) \
             for fac in query.all() ])
 
+    def get_best_cosine(self, molecule):
+        from fragmentation.models import FragAnnotationCompare
+        query = \
+            FragAnnotationCompare.objects\
+                .filter(molecule = molecule, project = self.project)\
+                .aggregate(Max('frag_mol_compare__cosine'))
+        return query['frag_mol_compare__cosine__max']
+
     def metabolization_network(self):
 
         def node_id(node_type, element):
@@ -59,12 +67,14 @@ class MetGraph:
             'group': 'nodes',
             'data': {
                 'id': node_id('mol', m),
-                'name': str(round( m.mass_exact() + settings.PROTON_MASS, 3 )) ,
+                'name': str(round( m.mass_exact(), 3 )) ,
+                'parent_mass': str(round( m.mass_exact(), 3 )) ,
                 'nodeType': 'molecule',
                 'annotationType': 'init' if m in self.project.molecules_init() else 'proposal',
                 'smiles': m.smiles(),
                 'molFile': m.mol_file(),
                 'cosine': self.get_cosine(m),
+                'best_cosine': self.get_best_cosine(m),
             }
         } for m in self.mols]
 
