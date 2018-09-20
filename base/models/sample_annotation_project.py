@@ -11,6 +11,7 @@ from metabolization.models import *
 from base.models import Molecule
 from fragmentation.models import *
 from django.db.models import Q
+import re
 
 import re
 
