@@ -101,27 +101,26 @@ class MetGraph:
         return nodes + links
         #return json.dumps(nodes + links )
 
-        def gen_metexplore(self):
-            res = ''
+    def gen_metexplore(self):
+        res = ''
 
-            nodes = [{'name': rp.reaction.name, "biologicalType":"reaction"} for rp in self.rps]
-            nodes += [{'name': str(round(m.mass_exact(),3)), "biologicalType":"metabolite", "labelVisible":False} for m in self.mols]
-            links = [{
-                'id': "{0} -- {1}".format(self.mols_dic[m.id], self.rps_dic[rp.id]),
-                'source': self.mols_dic[m.id],
-                'target': self.rps_dic[rp.id],
-                "interaction":"in",
-                "reversible":"false"}
-                for rp in self.rps for    m in rp.reactants.all() ]
-            links += [{
-                "id": "{0} -- {1}".format(self.rps_dic[rp.id], self.mols_dic[m.id]),
-                "source": self.rps_dic[rp.id],
-                "target": self.mols_dic[m.id],
-                "interaction": "out",
-                "reversible": "false"}
-                for rp in self.rps for m in self.products(rp) ]
-            res = '"nodes":' + json.dumps(nodes) +    ',\n"links":' + json.dumps(links)
-
+        nodes = [{'name': rp.reaction.name, "biologicalType":"reaction"} for rp in self.rps]
+        nodes += [{'name': str(round(m.mass_exact(),3)), "biologicalType":"metabolite", "labelVisible":False} for m in self.mols]
+        links = [{
+            'id': "{0} -- {1}".format(self.mols_dic[m.id], self.rps_dic[rp.id]),
+            'source': self.mols_dic[m.id],
+            'target': self.rps_dic[rp.id],
+            "interaction":"in",
+            "reversible":"false"}
+            for rp in self.rps for    m in rp.reactants.all() ]
+        links += [{
+            "id": "{0} -- {1}".format(self.rps_dic[rp.id], self.mols_dic[m.id]),
+            "source": self.rps_dic[rp.id],
+            "target": self.mols_dic[m.id],
+            "interaction": "out",
+            "reversible": "false"}
+            for rp in self.rps for m in self.products(rp) ]
+        res = '"nodes":' + json.dumps(nodes) +    ',\n"links":' + json.dumps(links)
 
         with open(self.project.item_path() + '/metexplore.json', 'w') as fw:
             with open('metabolization/modules/templates/metexplore_header', 'r') as fr:
