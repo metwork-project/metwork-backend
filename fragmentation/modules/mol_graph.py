@@ -39,8 +39,8 @@ class MolGraph:
             'group': 'nodes',
             'data': {
                 'id': id,
-                'name': ion.parent_mass,
-                'parent_mass': ion.parent_mass,
+                'name': str(round( ion.parent_mass, 3 )),
+                'parent_mass': str(round( ion.parent_mass, 3 )),
                 'nodeType': 'ion',
                 'annotationType': self.annotationType(ion),
                 'bestAnnotation': self.best_annotation(ion),
