@@ -24,6 +24,9 @@ class Molecule(models.Model):
 		else:
 			return RDKit.mol_to_smiles(self.mol_rdkit, kekulize)
 
+	def mol_file(self):
+		return RDKit.mol_to_molfile(self.mol_rdkit)
+
 	def mass_exact(self):
 		return RDKit.mass_exact(self.mol_rdkit)
 
@@ -37,13 +40,13 @@ class Molecule(models.Model):
 		import subprocess
 		tautomer_major = set([])
 		tautomer_all = subprocess.check_output([
-				'cxcalc', 'tautomers', 
+				'cxcalc', 'tautomers',
 				self.smiles(),
 				'-f','smiles'])\
 			.decode().split('\n')
 		for sm in tautomer_all[:-1]:
 			tautomer_major_ = subprocess.check_output([
-					'cxcalc', 'majortautomer', 
+					'cxcalc', 'majortautomer',
 					sm,
 					'-f','smiles'])\
 				.decode().split('\n')
@@ -121,6 +124,6 @@ class Molecule(models.Model):
 			for m in queryset.order_by('id'):
 				fw.writelines(','.join([
 					str(m.id),
-					m.inchi_key, 
+					m.inchi_key,
 					m.smiles(),
 			]) + '\n')

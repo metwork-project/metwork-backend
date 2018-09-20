@@ -143,7 +143,7 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
 	#for mass_exact in m.mass_exact_isotopes():
 		#mass_exact += 1.007
 	#for mass_exact in [m.mass_exact()]:
-	mass_exact = m.mass_exact() + 1.007
+	mass_exact = m.mass_exact() + settings.PROTON_MASS
 	mass_var = float(p.frag_compare_conf.ppm_tolerance) * 10**-6
 	mass_window = (
 		mass_exact * ( 1 - mass_var) ,
