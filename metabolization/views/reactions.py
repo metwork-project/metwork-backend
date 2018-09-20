@@ -11,16 +11,16 @@ from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 
 class ReactionSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(
-        queryset = get_user_model().objects.all(),
-        allow_null = True)
+    # user = serializers.PrimaryKeyRelatedField(
+    #     queryset = get_user_model().objects.all(),
+    #     allow_null = True)
 
     class Meta:
         model = Reaction
         fields = (
             'name',
             'description',
-            'user',
+            'user_name',
             'reactants_number',
             'has_no_project',
             'status_code',

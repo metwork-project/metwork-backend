@@ -72,6 +72,9 @@ class Reaction(FileManagement, models.Model):
         super(Reaction, self).save(*args, **kwargs)
         return self
 
+    def user_name(self):
+        return self.user.username
+
     def gen_image(self):
         svg = subprocess.check_output(["molconvert", "svg:w400h200", self.mrv_path()]).decode('utf-8')
         with open( self.image_path(), 'w') as fw:
