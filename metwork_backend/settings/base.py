@@ -270,3 +270,5 @@ CELERY_QUEUES = {
 CFM_ID_PATH=get_env("METWORK_CFM_ID_PATH")
 
 GUEST_USER_EMAIL='metwork.dev@gmail.com'
+
+PROTON_MASS = 1.007

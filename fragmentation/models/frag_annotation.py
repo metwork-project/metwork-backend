@@ -6,15 +6,14 @@ from polymorphic.models import PolymorphicModel
 from base.models import Molecule
 from fragmentation.models import FragMolSample, FragMolCompare
 
-
 class FragAnnotation(PolymorphicModel):
 
     frag_mol_sample = models.ForeignKey(
-            FragMolSample, 
-            on_delete=models.CASCADE, 
+            FragMolSample,
+            on_delete=models.CASCADE,
             default=None)
     molecule = models.ForeignKey(
-            Molecule, 
+            Molecule,
             on_delete=models.PROTECT)
 
     def ion_id(self):
@@ -29,13 +28,13 @@ class FragAnnotationDB(FragAnnotation):
         resource_name = "frag-annotations"
 
     name = models.CharField(
-            max_length=63, 
+            max_length=63,
             default='')
     db_source = models.CharField(
-            max_length=63, 
+            max_length=63,
             default='unkown')
     db_id = models.CharField(
-            max_length=63, 
+            max_length=63,
             default='')
 
     def has_no_project(self):
@@ -44,16 +43,16 @@ class FragAnnotationDB(FragAnnotation):
     def delete(self, *args, **kwargs):
         if self.has_no_project():
             super(FragAnnotationDB, self).delete(*args, **kwargs)
-        
+
 class FragAnnotationCompare(FragAnnotation):
 
     project = models.ForeignKey(
-            'base.Project', 
-            on_delete=models.CASCADE, 
-            db_index = True, 
+            'base.Project',
+            on_delete=models.CASCADE,
+            db_index = True,
             default=None)
     frag_mol_compare = models.ForeignKey(
-            FragMolCompare, 
-            on_delete=models.PROTECT, 
+            FragMolCompare,
+            on_delete=models.PROTECT,
             default=None,
             null=True)

@@ -126,7 +126,7 @@ class ProjectViewSet(ModelAuthViewSet):
 		return FileResponse(open(fileAddress, 'rb'))
 
 	@detail_route(methods=['get'])
-	def cytoscapejs_data(self, request, pk=None):
+	def metabolization_network(self, request, pk=None):
 		project = self.get_object()
-		data = project.cytoscapejs_data()
+		data = project.metabolization_network()
 		return JsonResponse(data, safe=False)
