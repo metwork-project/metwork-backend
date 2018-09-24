@@ -28,13 +28,13 @@ class FragAnnotationDB(FragAnnotation):
         resource_name = "frag-annotations"
 
     name = models.CharField(
-            max_length=63,
+            max_length=256,
             default='')
     db_source = models.CharField(
-            max_length=63,
+            max_length=256,
             default='unkown')
     db_id = models.CharField(
-            max_length=63,
+            max_length=128,
             default='')
 
     def has_no_project(self):
