@@ -212,6 +212,7 @@ class FragSample(models.Model):
                 elif file_format == 'GNPS':
                     data = fl.split("\t")
                     ion_id = data[col_titles.index('#Scan#')]
+                    adduct = data[col_titles.index('Adduct')]
                     name = data[col_titles.index('Compound_Name')]
                     smiles = data[col_titles.index('Smiles')]
 
@@ -220,7 +221,7 @@ class FragSample(models.Model):
                         data[col_titles.index('Data_Collector')])
                     db_id = data[col_titles.index('CAS_Number')]
 
-                if int(ion_id) > 0 :
+                if int(ion_id) > 0 and adduct == 'M+H':
                     m = Molecule.load_from_smiles(smiles)
                     fms = self.fragmolsample_set.get(
                             ion_id = ion_id)
