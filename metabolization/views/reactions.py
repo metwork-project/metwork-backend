@@ -55,7 +55,8 @@ class ReactionViewSet(ModelAuthViewSet):
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        del request.data['user']
+        if 'user' in request.data:
+            del request.data['user']
         return super().update(request, *args, **kwargs)
 
     @list_route(methods=['post'])
@@ -70,6 +71,12 @@ class ReactionViewSet(ModelAuthViewSet):
             return Response({'status': 'ok'})
         except:
             return Response({'error': 'unkown error while upploading file'})
+
+    @detail_route(methods=['patch'])
+    def evaluate_json(self, request, pk=None):
+        reaction = self.get_object()
+        print(request.data)
+        return Response({'image': 'test'})
 
     @detail_route(methods=['get'])
     def get_image(self, request, pk=None):
