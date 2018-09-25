@@ -203,25 +203,39 @@ class FragSample(models.Model):
     def import_annotation_file(self, file_object, file_format='default'):
         from fragmentation.models import FragMolSample, FragAnnotationDB
         fls = [l.decode('utf-8') for l in file_object.readlines()]
-        for fl in fls[1:]:
-            if file_format == 'default':
-                ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
-            elif file_format == 'GNPS':
-                data = fl.split("\t")
-                ion_id, name, smiles, db_source, db_id = data[0], data[4], data[26], 'GNPS : ' + data[5] + ', ' + data[6], data[2]
+        errors = {}
+        col_titles = fls[0].split("\t")
+        for i, fl in enumerate(fls[1:]):
+            try:
+                if file_format == 'default':
+                    ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
+                elif file_format == 'GNPS':
+                    data = fl.split("\t")
+                    ion_id = data[col_titles.index('#Scan#')]
+                    adduct = data[col_titles.index('Adduct')]
+                    name = data[col_titles.index('Compound_Name')]
+                    smiles = data[col_titles.index('Smiles')]
 
-            if int(ion_id) > 0:
-                m = Molecule.load_from_smiles(smiles)
-                fms = self.fragmolsample_set.get(
-                        ion_id = ion_id)
+                    db_source =  'GNPS : {0}, {1}'.format(
+                        data[col_titles.index('Compound_Source')],
+                        data[col_titles.index('Data_Collector')])
+                    db_id = data[col_titles.index('CAS_Number')]
 
-                fa = FragAnnotationDB.objects.create(
-                    frag_mol_sample = fms,
-                    molecule = m,
-                    name = name,
-                    db_source = db_source,
-                    db_id = db_id)
-        return {'success': 'Annotations successfully imported'}
+                if int(ion_id) > 0 and adduct == 'M+H':
+                    m = Molecule.load_from_smiles(smiles)
+                    fms = self.fragmolsample_set.get(
+                            ion_id = ion_id)
+
+                    fa = FragAnnotationDB.objects.create(
+                        frag_mol_sample = fms,
+                        molecule = m,
+                        name = name,
+                        db_source = db_source,
+                        db_id = db_id)
+            except Exception as err:
+                print(err)
+                errors[i] = {'err': str(err), 'smiles': smiles}
+        return {'success': 'Annotations successfully imported', 'errors': errors}
 
     def gen_mgf(self, energy = 2, decimal = 6):
         from fragmentation.models import FragMolSample
