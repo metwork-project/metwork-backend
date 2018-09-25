@@ -43,4 +43,5 @@ urlpatterns = [
     url(r'^api-register/', register),
     url(r'^api-password-reset/', password_reset),
     url(r'^download_all_molecules', download_all_molecules),
+    url(r'^api-status/', get_status),
 ]
