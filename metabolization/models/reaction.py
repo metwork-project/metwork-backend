@@ -112,11 +112,26 @@ class Reaction(FileManagement, models.Model):
         from metabolization.models import ReactionsConf
         return ReactionsConf.objects.filter(reactions__in = [self]).count() == 0
 
+    def load_chemdoodle_json(self, mol_json):
+        try:
+            cd  = ChemDoodle()
+            smarts = cd.json_to_react(mol_json)
+            self.smarts = smarts
+            self.status_code = Reaction.status.VALID
+        except:
+            self.status_code = Reaction.status.EDIT
+        self.save()
+        return self
+
     def load_smarts(self, smarts):
-        cd  = ChemDoodle()
-        react = RDKit.reaction_from_smarts(smarts)
-        print(json.dumps(cd.react_to_json(react)))
-        self.smarts = smarts
+        try:
+            cd  = ChemDoodle()
+            react = RDKit.reaction_from_smarts(smarts)
+            json.dumps(cd.react_to_json(react))
+            self.smarts = smarts
+            self.status_code = Reaction.status.VALID
+        except:
+            self.status_code = Reaction.status.EDIT
         self.save()
         return self
 

@@ -116,6 +116,10 @@ class ChemDoodle(object):
                 symbol = 'C' if 'l' not in atom else atom['l']
                 a = Chem.Atom(symbol)
             atoms_cd[atom_id] = mw.AddAtom(a)
+
+        if not 'b' in json_data:
+            json_data['b'] = []
+
         for bond in json_data['b']:
             bond_id = bond['i']
             if 'o' in bond:

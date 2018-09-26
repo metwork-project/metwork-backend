@@ -75,8 +75,14 @@ class ReactionViewSet(ModelAuthViewSet):
     @detail_route(methods=['patch'])
     def evaluate_json(self, request, pk=None):
         reaction = self.get_object()
-        print(request.data)
-        return Response({'image': 'test'})
+        json_mol = JSONParser().parse(request)
+        reaction.load_chemdoodle_json(json_mol)
+        return Response({'status_code': reaction.status_code})
+
+    @detail_route(methods=['get'])
+    def get_chemdoodle_json(self, request, pk=None):
+        reaction = self.get_object()
+        return Response( reaction.get_chemdoodle_json() )
 
     @detail_route(methods=['get'])
     def get_image(self, request, pk=None):
