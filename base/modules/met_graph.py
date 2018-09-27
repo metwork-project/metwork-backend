@@ -60,6 +60,7 @@ class MetGraph:
                 'name': rp.reaction.name,
                 'nodeType': 'reaction',
                 'reactionId': rp.reaction.id,
+                'reactJSON': rp.reaction.chemdoodle_json,
             }
         } for rp in self.rps]
 
