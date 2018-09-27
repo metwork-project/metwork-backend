@@ -10,6 +10,7 @@ import json
 from base.modules import RDKit
 from django.conf import settings
 from base.modules import FileManagement, RDKit, ChemDoodle
+from django.contrib.postgres.fields import JSONField
 
 class Reaction(FileManagement, models.Model):
 
@@ -50,6 +51,11 @@ class Reaction(FileManagement, models.Model):
     status_code = models.PositiveSmallIntegerField(
                     default=0,
                     db_index = True)
+    chemdoodle_json = JSONField(
+        default=None,
+        null= True,
+        blank=True)
+
 
     class status:
         INIT = 0
@@ -63,14 +69,51 @@ class Reaction(FileManagement, models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        if self.id is not None:
+            prev_status = Reaction.objects.get(id=self.id).status_code
+        else:
+            prev_status = Reaction.status.EDIT
         if self.smarts == '':
             self.smarts = self.get_smarts_from_mrv()
-        if self.reactants_number == 0:
-            self.reactants_number = self.get_reactants_number_from_mrv()
+        # if self.reactants_number == 0:
+        self.reactants_number = self.get_reactants_number()
         if self.status_code == Reaction.status.INIT:
             self.status_code = Reaction.status.EDIT
+        if self.status_code == Reaction.status.EDIT and prev_status != Reaction.status.VALID:
+            try:
+                cd  = ChemDoodle()
+                smarts = cd.json_to_react(self.chemdoodle_json)
+                self.smarts = smarts
+                react = RDKit.reaction_from_smarts(smarts)
+                self.chemdoodle_json = cd.react_to_json(react)
+                self.status_code = Reaction.status.VALID
+            except:
+                self.status_code = Reaction.status.EDIT
         super(Reaction, self).save(*args, **kwargs)
         return self
+
+    # def load_chemdoodle_json(self):
+            # self.chemdoodle_json = mol_json
+    #     # self.save()
+    #     # print(self.chemdoodle_json)
+    #     return self
+
+    def load_smarts(self, smarts):
+        try:
+            cd  = ChemDoodle()
+            react = RDKit.reaction_from_smarts(smarts)
+            json.dumps(cd.react_to_json(react))
+            self.smarts = smarts
+            self.status_code = Reaction.status.VALID
+        except:
+            self.status_code = Reaction.status.EDIT
+        self.save()
+        return self
+
+    # def get_chemdoodle_json(self):
+    #     react = RDKit.reaction_from_smarts(self.smarts)
+    #     cd  = ChemDoodle()
+    #     return cd.react_to_json(react)
 
     def user_name(self):
         return self.user.username
@@ -111,34 +154,6 @@ class Reaction(FileManagement, models.Model):
     def has_no_project(self):
         from metabolization.models import ReactionsConf
         return ReactionsConf.objects.filter(reactions__in = [self]).count() == 0
-
-    def load_chemdoodle_json(self, mol_json):
-        try:
-            cd  = ChemDoodle()
-            smarts = cd.json_to_react(mol_json)
-            self.smarts = smarts
-            self.status_code = Reaction.status.VALID
-        except:
-            self.status_code = Reaction.status.EDIT
-        self.save()
-        return self
-
-    def load_smarts(self, smarts):
-        try:
-            cd  = ChemDoodle()
-            react = RDKit.reaction_from_smarts(smarts)
-            json.dumps(cd.react_to_json(react))
-            self.smarts = smarts
-            self.status_code = Reaction.status.VALID
-        except:
-            self.status_code = Reaction.status.EDIT
-        self.save()
-        return self
-
-    def get_chemdoodle_json(self):
-        react = RDKit.reaction_from_smarts(self.smarts)
-        cd  = ChemDoodle()
-        return cd.react_to_json(react)
 
     def mrv_path(self):
         return '/'.join([
@@ -201,6 +216,13 @@ class Reaction(FileManagement, models.Model):
         else:
             return 0
 
+    def get_reactants_number(self):
+        smarts = self.smarts
+        if smarts != '':
+            rx = self.react_rdkit_(smarts)
+            return rx.GetNumReactantTemplates()
+        else:
+            return 0
 ## Hash management ##
 # file_hash aims to check if reaction file has not be changed since last DB update
     def file_hash_compute(self):

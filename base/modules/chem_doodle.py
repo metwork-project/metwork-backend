@@ -250,7 +250,7 @@ class ChemDoodle(object):
 
         mol = mw.GetMol()
         Chem.rdmolops.SanitizeMol(mol)
-
+        Chem.Kekulize(mol, True)
         # To keep stereo in MolToSmiles
         Chem.rdDepictor.Compute2DCoords(mol)
 
@@ -348,9 +348,12 @@ class ChemDoodle(object):
         def append_mol(m, mol_type):
             m_json = self.mol_rdkit_to_json(m, begin_id)
             x_max = 0
+            x_min = 0
             for a in m_json['a']:
+                x_min = min(x_min, a['x'])
+            for a in m_json['a']:
+                a['x'] += x_bound - x_min
                 x_max = max(x_max, a['x'])
-                a['x'] += x_bound
             for i, a in enumerate(m.GetAtoms()):
                 map_num = a.GetAtomMapNum()
                 if map_num > 0:
@@ -384,7 +387,7 @@ class ChemDoodle(object):
 
         # Products
         for m in rr.GetProducts():
-            append_mol(m, 'product')
+            x_bound += append_mol(m, 'product')
 
         # AtomMapping
         for i, map in atom_maping.items():

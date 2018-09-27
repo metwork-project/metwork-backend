@@ -10,21 +10,34 @@ from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 
+class JSONSerializerField(serializers.Field):
+    """ Serializer for JSONField -- required to make field writable"""
+    def to_internal_value(self, data):
+        return data
+    def to_representation(self, value):
+        return value
+
 class ReactionSerializer(serializers.ModelSerializer):
-    # user = serializers.PrimaryKeyRelatedField(
-    #     queryset = get_user_model().objects.all(),
-    #     allow_null = True)
+    user = serializers.PrimaryKeyRelatedField(
+        queryset = get_user_model().objects.all()
+        # ,allow_null = True
+        )
 
     class Meta:
         model = Reaction
         fields = (
             'name',
             'description',
+            'user',
             'user_name',
             'reactants_number',
             'has_no_project',
             'status_code',
-            'is_reactor')
+            'is_reactor',
+            'chemdoodle_json')
+            # )
+
+    chemdoodle_json = JSONSerializerField()
 
 class ReactionViewSet(ModelAuthViewSet):
     queryset = Reaction.objects.all().order_by('name')
@@ -71,18 +84,6 @@ class ReactionViewSet(ModelAuthViewSet):
             return Response({'status': 'ok'})
         except:
             return Response({'error': 'unkown error while upploading file'})
-
-    @detail_route(methods=['patch'])
-    def evaluate_json(self, request, pk=None):
-        reaction = self.get_object()
-        json_mol = JSONParser().parse(request)
-        reaction.load_chemdoodle_json(json_mol)
-        return Response({'status_code': reaction.status_code})
-
-    @detail_route(methods=['get'])
-    def get_chemdoodle_json(self, request, pk=None):
-        reaction = self.get_object()
-        return Response( reaction.get_chemdoodle_json() )
 
     @detail_route(methods=['get'])
     def get_image(self, request, pk=None):
