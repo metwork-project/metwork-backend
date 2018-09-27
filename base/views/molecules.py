@@ -11,7 +11,9 @@ from django.http import FileResponse
 class MoleculeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Molecule
-        fields = ('smiles',)
+        fields = (
+            'smiles',
+            'chemdoodle_json')
 
 class MoleculeViewSet(ModelAuthViewSet):
     serializer_class = MoleculeSerializer

@@ -56,7 +56,6 @@ class Reaction(FileManagement, models.Model):
         null= True,
         blank=True)
 
-
     class status:
         INIT = 0
         EDIT = 10
@@ -67,6 +66,22 @@ class Reaction(FileManagement, models.Model):
 
     def __str__(self):
         return self.name
+
+    def __init__(self, *args, **kwargs):
+        res = super().__init__(*args, **kwargs)
+        if self.smarts == '':
+            self.smarts = self.get_smarts_from_mrv()
+            self.save()
+        if self.chemdoodle_json is None:
+            try:
+                cd  = ChemDoodle()
+                self.chemdoodle_json = cd.react_to_json(
+                    RDKit.reaction_from_smarts(
+                        self.smarts))
+                self.save()
+            except:
+                pass
+        return res
 
     def save(self, *args, **kwargs):
         if self.id is not None:
@@ -86,17 +101,12 @@ class Reaction(FileManagement, models.Model):
                 self.smarts = smarts
                 react = RDKit.reaction_from_smarts(smarts)
                 self.chemdoodle_json = cd.react_to_json(react)
-                self.status_code = Reaction.status.VALID
+                if self.rdkit_ready():
+                    self.status_code = Reaction.status.VALID
             except:
                 self.status_code = Reaction.status.EDIT
         super(Reaction, self).save(*args, **kwargs)
         return self
-
-    # def load_chemdoodle_json(self):
-            # self.chemdoodle_json = mol_json
-    #     # self.save()
-    #     # print(self.chemdoodle_json)
-    #     return self
 
     def load_smarts(self, smarts):
         try:
@@ -109,11 +119,6 @@ class Reaction(FileManagement, models.Model):
             self.status_code = Reaction.status.EDIT
         self.save()
         return self
-
-    # def get_chemdoodle_json(self):
-    #     react = RDKit.reaction_from_smarts(self.smarts)
-    #     cd  = ChemDoodle()
-    #     return cd.react_to_json(react)
 
     def user_name(self):
         return self.user.username
@@ -190,6 +195,11 @@ class Reaction(FileManagement, models.Model):
 
     def rdkit_ready(self):
         try:
+            cd  = ChemDoodle()
+            self.chemdoodle_json = cd.react_to_json(
+                RDKit.reaction_from_smarts(
+                    self.smarts))
+            # self.save()
             rx = self.react_rdkit()
             return rx.Validate() == (0,0)
         except:

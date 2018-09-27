@@ -9,13 +9,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
-
-class JSONSerializerField(serializers.Field):
-    """ Serializer for JSONField -- required to make field writable"""
-    def to_internal_value(self, data):
-        return data
-    def to_representation(self, value):
-        return value
+from base.modules import JSONSerializerField
 
 class ReactionSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(

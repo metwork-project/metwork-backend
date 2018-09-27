@@ -72,7 +72,7 @@ class MetGraph:
                 'nodeType': 'molecule',
                 'annotationType': 'init' if m in self.project.molecules_init() else 'proposal',
                 'smiles': m.smiles(),
-                'molFile': m.mol_file(),
+                'molJSON': m.chemdoodle_json,
                 'cosine': self.get_cosine(m),
                 'best_cosine': self.get_best_cosine(m),
             }

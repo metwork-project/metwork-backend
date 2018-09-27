@@ -22,6 +22,9 @@ class FragAnnotation(PolymorphicModel):
     def smiles(self):
         return self.molecule.smiles()
 
+    def chemdoodle_json(self):
+        return self.molecule.chemdoodle_json
+
 class FragAnnotationDB(FragAnnotation):
 
     class JSONAPIMeta:
