@@ -33,7 +33,7 @@ class ReactProcess(models.Model):
             ((self.reactants.count() == self.reaction.reactants_number)\
                 or (self.reactants.count() == 1))\
             and (self.reactants.count() > 0)\
-            and (self.method in self.reaction.methods_available())    
+            and (self.method in self.reaction.methods_available())
 
     def run_reaction(self):
         if self.validate():

@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
-from base.modules import JSONSerializerField
+from base.modules import JSONSerializerField, ChemDoodle
+from base.views import MoleculeSerializer
 
 class ReactionSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
@@ -96,16 +97,24 @@ class ReactionViewSet(ModelAuthViewSet):
         except:
             return Response({'error': 'error import smarts'})
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['post'])
     def run_reaction(self, request, pk=None):
         from base.models import Molecule
         from metabolization.models import ReactProcess
-        r = self.get_object()
-        reactant_smiles = request.query_params.get('smiles','')
-        reactants = [ Molecule.load_from_smiles(sm) for sm in reactant_smiles.split('\n') ]
-        rp = ReactProcess.objects.create()
-        rp.reaction = r
-        rp.reactants.set(reactants)
-        rp.save()
-        rp.run_reaction()
-        return Response({'products': [p.smiles() for p in rp.products.all()]})
+        data = JSONParser().parse(request)
+        chemdoodle_json = data['reactants']['chemdoodle_json']
+        if 'm' in chemdoodle_json:
+            cd  = ChemDoodle()
+            reactants = [ cd.json_to_mol(mol_json)
+                for mol_json in chemdoodle_json['m'] ]
+            r = self.get_object()
+            rp = ReactProcess.objects.create()
+            rp.reaction = r
+            rp.reactants.set(reactants)
+            rp.method = r.methods_available()[0]
+            rp.save()
+            rp.run_reaction()
+            response = {'products': [ p.chemdoodle_json for p in rp.products.all() ] }
+            return Response(response)
+        else:
+            return JsonResponse({'error': 'test'})
