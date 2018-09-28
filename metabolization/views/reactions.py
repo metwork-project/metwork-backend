@@ -28,7 +28,8 @@ class ReactionSerializer(serializers.ModelSerializer):
             'has_no_project',
             'status_code',
             'is_reactor',
-            'chemdoodle_json')
+            'chemdoodle_json',
+            'chemdoodle_json_error',)
             # )
 
     chemdoodle_json = JSONSerializerField()

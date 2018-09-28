@@ -7,9 +7,10 @@ import os.path
 import hashlib
 import subprocess
 import json
+import sys
 from base.modules import RDKit
 from django.conf import settings
-from base.modules import FileManagement, RDKit, ChemDoodle
+from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
 
 class Reaction(FileManagement, models.Model):
@@ -55,6 +56,11 @@ class Reaction(FileManagement, models.Model):
         default=None,
         null= True,
         blank=True)
+    chemdoodle_json_error = models.CharField(
+        max_length=128,
+        default=None,
+        null= True,
+        blank=True)
 
     class status:
         INIT = 0
@@ -70,15 +76,16 @@ class Reaction(FileManagement, models.Model):
     def __init__(self, *args, **kwargs):
         res = super().__init__(*args, **kwargs)
         if self.smarts == '':
-            self.smarts = self.get_smarts_from_mrv()
-            self.save()
+            try:
+                self.smarts = self.get_smarts_from_mrv()
+            except:
+                pass
         if self.chemdoodle_json is None:
             try:
                 cd  = ChemDoodle()
                 self.chemdoodle_json = cd.react_to_json(
                     RDKit.reaction_from_smarts(
                         self.smarts))
-                self.save()
             except:
                 pass
         return res
@@ -101,10 +108,15 @@ class Reaction(FileManagement, models.Model):
                 self.smarts = smarts
                 react = RDKit.reaction_from_smarts(smarts)
                 self.chemdoodle_json = cd.react_to_json(react)
+                self.chemdoodle_json_error = None
                 if self.rdkit_ready():
                     self.status_code = Reaction.status.VALID
+                else:
+                    self.chemdoodle_json_error = 'error with RDKit'
+            except ChemDoodleJSONError as error:
+                self.chemdoodle_json_error = error
             except:
-                self.status_code = Reaction.status.EDIT
+                self.chemdoodle_json_error = 'unexpected error'
         super(Reaction, self).save(*args, **kwargs)
         return self
 

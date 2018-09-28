@@ -30,23 +30,26 @@ class ChemDoodle(object):
 
     def json_to_react(self, json_data):
         line_x = None
+        has_mapping = False
         if 's' in json_data:
             for s in (json_data['s']):
                 if s['t'] == 'Line':
                     if line_x is not None:
-                        raise ChemDoodleJSONError('More than one line')
+                        raise ChemDoodleJSONError('More than one arrow')
                     line_x = (s['x1'],s['x2'])
                     if line_x[0] > line_x[1]:
                         raise ChemDoodleJSONError('Line in wrong direction')
+                elif  s['t'] == 'AtomMapping':
+                    has_mapping = True
         if line_x is None:
-            raise ChemDoodleJSONError('No Line')
+            raise ChemDoodleJSONError('No arrow')
         mols = []
         if 'm' in json_data:
             mols = json_data['m']
-        if len(mols) < 2:
-            raise ChemDoodleJSONError('Not enough mols')
-        if len(mols) > 3:
-            raise ChemDoodleJSONError('Too many mols')
+        # if len(mols) < 2:
+        #     raise ChemDoodleJSONError('Not enough mols')
+        # if len(mols) > 3:
+        #     raise ChemDoodleJSONError('Too many mols')
         reactants = []
         product = None
         for m in mols:
@@ -63,11 +66,16 @@ class ChemDoodle(object):
                     raise ChemDoodleJSONError('Too many products')
                 product = m
             else:
-                raise ChemDoodleJSONError('Ambiguous molecule')
+                raise ChemDoodleJSONError('Ambiguous molecule position')
         if product is None:
             raise ChemDoodleJSONError('No product')
+        if len(reactants) == 0:
+            raise ChemDoodleJSONError('No reactants')
         if len(reactants) > 2:
             raise ChemDoodleJSONError('too many reactants')
+
+        if not has_mapping:
+            raise ChemDoodleJSONError('Need at least one mapping')
 
         map = json_data['s']
 

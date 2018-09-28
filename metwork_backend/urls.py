@@ -15,9 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-from base.views import *
-from metabolization.views import *
-from fragmentation.views import *
+from base.views import UserViewSet, MoleculeViewSet, ProjectViewSet, \
+    register, password_reset, get_status
+from metabolization.views import ReactionViewSet
+from fragmentation.views import FragSampleViewSet, FragAnnotationViewSet, FragCompareConfViewSet
 from rest_framework import routers, serializers, viewsets
 from rest_framework.authtoken.views import obtain_auth_token
 from django.conf import settings
@@ -26,6 +27,7 @@ from django.conf.urls.static import static
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'users', UserViewSet)
+router.register(r'molecules', MoleculeViewSet)
 router.register(r'projects', ProjectViewSet)
 router.register(r'fragsamples', FragSampleViewSet)
 router.register(r'frag-annotations', FragAnnotationViewSet)
@@ -42,6 +44,5 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='')),
     url(r'^api-register/', register),
     url(r'^api-password-reset/', password_reset),
-    url(r'^download_all_molecules', download_all_molecules),
     url(r'^api-status/', get_status),
 ]

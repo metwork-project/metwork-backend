@@ -36,13 +36,13 @@ class ChemDoodleTests(TransactionTestCase):
         cd  = ChemDoodle()
 
         error_path = {
-            'mol_1': 'No Line',
-            'reaction_2_lines': 'More than one line',
+            'mol_1': 'No arrow',
+            'reaction_2_lines': 'More than one arrow',
             'wrong_direction': 'Line in wrong direction',
             'too_many_mols': 'Too many mols',
             'not_enough_mols': 'Not enough mols',
             'too_many_products':'Too many products',
-            'ambiguous_mol':'Ambiguous molecule',
+            'ambiguous_mol':'Ambiguous molecule position',
         }
 
         for file_name, message in error_path.items():
