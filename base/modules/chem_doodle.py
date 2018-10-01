@@ -23,7 +23,12 @@ class ChemDoodle(object):
 
     def json_to_mol(self, json_data):
         from base.models import Molecule
-        return Molecule.load_from_rdkit( self.json_to_rdkit(json_data) )
+        # mol_rdkit = Molecule.load_from_rdkit( self.json_to_rdkit(json_data) )
+        mol_rdkit = self.json_to_rdkit(json_data)
+        smiles = Chem.MolToSmiles(mol_rdkit)
+        print(smiles)
+        return Molecule.load_from_smiles(smiles)
+        # return Chem.MolFromSmiles(Chem.MolToSmiles(mol_rdkit))
 
     def json_to_smarts(self, json_data, map, mol_type):
         mol = self.json_to_rdkit(json_data, map, mol_type)
@@ -259,7 +264,8 @@ class ChemDoodle(object):
 
         mol = mw.GetMol()
         Chem.rdmolops.SanitizeMol(mol)
-        Chem.Kekulize(mol, True)
+        # Chem.Kekulize(mol, True)
+        Chem.Kekulize(mol)
         # To keep stereo in MolToSmiles
         Chem.rdDepictor.Compute2DCoords(mol)
 

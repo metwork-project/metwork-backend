@@ -70,12 +70,9 @@ class ReactProcess(models.Model):
             products_rdkit = []
             if self.reactants.count() == 1:
                 reactant = self.reactants.all()[0].mol_rdkit
-                print(Chem.MolToSmiles(reactant))
-                Chem.Kekulize(reactant, True)
-                reactant = Chem.AddHs(reactant)
-                print(Chem.MolToSmiles(reactant))
-
-                # print(Chem.MolToSmiles(reactant))
+                # force non kekulize mol as reactant
+                reactant = Chem.AddHs(Chem.MolFromSmiles(Chem.MolToSmiles(reactant)))
+                # Chem.Kekulize(reactant, True)
                 products_rdkit = list(rx.RunReactant(reactant, 0))
             elif self.reactants.count() == 2:
                 reactants = [m.mol_rdkit for m in self.reactants.all()]
