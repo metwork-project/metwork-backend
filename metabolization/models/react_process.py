@@ -64,9 +64,7 @@ class ReactProcess(models.Model):
         elif method == 'rdkit':
             r_smarts = reaction.smarts
             r_smarts = r_smarts.replace('\\','-').replace('/','-')
-            print(r_smarts)
             rx = rdChemReactions.ReactionFromSmarts(r_smarts)
-            print(Chem.rdChemReactions.ReactionToSmarts(rx))
             products_rdkit = []
             if self.reactants.count() == 1:
                 reactant = self.reactants.all()[0].mol_rdkit
