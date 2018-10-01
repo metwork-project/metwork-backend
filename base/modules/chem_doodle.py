@@ -26,7 +26,8 @@ class ChemDoodle(object):
         return Molecule.load_from_rdkit( self.json_to_rdkit(json_data) )
 
     def json_to_smarts(self, json_data, map, mol_type):
-        return Chem.MolToSmarts( self.json_to_rdkit(json_data, map, mol_type) )
+        mol = self.json_to_rdkit(json_data, map, mol_type)
+        return Chem.MolToSmarts(mol)
 
     def json_to_react(self, json_data):
         line_x = None
@@ -156,7 +157,7 @@ class ChemDoodle(object):
         def mol_atom(idx):
             return mw.GetAtoms()[idx]
 
-    ### Manage chirality
+        ### Manage chirality
 
         for atom in mw.GetAtoms():
             if atom.GetSymbol() == 'C':
@@ -206,7 +207,7 @@ class ChemDoodle(object):
                     else:
                         atom.SetChiralTag(Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW)
 
-    ### Manage stereo
+        ### Manage stereo
 
         for bond in mw.GetBonds():
             if bond.GetBondType() == Chem.rdchem.BondType.DOUBLE \
@@ -234,7 +235,7 @@ class ChemDoodle(object):
                     else:
                         bond.SetStereo(Chem.rdchem.BondStereo.STEREOCIS)
 
-    # replace query_atoms
+        # replace query_atoms
 
         if len(query_atoms) > 0:
             for id, smarts in query_atoms:
@@ -242,7 +243,7 @@ class ChemDoodle(object):
                 Chem.SanitizeMol(m_a)
                 mw.ReplaceAtom(atoms_cd[id],m_a.GetAtoms()[0])
 
-    # Map atoms
+        # Map atoms
         dic_type = {
             'reactant': 'a1',
             'product': 'a2' }
@@ -270,6 +271,7 @@ class ChemDoodle(object):
     def mol_rdkit_to_json(self,
             mr,
             begin_id={'a': 0, 'b': 0}):
+
         json_res = {
             'a': [],
             'b': []
@@ -326,6 +328,27 @@ class ChemDoodle(object):
                         if i in CHIRAL_CONFIG[ct]:
                             chiral_bonds[b.GetIdx()] = CHIRAL_CONFIG[ct][i]
             json_res['a'].append(mol_json)
+
+        # Transform aromatic bonds in kekulize form
+        arom_bond_type = Chem.rdchem.BondType.SINGLE
+        def propagate_kekulize(atom, arom_bond_type):
+            for b in atom.GetBonds():
+                if b.GetBondType() == Chem.rdchem.BondType.AROMATIC:
+                    if arom_bond_type == Chem.rdchem.BondType.SINGLE:
+                        arom_bond_type = Chem.rdchem.BondType.DOUBLE
+                    else:
+                        arom_bond_type = Chem.rdchem.BondType.SINGLE
+                    b.SetBondType( arom_bond_type )
+                    if atom.GetIdx() != b.GetBeginAtomIdx():
+                        target = b.GetBeginAtom()
+                    else:
+                        target = b.GetEndAtom()
+                    propagate_kekulize(target, arom_bond_type)
+
+        for b in mr.GetBonds():
+            if b.GetBondType() == Chem.rdchem.BondType.AROMATIC:
+                b.SetBondType( arom_bond_type )
+                propagate_kekulize(b.GetBeginAtom(), arom_bond_type)
 
         for i, b in enumerate(mr.GetBonds()):
             b_id = b.GetIdx()
