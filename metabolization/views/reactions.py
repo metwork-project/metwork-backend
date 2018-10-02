@@ -93,9 +93,9 @@ class ReactionViewSet(ModelAuthViewSet):
             serializer = self.serializer_class(reaction)
             data = JSONParser().parse(request)
             reaction.load_smarts(data['smarts'])
-            return Response({'success': reaction.get_chemdoodle_json()})
+            return JsonResponse({'success': reaction.chemdoodle_json})
         except:
-            return Response({'error': 'error import smarts'})
+            return JsonResponse({'error': 'error import smarts'})
 
     @detail_route(methods=['post'])
     def run_reaction(self, request, pk=None):
@@ -108,13 +108,10 @@ class ReactionViewSet(ModelAuthViewSet):
             reactants = [ cd.json_to_mol(mol_json)
                 for mol_json in chemdoodle_json['m'] ]
             r = self.get_object()
-            rp = ReactProcess.objects.create()
-            rp.reaction = r
-            rp.reactants.set(reactants)
-            rp.method = r.methods_available()[0]
-            rp.save()
-            rp.run_reaction()
-            response = {'products': [ p.chemdoodle_json for p in rp.products.all() ] }
-            return Response(response)
+            rp = r.run_reaction(reactants)
+            response = {
+                'reactants': [ r.chemdoodle_json for r in rp.reactants.all() ],
+                'products': [ p.chemdoodle_json for p in rp.products.all() ] }
+            return JsonResponse(response)
         else:
             return JsonResponse({'error': 'test'})

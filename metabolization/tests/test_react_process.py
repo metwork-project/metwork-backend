@@ -56,8 +56,8 @@ class ReactProcessTests(ReactionTestManagement):
         r.smarts = '[#7,#8,#16:1]>>[#6]-[#6]-[*:1]'
         r.save()
         self.assertTrue(rp['rdkit'].validate())
-        for m in rp : 
-            rp[m].run_reaction() 
+        for m in rp :
+            rp[m].run_reaction()
             self.assertTrue(rp[m].achieved)
     # Check if molecule has been created
         expected_mols = \
@@ -79,9 +79,8 @@ class ReactProcessTests(ReactionTestManagement):
             'CCC1CC=C2N=C(N)NC2C1']
         ml = [Molecule.load_from_smiles(sm) for sm in smiles]
         r = Reaction.objects.get(name='diels_alder_cycloaddition')
-        #r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]-1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
-        r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
-        #r.smarts = '[#6:4]=[#6:3]-[c:2]1[c:1]n[c:7]n1.[#6:6]=[#6:5]>>[#6:5]-1-[#6:4]-[#6:3]=[#6:2]-2-[#7]=[#6:7]-[#7]-[#6:1]-2-[#6:6]-1'
+        # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
+        r.smarts =[#6:1]=[#6:2]-[#6:3]=[#6:4].[#6:6]=[#6:5]>>[#6:1]1-[#6:2]=[#6:3]-[#6:4]-[#6:5]-[#6:6]-1
         r.save()
         for m in methods:
             self.assertTrue(m in r.methods_available())

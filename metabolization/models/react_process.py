@@ -66,14 +66,13 @@ class ReactProcess(models.Model):
             r_smarts = r_smarts.replace('\\','-').replace('/','-')
             rx = rdChemReactions.ReactionFromSmarts(r_smarts)
             products_rdkit = []
+            def format_reactant(mol):
+                return Chem.AddHs(Chem.MolFromSmiles(Chem.MolToSmiles(mol)))
             if self.reactants.count() == 1:
-                reactant = self.reactants.all()[0].mol_rdkit
-                # force non kekulize mol as reactant
-                reactant = Chem.AddHs(Chem.MolFromSmiles(Chem.MolToSmiles(reactant)))
-                # Chem.Kekulize(reactant, True)
+                reactant = format_reactant(self.reactants.all()[0].mol_rdkit)
                 products_rdkit = list(rx.RunReactant(reactant, 0))
             elif self.reactants.count() == 2:
-                reactants = [m.mol_rdkit for m in self.reactants.all()]
+                reactants = [format_reactant(m.mol_rdkit) for m in self.reactants.all()]
                 for i in range(2):
                     products_rdkit = products_rdkit + list(rx.RunReactants((reactants[i], reactants[1-i])))
             res = {Molecule.load_from_rdkit(m) for m in list(chain(*products_rdkit))} - {False}

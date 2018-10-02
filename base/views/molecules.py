@@ -29,14 +29,11 @@ class MoleculeViewSet(ModelAuthViewSet):
             return Molecule.met_run_out(met_run_out)
         return self.queryset
 
-    @list_route(methods=['post'])
+    @list_route(methods=['patch'])
     def load_smiles(self, request, pk=None):
         data = JSONParser().parse(request)
-        mols = [
-            Molecule.load_from_smiles(data['smiles']) \
-            for m in data['smiles'].split('.') ]
-        if not False in mols:
-            res = [m.chemdoodle_json for m in mols]
-            return JsonResponse({'success': res})
+        mols = Molecule.load_from_smiles(data['smiles'].replace('\n','.'))
+        if mols != False:
+            return JsonResponse({'success': [mols.chemdoodle_json]})
         else:
             return JsonResponse({'error': 'unable to load smiles'})

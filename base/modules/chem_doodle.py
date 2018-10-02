@@ -228,17 +228,17 @@ class ChemDoodle(object):
                                 for b in mol_atom(c).GetBonds() \
                                     if b.GetBondType() == Chem.rdchem.BondType.SINGLE ] \
                             for c in carbons ]
+                    if not [] in sa:
+                        sa = [ sa[i][0] for i in range(2) ]
+                        bond.SetStereoAtoms (sa[0], sa[1])
 
-                    sa = [ sa[i][0] for i in range(2) ]
-                    bond.SetStereoAtoms (sa[0], sa[1])
-
-                    if len( intersection(
-                            Segment( a_point(sa[0]), a_point(sa[1]) ),
-                            Line( a_point(carbons[0]), a_point(carbons[1]) )
-                        )) > 0:
-                        bond.SetStereo(Chem.rdchem.BondStereo.STEREOTRANS)
-                    else:
-                        bond.SetStereo(Chem.rdchem.BondStereo.STEREOCIS)
+                        if len( intersection(
+                                Segment( a_point(sa[0]), a_point(sa[1]) ),
+                                Line( a_point(carbons[0]), a_point(carbons[1]) )
+                            )) > 0:
+                            bond.SetStereo(Chem.rdchem.BondStereo.STEREOTRANS)
+                        else:
+                            bond.SetStereo(Chem.rdchem.BondStereo.STEREOCIS)
 
         # replace query_atoms
 

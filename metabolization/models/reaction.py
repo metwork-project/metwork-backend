@@ -245,6 +245,17 @@ class Reaction(FileManagement, models.Model):
             return rx.GetNumReactantTemplates()
         else:
             return 0
+
+    def run_reaction(self, reactants):
+        from metabolization.models import ReactProcess
+        rp = ReactProcess.objects.create()
+        rp.reaction = self
+        rp.reactants.set(reactants)
+        rp.method = self.methods_available()[0]
+        rp.save()
+        rp.run_reaction()
+        return rp
+
 ## Hash management ##
 # file_hash aims to check if reaction file has not be changed since last DB update
     def file_hash_compute(self):
