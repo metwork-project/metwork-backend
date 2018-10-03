@@ -29,6 +29,7 @@ class ReactionSerializer(serializers.ModelSerializer):
             'has_no_project',
             'status_code',
             'is_reactor',
+            'smarts',
             'chemdoodle_json',
             'chemdoodle_json_error',)
             # )
@@ -54,9 +55,10 @@ class ReactionViewSet(ModelAuthViewSet):
                     else:
                         if project_id != '':
                             queryset = SampleAnnotationProject.objects.get(id=project_id).reactions_not_selected()
-        filter = self.request.query_params.get('filter', None)
-        if filter == 'is_active':
-            queryset = queryset.filter(status_code = Reaction.status.ACTIVE)
+        else:
+            filter = self.request.query_params.get('filter', None)
+            if filter == 'not_obsolete':
+                queryset = queryset.filter(status_code__lt = Reaction.status.OBSOLETE)
         return queryset.order_by('name')
 
     def create(self, request, *args, **kwargs):

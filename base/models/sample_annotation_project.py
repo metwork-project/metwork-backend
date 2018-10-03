@@ -114,7 +114,9 @@ class SampleAnnotationProject(Project):
             return self.reactions_conf.reactions.all()
 
     def reactions_not_selected(self):
-        return Reaction.objects.all().exclude(id__in=self.reaction_ids())
+        return Reaction.objects.all()\
+            .exclude(id__in=self.reaction_ids())\
+            .filter(status_code = Reaction.status.ACTIVE)
 
     def reaction_ids(self):
         if self.reactions_conf != None:
