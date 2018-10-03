@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
+from base.models import Molecule
 from base.modules import JSONSerializerField, ChemDoodle
 from base.views import MoleculeSerializer
 
@@ -107,6 +108,12 @@ class ReactionViewSet(ModelAuthViewSet):
             cd  = ChemDoodle()
             reactants = [ cd.json_to_mol(mol_json)
                 for mol_json in chemdoodle_json['m'] ]
+            reactants_smiles = reactants[0].smiles()
+            if '.' in reactants_smiles:
+                reactants = [
+                    Molecule.load_from_smiles(sm) \
+                    for sm in reactants_smiles.split('.')]
+            print(reactants)
             r = self.get_object()
             rp = r.run_reaction(reactants)
             response = {

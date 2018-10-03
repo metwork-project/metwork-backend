@@ -17,16 +17,17 @@ class ReactionTestManagement(TestManagement):
         return r
 
 
-    def create_reacts(self, reacts):
-        user = self.get_user()
+    def create_reacts(self, reacts, email='create@react.com'):
+        user = self.get_user(email)
         rd = {}
         for r_name in reacts:
             try:
                 r = self.import_file(
-                        reaction_name=r_name, 
+                        reaction_name=r_name,
                         user = user,
                         )
             except:
                 r = Reaction(user=user, name = r_name)
+                r.save()
             rd[r_name]  = r
         return rd

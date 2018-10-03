@@ -7,15 +7,6 @@ from metabolization.models import Reaction, ReactProcess
 
 class ReactProcessTests(ReactionTestManagement):
 
-    #@classmethod
-    #def setUp(cls):
-        #reacts = [
-        #    'methylation',
-        #    'bromination_of_phenols',
-        #    'diels_alder_cycloaddition']
-        #rtm = cls()
-        #self.create_reacts([''])
-
     def test_process_reaction_single_reactant(self):
         self.create_reacts(['methylation'])
         sm = 'NC=C(N)C'
@@ -36,32 +27,34 @@ class ReactProcessTests(ReactionTestManagement):
             self.assertTrue(m_exp in rp.products.all())
 
     def test_methods(self):
-        self.create_reacts(['methylation'])
-        methods = ['reactor', 'rdkit']
+        self.create_reacts(['methylation'], email='with@file.com')
+        self.create_reacts(['methylation_NO_FILE'], email='without@file.com')
+        r = Reaction.objects.get(name='methylation')
+        r_NO_FILE = Reaction.objects.get(name='methylation_NO_FILE')
+        methods = [('reactor',r), ('rdkit',r_NO_FILE)]
         sm = 'OCC'
         expected_smiles = {
             'reactor' : 'COCC',
             'rdkit' : 'CCOCC'}
         reactant = Molecule.load_from_smiles(sm)
-        #Reaction.reactions_update()
-        r = Reaction.objects.get(name='methylation')
+
         rp = {\
-            m: ReactProcess.objects.create(\
-                    reaction = r, \
-                    method = m)\
+            m[0]: ReactProcess.objects.create(\
+                    reaction = m[1], \
+                    method = m[0])\
             for m in methods }
         for m in rp:
             rp[m].reactants.add(reactant)
         self.assertFalse(rp['rdkit'].validate())
-        r.smarts = '[#7,#8,#16:1]>>[#6]-[#6]-[*:1]'
-        r.save()
+        r_NO_FILE.smarts = '[N,O,n,o:1]-[H:2]>>[#0:1]-[#6:2]-[#6]'
+        r_NO_FILE.save()
         self.assertTrue(rp['rdkit'].validate())
         for m in rp :
             rp[m].run_reaction()
             self.assertTrue(rp[m].achieved)
     # Check if molecule has been created
         expected_mols = \
-            { m: Molecule.find_from_smiles(expected_smiles[m]) \
+            { m[0]: Molecule.find_from_smiles(expected_smiles[m[0]]) \
                 for m in methods}
         self.assertTrue(not False in expected_mols)
     # Check if reaction_product has been created
@@ -80,7 +73,8 @@ class ReactProcessTests(ReactionTestManagement):
         ml = [Molecule.load_from_smiles(sm) for sm in smiles]
         r = Reaction.objects.get(name='diels_alder_cycloaddition')
         # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
-        r.smarts ='[#6:1]=[#6:2]-[#6:3]=[#6:4].[#6:6]=[#6:5]>>[#6:1]1-[#6:2]=[#6:3]-[#6:4]-[#6:5]-[#6:6]-1'
+        r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]1'
+        # r.smarts = '[#6:1]=[#6:2]-[#6:3]=[#6:4].[#6:6]=[#6:5]>>[#6:1]1-[#6:2]=[#6:3]-[#6:4]-[#6:5]-[#6:6]-1'
         r.save()
         for m in methods:
             self.assertTrue(m in r.methods_available())

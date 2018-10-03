@@ -96,6 +96,7 @@ class ChemDoodle(object):
         except:
             raise ChemDoodleJSONError('Error while converting molecules')
 
+        smarts = smarts.replace('=', '=,:')
         try:
             react = RDKit.reaction_from_smarts(smarts)
             Chem.rdChemReactions.ReactionToSmarts(react)
