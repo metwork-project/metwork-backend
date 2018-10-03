@@ -26,7 +26,6 @@ class ChemDoodle(object):
         # mol_rdkit = Molecule.load_from_rdkit( self.json_to_rdkit(json_data) )
         mol_rdkit = self.json_to_rdkit(json_data)
         smiles = Chem.MolToSmiles(mol_rdkit)
-        print(smiles)
         return Molecule.load_from_smiles(smiles)
         # return Chem.MolFromSmiles(Chem.MolToSmiles(mol_rdkit))
 
@@ -116,12 +115,20 @@ class ChemDoodle(object):
             atom_id = atom['i']
             # Query atoms
             if 'q' in atom:
-                v = atom['q']['as']['v']
+                q = atom['q']
+                v = q['as']['v']
                 if 'a' in v:
                     smarts = '[*]'
                     a_defaut = 'C'
                 else:
-                    smarts = '[{0}]'.format(','.join([a_ for a_ in v ]))
+                    smarts = v
+                    # Manage aromaticity
+                    if 'A' in q:
+                        if not q['A']['n']:
+                            smarts = []
+                        if q['A']['v']:
+                            smarts = smarts + [a_.lower() for a_ in v ]
+                    smarts = '[{0}]'.format(','.join([a_ for a_ in smarts ]))
                     a_defaut = v[0]
                 query_atoms.append((atom_id,smarts))
                 a = Chem.Atom(a_defaut)
