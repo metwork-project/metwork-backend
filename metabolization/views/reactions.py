@@ -99,8 +99,6 @@ class ReactionViewSet(ModelAuthViewSet):
 
     @detail_route(methods=['post'])
     def run_reaction(self, request, pk=None):
-        from base.models import Molecule
-        from metabolization.models import ReactProcess
         data = JSONParser().parse(request)
         chemdoodle_json = data['reactants']['chemdoodle_json']
         if 'm' in chemdoodle_json:
