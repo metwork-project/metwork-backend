@@ -21,7 +21,7 @@ class ChemDoodleTests(TransactionTestCase):
         self.assertEqual(cd.json_to_mol(json_mol).smiles(),smiles)
 
     def test_json_to_smarts(self):
-        smarts = '[N,O:1]/[#6](-[#9])=[#6]/[#6@@](-[#6])(-[#7])-[#6]1:[#6]:[#6]:[#6](-[*:2]):[#6]:[#6]:1'
+        smarts = '[N,O:1]/[#6](-[#9])=[#6]/[#6@@](-[#6])(-[#7])/[#6]1:[#6]:[#6]:[#6](-[*:2]):[#6]:[#6]:1'
         json_path = 'base/tests/files/chemdoodle_mol_2.json'
         cd  = ChemDoodle()
         with open(json_path, 'r') as fjson:
@@ -39,12 +39,12 @@ class ChemDoodleTests(TransactionTestCase):
             'mol_1': 'No arrow',
             'reaction_2_lines': 'More than one arrow',
             'wrong_direction': 'Line in wrong direction',
-            'too_many_mols': 'Too many mols',
+            'too_many_mols': 'Too many products',
             'not_enough_mols': 'Not enough mols',
             'too_many_products':'Too many products',
             'ambiguous_mol':'Ambiguous molecule position',
         }
-
+#'too_many_mols': 'Too many mols',
         for file_name, message in error_path.items():
             with open('base/tests/files/chemdoodle_{0}.json'.format(file_name), 'r') as fjson:
                 json_str = '[{0}]'.format(fjson.readline())
