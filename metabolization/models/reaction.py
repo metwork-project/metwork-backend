@@ -246,12 +246,15 @@ class Reaction(FileManagement, models.Model):
         else:
             return 0
 
-    def run_reaction(self, reactants):
+    def run_reaction(self, reactants, method=None):
         from metabolization.models import ReactProcess
         rp = ReactProcess.objects.create()
         rp.reaction = self
         rp.reactants.set(reactants)
-        rp.method = self.methods_available()[0]
+        if method in self.methods_available():
+            rp.method = method
+        else:
+            rp.method = self.methods_available()[0]
         rp.save()
         rp.run_reaction()
         return rp

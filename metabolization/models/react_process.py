@@ -13,7 +13,7 @@ from itertools import chain
 class ReactProcess(models.Model):
 
     reaction = models.ForeignKey(Reaction, on_delete=models.CASCADE, default=None, null=True)
-    method = models.CharField(max_length=32, default='reactor')
+    method = models.CharField(max_length=32, default='rdkit')
     method_hash = models.CharField(max_length=32, default='')
     reactants = models.ManyToManyField(Molecule, related_name="reactants", default=None)
     products = models.ManyToManyField(Molecule, related_name="products", default=None)
@@ -29,11 +29,16 @@ class ReactProcess(models.Model):
         ERROR = 99
 
     def validate(self):
+        methods_available = self.reaction.methods_available()
+        if len(methods_available) == 0:
+            return False
+        if self.method not in methods_available:
+            self.method = methods_available[0]
         return \
             ((self.reactants.count() == self.reaction.reactants_number)\
                 or (self.reactants.count() == 1))\
             and (self.reactants.count() > 0)\
-            and (self.method in self.reaction.methods_available())
+            and (self.method in methods_available)
 
     def run_reaction(self):
         if self.validate():
