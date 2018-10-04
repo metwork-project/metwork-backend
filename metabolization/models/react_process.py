@@ -87,8 +87,9 @@ class ReactProcess(models.Model):
 
     def format_reactant(self,mol):
         smarts = self.reaction.smarts
+        mol=Chem.MolFromSmiles(Chem.MolToSmiles(mol))
         if 'H' in smarts or '#1' in smarts:
-            return Chem.AddHs(Chem.MolFromSmiles(Chem.MolToSmiles(mol)))
+            return Chem.AddHs(mol)
         else:
             return mol
 
