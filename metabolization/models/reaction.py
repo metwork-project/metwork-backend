@@ -96,8 +96,6 @@ class Reaction(FileManagement, models.Model):
             prev_status = Reaction.status.EDIT
         if self.smarts is None:
             self.smarts = self.get_smarts_from_mrv()
-        # if self.reactants_number == 0:
-        self.reactants_number = self.get_reactants_number()
         if self.status_code == Reaction.status.INIT:
             self.status_code = Reaction.status.EDIT
         if self.status_code == Reaction.status.EDIT and prev_status != Reaction.status.VALID:
@@ -116,6 +114,7 @@ class Reaction(FileManagement, models.Model):
                 self.chemdoodle_json_error = error
             except:
                 self.chemdoodle_json_error = 'unexpected error'
+        self.reactants_number = self.get_reactants_number()
         super(Reaction, self).save(*args, **kwargs)
         return self
 
