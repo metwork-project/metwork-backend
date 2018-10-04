@@ -37,9 +37,6 @@ class Reaction(FileManagement, models.Model):
                     settings.AUTH_USER_MODEL,
                     on_delete=models.CASCADE,
                     db_index = True)
-    file_hash = models.CharField(
-            max_length=32,
-            default='')
     reactants_number = models.SmallIntegerField(
             default=0)
     method_priority = models.CharField(
@@ -48,7 +45,9 @@ class Reaction(FileManagement, models.Model):
             default='reactor') # cls. methods_allowed
     smarts = models.CharField(
             max_length=1024,
-            default='') # smarts used by rdkit method
+            default=None,
+            null= True,
+            blank=True) # smarts used by rdkit method
     status_code = models.PositiveSmallIntegerField(
                     default=0,
                     db_index = True)
@@ -75,7 +74,7 @@ class Reaction(FileManagement, models.Model):
 
     def __init__(self, *args, **kwargs):
         res = super().__init__(*args, **kwargs)
-        if self.smarts == '':
+        if self.smarts is None:
             try:
                 self.smarts = self.get_smarts_from_mrv()
             except:
@@ -95,7 +94,7 @@ class Reaction(FileManagement, models.Model):
             prev_status = Reaction.objects.get(id=self.id).status_code
         else:
             prev_status = Reaction.status.EDIT
-        if self.smarts == '':
+        if self.smarts is None:
             self.smarts = self.get_smarts_from_mrv()
         # if self.reactants_number == 0:
         self.reactants_number = self.get_reactants_number()
@@ -221,13 +220,13 @@ class Reaction(FileManagement, models.Model):
         if self.mrv_exist():
             return subprocess.check_output(['molconvert', 'smarts', self.mrv_path()]).decode('utf-8')
         else:
-            return ''
+            return None
 
     def react_rdkit(self):
         return self.react_rdkit_(self.smarts)
 
     def react_rdkit_(self, smarts):
-        if smarts != '':
+        if smarts is not None:
             return RDKit.reaction_from_smarts(smarts)
 
     def get_reactants_number_from_mrv(self):
@@ -240,7 +239,7 @@ class Reaction(FileManagement, models.Model):
 
     def get_reactants_number(self):
         smarts = self.smarts
-        if smarts != '':
+        if smarts is not None:
             rx = self.react_rdkit_(smarts)
             return rx.GetNumReactantTemplates()
         else:
@@ -261,21 +260,21 @@ class Reaction(FileManagement, models.Model):
 
 ## Hash management ##
 # file_hash aims to check if reaction file has not be changed since last DB update
-    def file_hash_compute(self):
-        if self.mrv_exist():
-            with open(self.mrv_path(), 'rb') as f:
-                return hashlib.md5(f.read()).hexdigest()
-        else:
-            return ''
-
-    def file_hash_update(self):
-        self.file_hash = self.file_hash_compute()
-        return self
-
-    def file_hash_check(self):
-        return self.file_hash == self.file_hash_compute()
-
-    def __unicode__(self):
-        return self.name
+    # def file_hash_compute(self):
+    #     if self.mrv_exist():
+    #         with open(self.mrv_path(), 'rb') as f:
+    #             return hashlib.md5(f.read()).hexdigest()
+    #     else:
+    #         return ''
+    #
+    # def file_hash_update(self):
+    #     self.file_hash = self.file_hash_compute()
+    #     return self
+    #
+    # def file_hash_check(self):
+    #     return self.file_hash == self.file_hash_compute()
+    #
+    # def __unicode__(self):
+    #     return self.name
 
 ####
