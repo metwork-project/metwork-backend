@@ -137,6 +137,8 @@ class ChemDoodle(object):
             else:
                 symbol = 'C' if 'l' not in atom else atom['l']
                 a = Chem.Atom(symbol)
+                if 'c' in atom:
+                    a.SetFormalCharge(atom['c'])
             atoms_cd[atom_id] = mw.AddAtom(a)
 
         if not 'b' in json_data:
@@ -336,6 +338,9 @@ class ChemDoodle(object):
                 symbol = a.GetSymbol()
                 if symbol != 'C':
                     mol_json['l'] = symbol
+                charge = a.GetFormalCharge()
+                if charge != 0:
+                    mol_json['c'] = charge
                 elif a.GetChiralTag() != Chem.rdchem.ChiralType.CHI_UNSPECIFIED:
                     ct = a.GetChiralTag()
                     for i, b in enumerate(a.GetBonds()):
