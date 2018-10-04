@@ -71,13 +71,11 @@ class ReactProcess(models.Model):
             r_smarts = r_smarts.replace('\\','-').replace('/','-')
             rx = rdChemReactions.ReactionFromSmarts(r_smarts)
             products_rdkit = []
-            def format_reactant(mol):
-                return Chem.AddHs(Chem.MolFromSmiles(Chem.MolToSmiles(mol)))
             if self.reactants.count() == 1:
-                reactant = format_reactant(self.reactants.all()[0].mol_rdkit)
+                reactant = self.format_reactant(self.reactants.all()[0].mol_rdkit)
                 products_rdkit = list(rx.RunReactant(reactant, 0))
             elif self.reactants.count() == 2:
-                reactants = [format_reactant(m.mol_rdkit) for m in self.reactants.all()]
+                reactants = [self.format_reactant(m.mol_rdkit) for m in self.reactants.all()]
                 for i in range(2):
                     products_rdkit = products_rdkit + list(rx.RunReactants((reactants[i], reactants[1-i])))
             res = {Molecule.load_from_rdkit(m) for m in list(chain(*products_rdkit))} - {False}
@@ -86,6 +84,13 @@ class ReactProcess(models.Model):
         self.status_code = ReactProcess.status.DONE
         self.save()
         return res
+
+    def format_reactant(self,mol):
+        smarts = self.reaction.smarts
+        if 'H' in smarts or '#1' in smarts:
+            return Chem.AddHs(Chem.MolFromSmiles(Chem.MolToSmiles(mol)))
+        else:
+            return mol
 
     def wait_run_end(self, timeout = 30):
         begin = time.time()

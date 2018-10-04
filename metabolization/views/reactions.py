@@ -113,7 +113,6 @@ class ReactionViewSet(ModelAuthViewSet):
                 reactants = [
                     Molecule.load_from_smiles(sm) \
                     for sm in reactants_smiles.split('.')]
-            print(reactants)
             r = self.get_object()
             rp = r.run_reaction(reactants)
             response = {
