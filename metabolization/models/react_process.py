@@ -91,6 +91,8 @@ class ReactProcess(models.Model):
         if 'H' in smarts or '#1' in smarts:
             return Chem.AddHs(mol)
         else:
+            Chem.Kekulize(mol,True)
+            Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE)
             return mol
 
     def wait_run_end(self, timeout = 30):
