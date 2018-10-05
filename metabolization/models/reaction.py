@@ -42,7 +42,7 @@ class Reaction(FileManagement, models.Model):
     method_priority = models.CharField(
             max_length=32,
             choices = METHODS_CHOICES,
-            default='reactor') # cls. methods_allowed
+            default='rdkit') # cls. methods_allowed
     smarts = models.CharField(
             max_length=1024,
             default=None,
@@ -145,7 +145,11 @@ class Reaction(FileManagement, models.Model):
 
     @classmethod
     def import_file(cls, file_object, name, user, description=None):
-        r = cls(name = name, user=user, description=description)
+        r = cls(
+            name = name,
+            user=user,
+            description=description,
+            method_priority='reactor')
         r.save()
         with open(r.mrv_path(), 'w') as f:
             f.write(file_object.read().decode('utf-8'))
