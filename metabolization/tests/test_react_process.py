@@ -65,7 +65,8 @@ class ReactProcessTests(ReactionTestManagement):
     def test_process_reaction_double_reactants(self):
         self.create_reacts([ 'diels_alder_cycloaddition'])
         methods = ['reactor', 'rdkit']
-        smiles = ['NC1=NC(C=C)=CN1', 'C=CCC']
+        methods = [ 'rdkit']
+        # smiles = ['NC1=NC(C=C)=CN1', 'C=CCC']
         smiles = ['C=Cc1c[nH]c(N)n1', 'C=CCC']
         expected_smiles = [\
             'CCC1CCC=C2N=C(N)NC12', \
@@ -74,10 +75,12 @@ class ReactProcessTests(ReactionTestManagement):
         r = Reaction.objects.get(name='diels_alder_cycloaddition')
         # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
         # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]1'
-        r.smarts = '[#6:1]=,:[#6:2]/[#6:3]=,:[#6:4]/[H].[#6:5]=,:[#6:6]>>[#6:1]1/[#6:2]=,:[#6:3]\[#6:4]-[#6:6]-[#6:5]-1'
+        smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1'
         #[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1
         # r.smarts = '[#6:1]=[#6:2]-[#6:3]=[#6:4].[#6:6]=[#6:5]>>[#6:1]1-[#6:2]=[#6:3]-[#6:4]-[#6:5]-[#6:6]-1'
-        r.save()
+        # print(r.smarts)
+        # r.save()
+        r.load_smarts(smarts)
         for m in methods:
             self.assertTrue(m in r.methods_available())
         for method in methods:
