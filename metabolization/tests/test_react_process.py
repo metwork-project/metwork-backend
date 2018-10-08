@@ -73,13 +73,7 @@ class ReactProcessTests(ReactionTestManagement):
             'CCC1CC=C2N=C(N)NC2C1']
         ml = [Molecule.load_from_smiles(sm) for sm in smiles]
         r = Reaction.objects.get(name='diels_alder_cycloaddition')
-        # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
-        # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]1'
         smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1'
-        #[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1
-        # r.smarts = '[#6:1]=[#6:2]-[#6:3]=[#6:4].[#6:6]=[#6:5]>>[#6:1]1-[#6:2]=[#6:3]-[#6:4]-[#6:5]-[#6:6]-1'
-        # print(r.smarts)
-        # r.save()
         r.load_smarts(smarts)
         for m in methods:
             self.assertTrue(m in r.methods_available())
@@ -95,3 +89,9 @@ class ReactProcessTests(ReactionTestManagement):
                 self.assertEqual(set(rp.products.all()), expected_mols, \
                     'error for method {0}\n{1}'.format(method, set(rp.products.all())))
                 ml.reverse()
+
+    def test_mass_delta(self):
+        r = self.create_reacts([('methylation', '[N,O:1]>>[*:1]-[#6]')])['methylation']
+        m = Molecule.load_from_smiles('CCO')
+        rp = r.run_reaction([m])
+        self.assertEqual(round(rp.mass_delta(),6), 14.01565)

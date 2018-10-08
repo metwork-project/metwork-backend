@@ -248,7 +248,7 @@ class Reaction(FileManagement, models.Model):
         else:
             return 0
 
-    def run_reaction(self, reactants, method=None):
+    def run_reaction(self, reactants, method='rdkit'):
         from metabolization.models import ReactProcess
         rp = ReactProcess.objects.create()
         rp.reaction = self
@@ -261,23 +261,10 @@ class Reaction(FileManagement, models.Model):
         rp.run_reaction()
         return rp
 
-## Hash management ##
-# file_hash aims to check if reaction file has not be changed since last DB update
-    # def file_hash_compute(self):
-    #     if self.mrv_exist():
-    #         with open(self.mrv_path(), 'rb') as f:
-    #             return hashlib.md5(f.read()).hexdigest()
-    #     else:
-    #         return ''
-    #
-    # def file_hash_update(self):
-    #     self.file_hash = self.file_hash_compute()
-    #     return self
-    #
-    # def file_hash_check(self):
-    #     return self.file_hash == self.file_hash_compute()
-    #
-    # def __unicode__(self):
-    #     return self.name
-
-####
+    def mass_delta(self):
+        from metabolization.models import ReactProcess
+        rps = self.reactprocess_set.filter(status_code=ReactProcess.status.DONE)
+        if len(rps) > 0:
+            return rps.first().mass_delta()
+        else:
+            return None

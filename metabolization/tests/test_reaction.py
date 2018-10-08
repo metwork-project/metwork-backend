@@ -8,6 +8,7 @@ import os
 import collections
 from metabolization.modules import ReactionTestManagement
 from metabolization.models import Reaction, ReactProcess
+from base.models import Molecule
 
 class ReactionModelTests(ReactionTestManagement):
 
@@ -89,5 +90,6 @@ class ReactionModelTests(ReactionTestManagement):
     def test_mass_delta(self):
         r = self.create_reacts([('methylation', '[N,O:1]>>[*:1]-[#6]')])['methylation']
         m = Molecule.load_from_smiles('CCO')
-        rp = r.run_reaction([m])
-        self.assertEqual(round(rp.mass_delta(),6), 14.01565)
+        self.assertTrue(r.mass_delta() is None)
+        r.run_reaction([m])
+        self.assertEqual(round(r.mass_delta(),6), 14.01565)
