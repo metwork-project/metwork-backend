@@ -28,10 +28,10 @@ class MolGraph:
             'cosine': best_annot[1]
         }
 
-    def mol_file(self,ion):
+    def mol_json(self,ion):
         best_annot = ion.best_annotation()[0]
         if best_annot is not None:
-            return best_annot.mol_file()
+            return best_annot.chemdoodle_json
 
     def gen_molecular_network(self):
 
@@ -39,13 +39,13 @@ class MolGraph:
             'group': 'nodes',
             'data': {
                 'id': id,
-                'name': str(round( ion.parent_mass, 3 )),
-                'parent_mass': str(round( ion.parent_mass, 3 )),
+                'name': ion.parent_mass,
+                'parent_mass': ion.parent_mass,
                 'nodeType': 'ion',
                 'annotationType': self.annotationType(ion),
                 'bestAnnotation': self.best_annotation(ion),
                 'info': ion.gen_info().replace('\n','<br/>'),
-                'molFile': self.mol_file(ion),
+                'molJSON': self.mol_json(ion),
             }
         } for id, ion in enumerate(self.frag_sample.ions_list())]
 

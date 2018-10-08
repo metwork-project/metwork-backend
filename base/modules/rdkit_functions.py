@@ -48,3 +48,11 @@ class RDKit:
         return \
             Chem.rdmolops.SanitizeMol(mol_rdkit, catchErrors=True) \
             == Chem.rdmolops.SanitizeFlags.SANITIZE_NONE
+
+    @classmethod
+    def reaction_from_smarts(self, smarts):
+        return Chem.rdChemReactions.ReactionFromSmarts(smarts)
+
+    @classmethod
+    def reaction_to_smarts(self, reaction):
+        return Chem.rdChemReactions.ReactionToSmarts(reaction)

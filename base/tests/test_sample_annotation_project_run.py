@@ -23,10 +23,10 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 			if p['name'] == name:
 				self.eval_annotation_project(**p)
 
-	def eval_annotation_project(self, 
+	def eval_annotation_project(self,
 				name, anno_file,
-				smiles, expected_anno, 
-				not_expected_smiles, reactions_name, 
+				smiles, expected_anno,
+				not_expected_smiles, reactions_name,
 				depth_total, depth_last_match = 0,
 				react_process_count_expected = None,
 				sample_file_name = 'test_annotation_project.mgf'):
@@ -102,7 +102,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 		#for m in p.molecules.all():
 		#	print fsim.frag_molecule(m).gen_mgf()
 
-		# Check if molecules expected added to project molecules 
+		# Check if molecules expected added to project molecules
 		# and annotation match
 
 		for anno_exp in expected_anno:
@@ -136,7 +136,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 		#print '###### {0} ######'.format(name)
 		#print ReactProcess.objects.count()
 		#print '\n'.join([ '{0} with : {1}'.format(
-		#						rp.reaction, 
+		#						rp.reaction,
 		#						', '.join([ m.smiles() for m in rp.reactants.all() ])  ) \
 		#					for rp in ReactProcess.objects.all() ])
 
@@ -169,8 +169,8 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 			'smiles' : ['OC=CCO'],
 			'reactions_name' : [ 'methylation' ],
 			'expected_anno' : [
-				('COC=CCO',2), 
-				('COCC=CO', 3), 
+				('COC=CCO',2),
+				('COCC=CO', 3),
 				('COC=CCOC',15)],
 			'not_expected_smiles' : [],
 			'depth_total' : 2,
@@ -181,8 +181,8 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 			'smiles' : ['OC=CCO'],
 			'reactions_name' : [ 'methylation' ],
 			'expected_anno' : [
-				('COC=CCO',2), 
-				('COCC=CO', 3), 
+				('COC=CCO',2),
+				('COCC=CO', 3),
 				('COC=CCOC',15)],
 			'not_expected_smiles' : [],
 			'depth_total' : 3,
@@ -224,7 +224,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 			'reactions_name' : [ 'methylation', 'diels_alder_cycloaddition' ],
 			'expected_anno' : [
 				('COC=CCO',2),
-				('CCC1CCC=C2N=C(N)NC12', 10), 
+				('CCC1CCC=C2N=C(N)NC12', 10),
 				('CCC1CC=C2N=C(N)NC2C1', 9)],
 			'not_expected_smiles' : [],
 			'depth_total' : 1
@@ -240,4 +240,3 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 		#	'depth_total' : 10,
 		#	'sample_file_name' : 'paraz 3 ions.mgf'
 		} ]
-

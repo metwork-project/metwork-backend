@@ -63,9 +63,6 @@ class Project(FileManagement, PolymorphicModel):
 					conf.save()
 				self.__setattr__( f.name, conf)
 		self.save()
-		for f in self._meta.local_fields:
-			if hasattr( self.__getattribute__(f.name) , 'IS_CONF'):
-				print(self.__getattribute__(f.name))
 		return self
 
 	def update_conf(self,conf_name,params):

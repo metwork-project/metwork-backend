@@ -6,12 +6,16 @@ from base.models import Molecule
 from base.views.model_auth import ModelAuthViewSet
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.http import FileResponse
+from rest_framework.decorators import list_route, detail_route
+from django.http import HttpResponse, JsonResponse
+from rest_framework.parsers import JSONParser
 
 class MoleculeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Molecule
-        fields = ('smiles',)
+        fields = (
+            'smiles',
+            'chemdoodle_json')
 
 class MoleculeViewSet(ModelAuthViewSet):
     serializer_class = MoleculeSerializer
@@ -25,10 +29,11 @@ class MoleculeViewSet(ModelAuthViewSet):
             return Molecule.met_run_out(met_run_out)
         return self.queryset
 
-@require_http_methods(["GET"])
-@csrf_exempt
-def download_all_molecules(request):
-	file_path = 'all_molecules.csv'
-	query_set = Molecule.objects.all()
-	Molecule.gen_molecules(file_path, query_set)
-	return FileResponse(open(file_path, 'rb'))
+    @list_route(methods=['patch'])
+    def load_smiles(self, request, pk=None):
+        data = JSONParser().parse(request)
+        mols = Molecule.load_from_smiles(data['smiles'].replace('\n','.'))
+        if mols != False:
+            return JsonResponse({'success': [mols.chemdoodle_json]})
+        else:
+            return JsonResponse({'error': 'unable to load smiles'})

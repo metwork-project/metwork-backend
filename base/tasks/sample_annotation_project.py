@@ -60,7 +60,8 @@ def run_reaction_molecule(reactants_id, reaction_id, project_id, depth_total, de
 						.annotate(reactants_count=Count('reactants'))\
 						.filter(
 							reaction = r,
-							reactants_count = reactants_uniq_count)
+							reactants_count = reactants_uniq_count,
+							method = r.method_to_apply())
 		for m in reactants:
 			rp_search = rp_search.filter(reactants__id = m.id)
 
@@ -72,7 +73,6 @@ def run_reaction_molecule(reactants_id, reaction_id, project_id, depth_total, de
 			for m_id in reactants_id:
 				rp.reactants.add(Molecule.objects.get( id = m_id ))
 			rp.save()
-
 			rp.run_reaction().refresh_from_db()
 		try:
 			p.react_processes.add(rp)

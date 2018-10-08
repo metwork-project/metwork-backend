@@ -209,6 +209,7 @@ class FragSample(models.Model):
             try:
                 if file_format == 'default':
                     ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
+                    adduct = 'M+H'
                 elif file_format == 'GNPS':
                     data = fl.split("\t")
                     ion_id = data[col_titles.index('#Scan#')]

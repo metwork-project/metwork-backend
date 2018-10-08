@@ -38,7 +38,7 @@ class ReactionModelTests(ReactionTestManagement):
 		self.assertFalse( os.path.isdir(r_path) )
 
 	def test_method_to_apply(self):
-		reacts = {	
+		reacts = {
 			'methylation': ['reactor', 'reactor'],
 			'bromination_of_phenols': ['rdkit', 'reactor'],
 			'diels_alder_cycloaddition': ['rdkit', 'rdkit'],
@@ -57,8 +57,8 @@ class ReactionModelTests(ReactionTestManagement):
 			'error': [], }
 		rd = self.create_reacts(reacts)
 		for r_name in reacts:
-			self.assertEqual( rd[r_name].methods_available(), 
-				reacts[r_name], 
+			self.assertEqual( rd[r_name].methods_available(),
+				reacts[r_name],
 				[r_name, rd[r_name].methods_available()])
 
 	def test_rdkit_ready(self):
@@ -85,29 +85,4 @@ class ReactionModelTests(ReactionTestManagement):
 			r = rd[r_name]
 			self.assertEqual(r.get_reactants_number_from_mrv(), reacts[r_name])
 			self.assertEqual(r.reactants_number, reacts[r_name])
-
-	def test_file_hash(self):
-		react_name = 'methylation'
-		react_hash = 'a6032f405b605ebf8298941a7932027f'
-		nok_name = 'nok_name'
-		r = self.import_file(react_name)
-		r_nok = Reaction(name=nok_name)
-	# Test file_hash_compute()
-		self.assertEqual(r.file_hash_compute(), react_hash)
-		self.assertEqual(r_nok.file_hash_compute(), '')
-
-	# Should use file_hash_update() to modifie file_hash field
-		self.assertNotEqual(r.file_hash, react_hash)
-		r.file_hash_update()
-		self.assertEqual(r.file_hash, react_hash)
-
-	# Test if file_hash_check() return False if file is modified
-	# Create a copy of reference file to do this
-		with open(r.mrv_path(), 'a') as f_copy:
-			f_copy.writelines('newline\n')
-		self.assertFalse(r.file_hash_check())
-
-
-
-
-
+			

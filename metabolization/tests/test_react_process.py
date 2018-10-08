@@ -7,15 +7,6 @@ from metabolization.models import Reaction, ReactProcess
 
 class ReactProcessTests(ReactionTestManagement):
 
-    #@classmethod
-    #def setUp(cls):
-        #reacts = [
-        #    'methylation',
-        #    'bromination_of_phenols',
-        #    'diels_alder_cycloaddition']
-        #rtm = cls()
-        #self.create_reacts([''])
-
     def test_process_reaction_single_reactant(self):
         self.create_reacts(['methylation'])
         sm = 'NC=C(N)C'
@@ -36,32 +27,34 @@ class ReactProcessTests(ReactionTestManagement):
             self.assertTrue(m_exp in rp.products.all())
 
     def test_methods(self):
-        self.create_reacts(['methylation'])
-        methods = ['reactor', 'rdkit']
+        self.create_reacts(['methylation'], email='with@file.com')
+        self.create_reacts(['methylation_NO_FILE'], email='without@file.com')
+        r = Reaction.objects.get(name='methylation')
+        r_NO_FILE = Reaction.objects.get(name='methylation_NO_FILE')
+        methods = [('reactor',r), ('rdkit',r_NO_FILE)]
         sm = 'OCC'
         expected_smiles = {
             'reactor' : 'COCC',
             'rdkit' : 'CCOCC'}
         reactant = Molecule.load_from_smiles(sm)
-        #Reaction.reactions_update()
-        r = Reaction.objects.get(name='methylation')
+
         rp = {\
-            m: ReactProcess.objects.create(\
-                    reaction = r, \
-                    method = m)\
+            m[0]: ReactProcess.objects.create(\
+                    reaction = m[1], \
+                    method = m[0])\
             for m in methods }
         for m in rp:
             rp[m].reactants.add(reactant)
         self.assertFalse(rp['rdkit'].validate())
-        r.smarts = '[#7,#8,#16:1]>>[#6]-[#6]-[*:1]'
-        r.save()
+        r_NO_FILE.smarts = '[N,O,n,o:1]-[H:2]>>[#0:1]-[#6:2]-[#6]'
+        r_NO_FILE.save()
         self.assertTrue(rp['rdkit'].validate())
-        for m in rp : 
-            rp[m].run_reaction() 
+        for m in rp :
+            rp[m].run_reaction()
             self.assertTrue(rp[m].achieved)
     # Check if molecule has been created
         expected_mols = \
-            { m: Molecule.find_from_smiles(expected_smiles[m]) \
+            { m[0]: Molecule.find_from_smiles(expected_smiles[m[0]]) \
                 for m in methods}
         self.assertTrue(not False in expected_mols)
     # Check if reaction_product has been created
@@ -72,17 +65,22 @@ class ReactProcessTests(ReactionTestManagement):
     def test_process_reaction_double_reactants(self):
         self.create_reacts([ 'diels_alder_cycloaddition'])
         methods = ['reactor', 'rdkit']
-        smiles = ['NC1=NC(C=C)=CN1', 'C=CCC']
+        methods = [ 'rdkit']
+        # smiles = ['NC1=NC(C=C)=CN1', 'C=CCC']
         smiles = ['C=Cc1c[nH]c(N)n1', 'C=CCC']
         expected_smiles = [\
             'CCC1CCC=C2N=C(N)NC12', \
             'CCC1CC=C2N=C(N)NC2C1']
         ml = [Molecule.load_from_smiles(sm) for sm in smiles]
         r = Reaction.objects.get(name='diels_alder_cycloaddition')
-        #r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]-1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
-        r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
-        #r.smarts = '[#6:4]=[#6:3]-[c:2]1[c:1]n[c:7]n1.[#6:6]=[#6:5]>>[#6:5]-1-[#6:4]-[#6:3]=[#6:2]-2-[#7]=[#6:7]-[#7]-[#6:1]-2-[#6:6]-1'
-        r.save()
+        # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:6]=[#6:5]>>[#6:1]1[#6:2]=[#6:3][#6:4]-[#6:5]-[#6:6]-1'
+        # r.smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]1'
+        smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1'
+        #[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1
+        # r.smarts = '[#6:1]=[#6:2]-[#6:3]=[#6:4].[#6:6]=[#6:5]>>[#6:1]1-[#6:2]=[#6:3]-[#6:4]-[#6:5]-[#6:6]-1'
+        # print(r.smarts)
+        # r.save()
+        r.load_smarts(smarts)
         for m in methods:
             self.assertTrue(m in r.methods_available())
         for method in methods:

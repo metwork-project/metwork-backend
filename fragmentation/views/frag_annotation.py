@@ -5,12 +5,22 @@ from base.views.model_auth import ModelAuthViewSet
 from fragmentation.models import FragAnnotationDB
 from rest_framework import serializers
 from rest_framework.response import Response
+from base.modules import JSONSerializerField
 
 class FragAnnotationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FragAnnotationDB
-        fields = ('ion_id', 'name', 'smiles', 'db_source', 'db_id', 'has_no_project')
+        fields = (
+            'ion_id',
+            'name',
+            'smiles',
+            'db_source',
+            'db_id',
+            'has_no_project',
+            'chemdoodle_json')
+
+    chemdoodle_json = JSONSerializerField()
 
 class FragAnnotationViewSet(ModelAuthViewSet):
 
@@ -21,7 +31,7 @@ class FragAnnotationViewSet(ModelAuthViewSet):
 		queryset = FragAnnotationDB.objects.filter(
 			frag_mol_sample__frag_sample__user=self.request.user)
 		if 'frag_sample_id' in self.request.query_params:
-			queryset = queryset.filter(frag_mol_sample__frag_sample=self.request.query_params['frag_sample_id']) 
+			queryset = queryset.filter(frag_mol_sample__frag_sample=self.request.query_params['frag_sample_id'])
 		project_id = self.request.query_params.get('project_id', None)
 		if project_id is not None:
 				from base.models import SampleAnnotationProject
