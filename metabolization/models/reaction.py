@@ -152,7 +152,7 @@ class Reaction(FileManagement, models.Model):
         max = 0
         for r in cls.activated():
             rd = r.mass_delta()
-            if  rd > max:
+            if  rd is not None and rd > max:
                 max = rd
         return max
 

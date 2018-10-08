@@ -171,10 +171,11 @@ class SampleAnnotationProject(Project):
         reaction_ids = [
             r.id \
             for r in Reaction.activated()
-            if True in np.isclose(delta[r.reactants_number], r.mass_delta()) ]
+            if r.mass_delta() is not None \
+                and True in np.isclose(delta[r.reactants_number], r.mass_delta()) ]
         self.change_reactions(reaction_ids)
 
-        return self.reactions_conf.reactions.all()
+        return self.reactions()
 
     def toggle_item(self, field, item_id):
     # Select or unselect the item of type "field" identified by its id "item_id"

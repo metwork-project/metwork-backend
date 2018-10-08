@@ -177,13 +177,14 @@ class FragSample(models.Model):
 
         def diff_values(a1,a2):
             res = np.reshape(a2, (len(a2),1))
-            print(max)
-            res = np.where( a1 - res <= max ))
+            res = np.round(a1 - res,6)
             res = np.abs(res)
-            return np.unique(res)
+            res = np.unique(res)
+            res = res[np.where( res <= max )[0]]
+            return res
 
         single = diff_values(allfms ,allfms)
-        double = diff_values(allfms - settings.PROTON_MASS ,single)
+        double = diff_values(single, allfms - settings.PROTON_MASS)
 
         # single = np.unique(np.abs(allfms - np.reshape(allfms, (len(allfms),1))))
         # double = np.unique(np.abs(allfms - settings.PROTON_MASS - np.reshape(single, (len(single),1))))

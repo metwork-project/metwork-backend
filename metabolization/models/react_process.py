@@ -107,6 +107,9 @@ class ReactProcess(models.Model):
         return self
 
     def mass_delta(self):
-        rm = sum( (r.mass_exact() for r in self.reactants.all()) )
-        pm = self.products.first().mass_exact()
-        return pm - rm
+        if self.products.count()>0:
+            rm = sum( (r.mass_exact() for r in self.reactants.all()) )
+            pm = self.products.first().mass_exact()
+            return pm - rm
+        else:
+            return None
