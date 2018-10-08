@@ -12,8 +12,7 @@ from base.models import Molecule
 from fragmentation.models import *
 from django.db.models import Q
 import re
-
-import re
+import numpy as np
 
 class SampleAnnotationProject(Project):
 
@@ -164,9 +163,21 @@ class SampleAnnotationProject(Project):
         if self.reactions_conf != None:
             return [fa.id for fa in self.frag_annotations_init.all()]
 
+    def select_reaction_with_mass(self):
+        delta={
+            1: np.array(self.frag_sample.mass_delta_single),
+            2: np.array(self.frag_sample.mass_delta_double)
+        }
+        reaction_ids = [
+            r.id \
+            for r in Reaction.activated()
+            if True in np.isclose(delta[r.reactants_number], r.mass_delta()) ]
+        self.change_reactions(reaction_ids)
+
+        return self.reactions_conf.reactions.all()
+
     def toggle_item(self, field, item_id):
     # Select or unselect the item of type "field" identified by its id "item_id"
-        from django.db.models import Count
         if field == 'reaction':
             reaction = Reaction.objects.get(id=item_id)
             reaction_ids = self.reaction_ids()
@@ -180,41 +191,8 @@ class SampleAnnotationProject(Project):
             else:
                 return {'error' : 'Only ' +  str(self.REACTIONS_LIMIT) + 'are allowed'}
 
-            # Manage which ReactionConf to applied to project
-            reactions = Reaction.objects.filter(id__in=reaction_ids)
-            # Look for existing conf that match the critteria
-            rcs = ReactionsConf.objects\
-                        .annotate(Count('reactions'))\
-                        .filter(
-                            reactions__count = len(reaction_ids),
-                            method_priority = self.reactions_conf.method_priority)\
-                        .distinct()
-            for r in reactions:
-                rcs = rcs.filter(reactions__in = [r])
-            prev_rc = self.reactions_conf
-            # Does previous conf is not associated with other project ?
-            prev_rc_uniq = self.reactions_conf.sampleannotationproject_set.count() == 1
-            # Does new conf to applies already exist ?
-            new_rc_exist = rcs.count() > 0
-            if new_rc_exist:
-                rc = rcs.first()
-                self.reactions_conf = rc
-                self.save()
-                if prev_rc_uniq:
-                    prev_rc.delete()
-            elif prev_rc_uniq:
-                if to_remove:
-                    self.reactions_conf.reactions.remove(reaction)
-                else:
-                    self.reactions_conf.reactions.add(reaction)
-                self.reactions_conf.save()
-            else:
-                rc = ReactionsConf.objects.create(
-                        method_priority = self.reactions_conf.method_priority)
-                for r in reactions:
-                    rc.reactions.add(r)
-                rc.save()
-                self.reactions_conf = rc
+            self.change_reactions(reaction_ids, reaction=reaction, to_remove=to_remove)
+
         if field == 'frag-annotation':
             fa = FragAnnotationDB.objects.get(id=item_id)
             if fa in self.frag_annotations_init.all():
@@ -223,6 +201,44 @@ class SampleAnnotationProject(Project):
                 self.frag_annotations_init.add(fa)
         self.save()
         return self
+
+    def change_reactions(self, reaction_ids, reaction=None, to_remove=False):
+        from django.db.models import Count
+        # Manage which ReactionConf to applied to project
+        reactions = Reaction.objects.filter(id__in=reaction_ids)
+        # Look for existing conf that match the critteria
+        rcs = ReactionsConf.objects\
+                    .annotate(Count('reactions'))\
+                    .filter(
+                        reactions__count = len(reaction_ids),
+                        method_priority = self.reactions_conf.method_priority)\
+                    .distinct()
+        for r in reactions:
+            rcs = rcs.filter(reactions__in = [r])
+        prev_rc = self.reactions_conf
+        # Does previous conf is not associated with other project ?
+        prev_rc_uniq = self.reactions_conf.sampleannotationproject_set.count() == 1
+        # Does new conf to applies already exist ?
+        new_rc_exist = rcs.count() > 0
+        if new_rc_exist:
+            rc = rcs.first()
+            self.reactions_conf = rc
+            self.save()
+            if prev_rc_uniq:
+                prev_rc.delete()
+        elif reaction is not None and prev_rc_uniq:
+            if to_remove:
+                self.reactions_conf.reactions.remove(reaction)
+            else:
+                self.reactions_conf.reactions.add(reaction)
+            self.reactions_conf.save()
+        else:
+            rc = ReactionsConf.objects.create(
+                    method_priority = self.reactions_conf.method_priority)
+            for r in reactions:
+                rc.reactions.add(r)
+            rc.save()
+            self.reactions_conf = rc
 
     def run(self):
         from base.tasks import start_run

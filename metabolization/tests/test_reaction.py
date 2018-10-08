@@ -90,6 +90,6 @@ class ReactionModelTests(ReactionTestManagement):
     def test_mass_delta(self):
         r = self.create_reacts([('methylation', '[N,O:1]>>[*:1]-[#6]')])['methylation']
         m = Molecule.load_from_smiles('CCO')
-        self.assertTrue(r.mass_delta() is None)
+        self.assertIsNone(r.mass_delta())
         r.run_reaction([m])
         self.assertEqual(round(r.mass_delta(),6), 14.01565)

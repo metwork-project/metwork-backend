@@ -144,6 +144,10 @@ class Reaction(FileManagement, models.Model):
         return open( self.image_path(), 'r').read()
 
     @classmethod
+    def activated(cls):
+        return cls.objects.filter(status_code = cls.status.ACTIVE)
+
+    @classmethod
     def import_file(cls, file_object, name, user, description=None):
         r = cls(
             name = name,

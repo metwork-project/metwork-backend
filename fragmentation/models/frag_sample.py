@@ -40,6 +40,12 @@ class FragSample(models.Model):
     cosine_matrix = ArrayField(
         ArrayField(models.FloatField()),
         null = True)
+    mass_delta_single = ArrayField(
+        ArrayField(models.FloatField()),
+        null = True)
+    mass_delta_double = ArrayField(
+        ArrayField(models.FloatField()),
+        null = True)
     status_code = models.PositiveIntegerField(
                     default=0,
                     db_index = True)
@@ -151,10 +157,30 @@ class FragSample(models.Model):
             #except:
             #    error_log.append(l)
 
+        self.gen_mass_delta()
         self.gen_cosine_matrix()
+
 
         if len(error_log) > 0 : print ('ERROR LOG', error_log )
         self.status_code = 3
+        self.save()
+
+    def gen_mass_delta(self):
+        single = []
+        double = []
+        for i in self.fragmolsample_set.all():
+            for k in self.fragmolsample_set.all():
+                delta_single = round( abs( k.parent_mass - i.parent_mass ) , 6)
+                if not delta_single in single:
+                    single.append(delta_single)
+                for j in self.fragmolsample_set.all():
+                    delta_double = round( abs( \
+                        k.parent_mass \
+                        - (i.parent_mass + j.parent_mass - settings.PROTON_MASS ) ) , 6)
+                    if not delta_double in double:
+                        double.append(delta_double)
+        self.mass_delta_single = single
+        self.mass_delta_double = double
         self.save()
 
     def ions_list(self):
