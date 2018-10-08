@@ -148,6 +148,15 @@ class Reaction(FileManagement, models.Model):
         return cls.objects.filter(status_code = cls.status.ACTIVE)
 
     @classmethod
+    def max_delta(cls):
+        max = 0
+        for r in cls.activated():
+            rd = r.mass_delta()
+            if  rd > max:
+                max = rd
+        return max
+
+    @classmethod
     def import_file(cls, file_object, name, user, description=None):
         r = cls(
             name = name,

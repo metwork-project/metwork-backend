@@ -166,21 +166,42 @@ class FragSample(models.Model):
         self.save()
 
     def gen_mass_delta(self):
-        single = []
-        double = []
-        for i in self.fragmolsample_set.all():
-            for k in self.fragmolsample_set.all():
-                delta_single = round( abs( k.parent_mass - i.parent_mass ) , 6)
-                if not delta_single in single:
-                    single.append(delta_single)
-                for j in self.fragmolsample_set.all():
-                    delta_double = round( abs( \
-                        k.parent_mass \
-                        - (i.parent_mass + j.parent_mass - settings.PROTON_MASS ) ) , 6)
-                    if not delta_double in double:
-                        double.append(delta_double)
-        self.mass_delta_single = single
-        self.mass_delta_double = double
+        from metabolization.models import Reaction
+        max = Reaction.max_delta()
+
+        single = np.array([])
+        double = np.array([])
+        allfms = np.array([
+            fms.parent_mass for fms in self.fragmolsample_set.all() ])
+        allfms = np.unique(allfms)
+
+        def diff_values(a1,a2):
+            res = np.reshape(a2, (len(a2),1))
+            print(max)
+            res = np.where( a1 - res <= max ))
+            res = np.abs(res)
+            return np.unique(res)
+
+        single = diff_values(allfms ,allfms)
+        double = diff_values(allfms - settings.PROTON_MASS ,single)
+
+        # single = np.unique(np.abs(allfms - np.reshape(allfms, (len(allfms),1))))
+        # double = np.unique(np.abs(allfms - settings.PROTON_MASS - np.reshape(single, (len(single),1))))
+        # for i in allfms:
+        #     for k in allfms:
+        #         delta_single = round( abs( k - i ) , 6)
+        #         if not True in np.isin(delta_single, single):
+        #         # if not delta_single in single:
+        #             single = np.append(single, delta_single)
+        #         for j in allfms:
+        #             delta_double = round( abs( \
+        #                 k \
+        #                 - (i + j - settings.PROTON_MASS ) ) , 6)
+        #             if not True in np.isin(delta_double, double):
+        #             # if not delta_double in double:
+        #                 double = np.append(double, delta_double)
+        self.mass_delta_single = single.tolist()
+        self.mass_delta_double = double.tolist()
         self.save()
 
     def ions_list(self):
