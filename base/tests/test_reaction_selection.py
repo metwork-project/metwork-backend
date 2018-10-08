@@ -44,7 +44,7 @@ class ReactionSelectionTests(TransactionTestCase):
             depth_last_match = 0)
         p.save()
         p.update_frag_sample(fs)
-        p.select_reaction_with_mass()
+        p.select_reaction_by_mass()
 
         self.assertIn(methylation, p.reactions())
         self.assertNotIn(diels_alder_modified, p.reactions())

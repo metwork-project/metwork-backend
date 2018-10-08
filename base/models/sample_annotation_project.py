@@ -163,7 +163,7 @@ class SampleAnnotationProject(Project):
         if self.reactions_conf != None:
             return [fa.id for fa in self.frag_annotations_init.all()]
 
-    def select_reaction_with_mass(self):
+    def select_reaction_by_mass(self):
         delta={
             1: np.array(self.frag_sample.mass_delta_single),
             2: np.array(self.frag_sample.mass_delta_double)
