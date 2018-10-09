@@ -5,7 +5,7 @@ from decimal import *
 import time
 from django.db import models, IntegrityError
 from django.conf import settings
-from base.models import Molecule
+from base.models import Molecule, Array1DModel, Array2DModel
 from libmetgem.cosine import compute_distance_matrix
 from django.contrib.postgres.fields import ArrayField
 import numpy as np
@@ -37,15 +37,24 @@ class FragSample(models.Model):
     ions_total = models.PositiveSmallIntegerField(
                     default=0,
                     db_index = True)
-    cosine_matrix = ArrayField(
-        ArrayField(models.FloatField()),
-        null = True)
-    mass_delta_single = ArrayField(
-        ArrayField(models.FloatField()),
-        null = True)
-    mass_delta_double = ArrayField(
-        ArrayField(models.FloatField()),
-        null = True)
+    cosine_matrix = models.OneToOneField(
+        Array2DModel,
+        related_name='cosine_matrix',
+        on_delete=models.CASCADE,
+        null= True,
+    )
+    mass_delta_single = models.OneToOneField(
+        Array1DModel,
+        related_name='mass_delta_single',
+        on_delete=models.CASCADE,
+        null= True,
+    )
+    mass_delta_double = models.OneToOneField(
+        Array1DModel,
+        related_name='mass_delta_double',
+        on_delete=models.CASCADE,
+        null= True,
+    )
     status_code = models.PositiveIntegerField(
                     default=0,
                     db_index = True)
@@ -187,9 +196,12 @@ class FragSample(models.Model):
         single = diff_values(allfms ,allfms)
         double = diff_values(single, allfms - settings.PROTON_MASS)
 
-        self.mass_delta_single = single.tolist()
-        self.mass_delta_double = double.tolist()
+        mass_delta_single = Array1DModel.objects.create(value=single.tolist())
+        mass_delta_double = Array1DModel.objects.create(value=double.tolist())
+        self.mass_delta_single = mass_delta_single
+        self.mass_delta_double = mass_delta_double
         self.save()
+        return self
 
     def ions_list(self):
         return self.fragmolsample_set.all().order_by('ion_id').distinct()
@@ -200,7 +212,7 @@ class FragSample(models.Model):
     def gen_cosine_matrix(self):
         query = self.ions_list()
         try:
-            self.cosine_matrix = compute_distance_matrix(
+            cosine_matrix = compute_distance_matrix(
                 [ fms.parent_mass for fms in query ],
                 [ filter_data(
                     np.array(fms.fragmolspectrum_set.get(energy = 1).spectrum),
@@ -209,7 +221,9 @@ class FragSample(models.Model):
                     for fms in query ],
                 0.002,
                 5
-            ).tolist()
+            )
+            cosine_matrix = Array2DModel.objects.create(value=cosine_matrix.tolist())
+            self.cosine_matrix = cosine_matrix
             self.save()
         except:
             pass

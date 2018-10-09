@@ -169,8 +169,8 @@ class SampleAnnotationProject(Project):
 
     def select_reactions_by_mass(self):
         delta={
-            1: np.array(self.frag_sample.mass_delta_single),
-            2: np.array(self.frag_sample.mass_delta_double)
+            1: np.array(self.frag_sample.mass_delta_single.value),
+            2: np.array(self.frag_sample.mass_delta_double.value)
         }
         reaction_ids = [
             r.id \
