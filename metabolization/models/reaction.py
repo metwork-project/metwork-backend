@@ -107,7 +107,7 @@ class Reaction(FileManagement, models.Model):
                 react = RDKit.reaction_from_smarts(smarts)
                 self.chemdoodle_json = cd.react_to_json(react)
                 self.chemdoodle_json_error = None
-                if self.rdkit_ready():
+                if self.ready():
                     self.status_code = Reaction.status.VALID
                 else:
                     self.chemdoodle_json_error = 'error with RDKit'
@@ -214,14 +214,14 @@ class Reaction(FileManagement, models.Model):
         res = []
         if self.mrv_exist():
             res.append('reactor')
-        if self.rdkit_ready():
+        if self.ready():
             res.append('rdkit')
         return res
 
     def is_reactor(self):
         return 'reactor' in self.methods_available()
 
-    def rdkit_ready(self):
+    def ready(self):
         try:
             cd  = ChemDoodle()
             self.chemdoodle_json = cd.react_to_json(
@@ -245,14 +245,6 @@ class Reaction(FileManagement, models.Model):
     def react_rdkit_(self, smarts):
         if smarts is not None:
             return RDKit.reaction_from_smarts(smarts)
-
-    def get_reactants_number_from_mrv(self):
-        smarts = self.get_smarts_from_mrv()
-        if smarts:
-            rx = self.react_rdkit_(smarts)
-            return rx.GetNumReactantTemplates()
-        else:
-            return 0
 
     def get_reactants_number(self):
         smarts = self.smarts

@@ -17,7 +17,7 @@ class ReactionTestManagement(TestManagement):
         return r
 
 
-    def create_reacts(self, reacts, email='create@react.com', smarts=None):
+    def create_reacts(self, reacts, email='create@react.com'):
         user = self.get_user(email)
         rd = {}
         for name, smarts in reacts:
