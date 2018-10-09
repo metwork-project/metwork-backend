@@ -149,8 +149,7 @@ class Reaction(FileManagement, models.Model):
             name = name,
             user=user,
             description=description,
-            smarts=smarts,
-            method_priority='rdkit')
+            smarts=smarts)
         r.save()
         return r
 

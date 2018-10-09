@@ -45,7 +45,13 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
         #reactions = [ Reaction.objects.get( name = rn) \
         #    for rn in reactions_name]
 
-        reactions = [ self.import_file( reaction_name = rn, user = u) \
+        smarts = {
+            'methylation': '[N,O:1]>>[*:1]-[#6]',
+            'diels_alder': '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1',
+        }
+
+        reactions = [
+            Reaction.create_from_smarts( smarts=smarts[rn], name=rn, user=u ) \
             for rn in reactions_name]
 
         print (reactions)
@@ -207,21 +213,11 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
             'depth_total' : 2,
             'depth_last_match' : 1,
             'sample_file_name' : 'test_annotation_project_GAP.mgf',
-        #}, {
-        #    'name' : 'tautomerisation',
-        #    'anno_file' : 'anno_tauto',
-        #    'smiles' :['NC1=NC(C=C)=CN1'],
-        #    'reactions_name' : [ 'diels_alder_cycloaddition' ],
-        #    'expected_anno' : [
-        #        ('NC1=NC=C(N1)C1CCC2=C(C1)NC(N)=N2',40) ],
-        #    'not_expected_smiles' : [],
-        #    'depth_total' : 1,
-        #    'sample_file_name' : 'test_tauto.mgf',
         }, {
             'name' : 'bi_reactants_reaction',
             'anno_file' : 'anno_2',
             'smiles' :['OC=CCO', 'C=Cc1c[nH]c(N)n1', 'C=CCC'],
-            'reactions_name' : [ 'methylation', 'diels_alder_cycloaddition' ],
+            'reactions_name' : [ 'methylation', 'diels_alder' ],
             'expected_anno' : [
                 ('COC=CCO',2),
                 ('CCC1CCC=C2N=C(N)NC12', 10),
