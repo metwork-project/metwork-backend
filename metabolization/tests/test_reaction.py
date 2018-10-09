@@ -93,3 +93,20 @@ class ReactionModelTests(ReactionTestManagement):
         self.assertIsNone(r.mass_delta())
         r.run_reaction([m])
         self.assertEqual(round(r.mass_delta(),6), 14.01565)
+
+    def test_reset_react_process(self):
+        # reset react process if not ACTIVE
+        r = self.create_reacts([('methylation', '[N,O:1]>>[*:1]-[#6]-[#6]')])['methylation']
+        co = Molecule.load_from_smiles('CO')
+        cco = Molecule.load_from_smiles('CCO')
+        self.assertEqual(r.reactprocess_set.count(), 0)
+        r.run_reaction([cco])
+        self.assertEqual(r.reactprocess_set.count(), 1)
+        r.smarts = '[N,O:1]>>[*:1]-[#6]'
+        r.save()
+        r.run_reaction([co])
+        self.assertEqual(r.reactprocess_set.count(), 1)
+        r.status_code = Reaction.status.ACTIVE
+        r.save()
+        r.run_reaction([cco])
+        self.assertEqual(r.reactprocess_set.count(), 2)

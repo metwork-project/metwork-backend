@@ -263,6 +263,8 @@ class Reaction(FileManagement, models.Model):
             return 0
 
     def run_reaction(self, reactants, method='rdkit'):
+        if self.status_code < Reaction.status.ACTIVE:
+            self.reactprocess_set.all().delete()
         from metabolization.models import ReactProcess
         rp = ReactProcess.objects.create()
         rp.reaction = self
