@@ -21,10 +21,6 @@ class Reaction(FileManagement, models.Model):
 
     REACTANTS_MAX = 2
 
-    METHODS_CHOICES = (
-        ('reactor', 'Reactor'),
-        ('rdkit', 'RDKit'),)
-
     name = models.CharField(
             max_length=128,
             default='new_reaction',
@@ -40,10 +36,6 @@ class Reaction(FileManagement, models.Model):
                     db_index = True)
     reactants_number = models.SmallIntegerField(
             default=0)
-    method_priority = models.CharField(
-            max_length=32,
-            choices = METHODS_CHOICES,
-            default='rdkit') # cls. methods_allowed
     smarts = models.CharField(
             max_length=1024,
             default=None,
@@ -95,8 +87,6 @@ class Reaction(FileManagement, models.Model):
             prev_status = Reaction.objects.get(id=self.id).status_code
         else:
             prev_status = Reaction.status.EDIT
-        if self.smarts is None:
-            self.smarts = self.get_smarts_from_mrv()
         if self.status_code == Reaction.status.INIT:
             self.status_code = Reaction.status.EDIT
         if self.status_code == Reaction.status.EDIT and prev_status != Reaction.status.VALID:
@@ -134,15 +124,9 @@ class Reaction(FileManagement, models.Model):
     def user_name(self):
         return self.user.username
 
-    def gen_image(self):
-        svg = subprocess.check_output(["molconvert", "svg:w400h200", self.mrv_path()]).decode('utf-8')
-        with open( self.image_path(), 'w') as fw:
-            fw.write(svg)
-
     def get_image(self):
-        if not os.path.isfile(self.image_path()):
-            self.gen_image()
-        return open( self.image_path(), 'r').read()
+        if os.path.isfile(self.image_path()):
+            return open( self.image_path(), 'r').read()
 
     @classmethod
     def activated(cls):
@@ -156,20 +140,6 @@ class Reaction(FileManagement, models.Model):
             if  rd is not None and rd > max:
                 max = rd
         return max
-
-    @classmethod
-    def import_file(cls, file_object, name, user, description=None):
-        r = cls(
-            name = name,
-            user=user,
-            description=description,
-            method_priority='reactor')
-        r.save()
-        with open(r.mrv_path(), 'w') as f:
-            f.write(file_object.read().decode('utf-8'))
-        r.save()
-        r.gen_image()
-        return r
 
     @classmethod
     def create_from_smarts(cls, smarts, name, user, description=None):
@@ -188,38 +158,10 @@ class Reaction(FileManagement, models.Model):
         from metabolization.models import ReactionsConf
         return ReactionsConf.objects.filter(reactions__in = [self]).count() == 0
 
-    def mrv_path(self):
-        return '/'.join([
-            self.item_path(),
-            'reaction.mrv'])
-
     def image_path(self):
         return '/'.join([
             self.item_path(),
             'image.svg'])
-
-    def mrv_exist(self):
-        return os.path.isfile(self.mrv_path())
-
-    def method_to_apply(self):
-        prio = self.method_priority
-        default = 'reactor'
-        available = self.methods_available()
-        if prio in available:
-            return prio
-        elif default in available:
-            return default
-
-    def methods_available(self):
-        res = []
-        if self.mrv_exist():
-            res.append('reactor')
-        if self.ready():
-            res.append('rdkit')
-        return res
-
-    def is_reactor(self):
-        return 'reactor' in self.methods_available()
 
     def ready(self):
         try:
@@ -227,17 +169,10 @@ class Reaction(FileManagement, models.Model):
             self.chemdoodle_json = cd.react_to_json(
                 RDKit.reaction_from_smarts(
                     self.smarts))
-            # self.save()
             rx = self.react_rdkit()
             return rx.Validate() == (0,0)
         except:
             return False
-
-    def get_smarts_from_mrv(self):
-        if self.mrv_exist():
-            return subprocess.check_output(['molconvert', 'smarts', self.mrv_path()]).decode('utf-8')
-        else:
-            return None
 
     def react_rdkit(self):
         return self.react_rdkit_(self.smarts)
@@ -261,10 +196,6 @@ class Reaction(FileManagement, models.Model):
         rp = ReactProcess.objects.create()
         rp.reaction = self
         rp.reactants.set(reactants)
-        if method in self.methods_available():
-            rp.method = method
-        else:
-            rp.method = self.methods_available()[0]
         rp.save()
         rp.run_reaction()
         return rp
