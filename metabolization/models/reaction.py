@@ -12,6 +12,7 @@ from base.modules import RDKit
 from django.conf import settings
 from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
+from django.db.models import Count
 
 class Reaction(FileManagement, models.Model):
 
@@ -276,7 +277,7 @@ class Reaction(FileManagement, models.Model):
 
     def mass_delta(self):
         from metabolization.models import ReactProcess
-        rps = self.reactprocess_set.filter(status_code=ReactProcess.status.DONE)
+        rps = self.reactprocess_set.annotate(Count('products')).filter(products__count__gt=0)
         if len(rps) > 0:
             return rps.first().mass_delta()
         else:

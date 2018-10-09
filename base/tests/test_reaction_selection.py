@@ -16,6 +16,13 @@ class ReactionSelectionTests(TransactionTestCase):
             name = 'methylation',
             smarts = '[N,O:1]>>[*:1]-[#6]' )
         methylation.run_reaction([Molecule.load_from_smiles('CCO')])
+        diels_alder = Reaction.objects.create(
+            user=u,
+            name = 'diels_alder',
+            smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1' )
+        diels_alder.run_reaction([
+            Molecule.load_from_smiles('C=Cc1c[nH]c(N)n1'),
+            Molecule.load_from_smiles('C=C')])
         diels_alder_modified = Reaction.objects.create(
             user=u,
             name = 'diels_alder_modified',
@@ -23,7 +30,7 @@ class ReactionSelectionTests(TransactionTestCase):
         diels_alder_modified.run_reaction([
             Molecule.load_from_smiles('C=Cc1c[nH]c(N)n1'),
             Molecule.load_from_smiles('C=C')])
-        for r in [methylation, diels_alder_modified]:
+        for r in [methylation, diels_alder, diels_alder_modified]:
             r.status_code = Reaction.status.ACTIVE
             r.save()
 
@@ -44,7 +51,8 @@ class ReactionSelectionTests(TransactionTestCase):
             depth_last_match = 0)
         p.save()
         p.update_frag_sample(fs)
-        p.select_reaction_by_mass()
+        p.select_reactions_by_mass()
 
         self.assertIn(methylation, p.reactions())
+        self.assertIn(diels_alder, p.reactions())
         self.assertNotIn(diels_alder_modified, p.reactions())

@@ -167,7 +167,7 @@ class FragSample(models.Model):
 
     def gen_mass_delta(self):
         from metabolization.models import Reaction
-        max = Reaction.max_delta()
+        reaction_max = Reaction.max_delta()
 
         single = np.array([])
         double = np.array([])
@@ -180,27 +180,13 @@ class FragSample(models.Model):
             res = np.round(a1 - res,6)
             res = np.abs(res)
             res = np.unique(res)
-            res = res[np.where( res <= max )[0]]
+            mass_max = max(reaction_max, min(allfms)) + settings.PROTON_MASS
+            res = res[np.where( res <= mass_max )[0]]
             return res
 
         single = diff_values(allfms ,allfms)
         double = diff_values(single, allfms - settings.PROTON_MASS)
 
-        # single = np.unique(np.abs(allfms - np.reshape(allfms, (len(allfms),1))))
-        # double = np.unique(np.abs(allfms - settings.PROTON_MASS - np.reshape(single, (len(single),1))))
-        # for i in allfms:
-        #     for k in allfms:
-        #         delta_single = round( abs( k - i ) , 6)
-        #         if not True in np.isin(delta_single, single):
-        #         # if not delta_single in single:
-        #             single = np.append(single, delta_single)
-        #         for j in allfms:
-        #             delta_double = round( abs( \
-        #                 k \
-        #                 - (i + j - settings.PROTON_MASS ) ) , 6)
-        #             if not True in np.isin(delta_double, double):
-        #             # if not delta_double in double:
-        #                 double = np.append(double, delta_double)
         self.mass_delta_single = single.tolist()
         self.mass_delta_double = double.tolist()
         self.save()

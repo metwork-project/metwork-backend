@@ -163,7 +163,11 @@ class SampleAnnotationProject(Project):
         if self.reactions_conf != None:
             return [fa.id for fa in self.frag_annotations_init.all()]
 
-    def select_reaction_by_mass(self):
+    def remove_reactions(self):
+        self.change_reactions([])
+        return self
+
+    def select_reactions_by_mass(self):
         delta={
             1: np.array(self.frag_sample.mass_delta_single),
             2: np.array(self.frag_sample.mass_delta_double)
@@ -172,10 +176,13 @@ class SampleAnnotationProject(Project):
             r.id \
             for r in Reaction.activated()
             if r.mass_delta() is not None \
-                and True in np.isclose(delta[r.reactants_number], r.mass_delta()) ]
+                and True in np.isclose(
+                    r.mass_delta(),
+                    delta[r.reactants_number],
+                    atol=1e-03,
+                    rtol=1e-06 )]
         self.change_reactions(reaction_ids)
-
-        return self.reactions()
+        return self
 
     def toggle_item(self, field, item_id):
     # Select or unselect the item of type "field" identified by its id "item_id"
@@ -200,7 +207,7 @@ class SampleAnnotationProject(Project):
                 self.frag_annotations_init.remove(fa)
             else:
                 self.frag_annotations_init.add(fa)
-        self.save()
+            self.save()
         return self
 
     def change_reactions(self, reaction_ids, reaction=None, to_remove=False):
@@ -225,7 +232,7 @@ class SampleAnnotationProject(Project):
             rc = rcs.first()
             self.reactions_conf = rc
             self.save()
-            if prev_rc_uniq:
+            if prev_rc_uniq and prev_rc != rc:
                 prev_rc.delete()
         elif reaction is not None and prev_rc_uniq:
             if to_remove:
@@ -240,6 +247,7 @@ class SampleAnnotationProject(Project):
                 rc.reactions.add(r)
             rc.save()
             self.reactions_conf = rc
+        self.save()
 
     def run(self):
         from base.tasks import start_run
