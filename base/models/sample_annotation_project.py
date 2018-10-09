@@ -168,6 +168,9 @@ class SampleAnnotationProject(Project):
         return self
 
     def select_reactions_by_mass(self):
+        # regen frag_sample.mass_delta_* if necessary
+        if Reaction.max_delta() > self.frag_sample.reaction_mass_max:
+            self.frag_sample.gen_mass_delta()
         delta={
             1: np.array(self.frag_sample.mass_delta_single.value),
             2: np.array(self.frag_sample.mass_delta_double.value)

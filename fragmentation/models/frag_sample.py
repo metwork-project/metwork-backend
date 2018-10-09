@@ -55,6 +55,10 @@ class FragSample(models.Model):
         on_delete=models.CASCADE,
         null= True,
     )
+    # reaction_mass_max is the max value of reactions mass
+    # when mass_delta_* lists where evaluated
+    reaction_mass_max = models.FloatField(\
+            default = 0)
     status_code = models.PositiveIntegerField(
                     default=0,
                     db_index = True)
@@ -178,18 +182,17 @@ class FragSample(models.Model):
         from metabolization.models import Reaction
         reaction_max = Reaction.max_delta()
 
-        single = np.array([])
-        double = np.array([])
         allfms = np.array([
             fms.parent_mass for fms in self.fragmolsample_set.all() ])
         allfms = np.unique(allfms)
 
+        self.reaction_mass_max = max(reaction_max, min(allfms))
+
         def diff_values(a1,a2):
             res = np.reshape(a2, (len(a2),1))
             res = np.round(a1 - res,6)
-            res = np.abs(res)
-            res = np.unique(res)
-            mass_max = max(reaction_max, min(allfms)) + settings.PROTON_MASS
+            res = np.unique(np.abs(res))
+            mass_max = self.reaction_mass_max + settings.PROTON_MASS
             res = res[np.where( res <= mass_max )[0]]
             return res
 

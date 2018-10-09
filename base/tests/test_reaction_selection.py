@@ -16,6 +16,11 @@ class ReactionSelectionTests(TransactionTestCase):
             name = 'methylation',
             smarts = '[N,O:1]>>[*:1]-[#6]' )
         methylation.run_reaction([Molecule.load_from_smiles('CCO')])
+        methylation_modified = Reaction.objects.create(
+            user=u,
+            name = 'methylation_modified',
+            smarts = '[N,O:1]>>IC(I)C[*:1]' )
+        methylation_modified.run_reaction([Molecule.load_from_smiles('CCO')])
         diels_alder = Reaction.objects.create(
             user=u,
             name = 'diels_alder',
@@ -54,5 +59,14 @@ class ReactionSelectionTests(TransactionTestCase):
         p.select_reactions_by_mass()
 
         self.assertIn(methylation, p.reactions())
+        self.assertNotIn(methylation_modified, p.reactions())
         self.assertIn(diels_alder, p.reactions())
         self.assertNotIn(diels_alder_modified, p.reactions())
+
+        # test frag_sample.gen_mass_delta reevaluation
+        # when new reaction added
+        methylation_modified.status_code = Reaction.status.ACTIVE
+        methylation_modified.save()
+        self.assertNotIn(methylation_modified, p.reactions())
+        p.select_reactions_by_mass()
+        self.assertIn(methylation_modified, p.reactions())
