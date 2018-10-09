@@ -179,8 +179,8 @@ class SampleAnnotationProject(Project):
                 and True in np.isclose(
                     r.mass_delta(),
                     delta[r.reactants_number],
-                    atol=1e-03,
-                    rtol=1e-06 )]
+                    atol=5*1e-03,
+                    rtol=0 )]
         self.change_reactions(reaction_ids)
         return self
 
