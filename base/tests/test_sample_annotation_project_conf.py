@@ -37,7 +37,8 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 	def test_status_ready(self):
 		initial_name = "initial name"
 		u = get_user_model().objects.create(email = 'user@test.com')
-		self.import_file(reaction_name = "methylation", user = u)
+		# self.import_file(reaction_name = "methylation", user = u)
+		r = self.create_reacts([('methylation', '[N,O:1]>>[*:1]-[#6]')]) ['methylation']
 		p = SampleAnnotationProject.objects.create(
 			name = initial_name,
 			user = u,)
