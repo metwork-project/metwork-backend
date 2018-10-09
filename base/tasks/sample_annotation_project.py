@@ -60,8 +60,7 @@ def run_reaction_molecule(reactants_id, reaction_id, project_id, depth_total, de
                         .annotate(reactants_count=Count('reactants'))\
                         .filter(
                             reaction = r,
-                            reactants_count = reactants_uniq_count,
-                            method = r.method_to_apply())
+                            reactants_count = reactants_uniq_count)
         for m in reactants:
             rp_search = rp_search.filter(reactants__id = m.id)
 
@@ -152,24 +151,6 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
     ms1 = cache.get( 'project_ms1_not_init_' + str(project_id) )
     pos_id_min, pos_id_max = ( np.searchsorted(ms1[1], mw) for mw in mass_window )
     fm_search_ids = ms1[0][pos_id_min:pos_id_max]
-
-    # ===> Tautomerization not used
-    if False: #fm_search.count() > 0:
-        maj_taut = m.major_tautomers()
-        maj_taut_to_process = maj_taut
-        for mt in maj_taut:
-            if not mt in p.molecules.all():
-                try:
-                    p.molecules.add(mt)
-                    p.save()
-                    maj_taut_to_process.append(mt)
-                except:
-                    pass
-        mol_ids = list( {m.id} | {mol.id for mol in maj_taut_to_process} )
-    #else:
-        mol_ids = [m.id]
-        fm_search_ids += [fms.id for fms in fm_search]
-    # =====
 
     p.add_process()
     tsk = evaluate_molecule_2.apply_async( args= [m.id, fm_search_ids, project_id, depth_total, depth_last_match], queue = settings.CELERY_RUN_QUEUE)

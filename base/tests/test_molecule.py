@@ -19,7 +19,7 @@ class MoleculeModelTests(TransactionTestCase):
         m = Molecule.create_from_smiles('NC1=NC(C=C)=CN1')
         kekulize_options = {\
             False: 'C=Cc1c[nH]c(N)n1', \
-            True: 'C=CC1=C[NH]C(N)=N1'} 
+            True: 'C=CC1=C[NH]C(N)=N1'}
         for k in kekulize_options:
             self.assertEqual(RDKit.mol_to_smiles(m.mol_rdkit, kekulize = k), kekulize_options[k])
 
@@ -49,14 +49,3 @@ class MoleculeModelTests(TransactionTestCase):
         self.assertTrue(Molecule.find_from_smiles(sm))
         self.assertEqual(m.mol_rdkit, mol_rdkit)
         self.assertEqual(m, Molecule.load_from_rdkit(mol_rdkit))
-
-    def test_major_tautomerization(self):
-        smiles = 'NC1=NC2CCCC=C2N1'
-        smiles_out = [
-            'NC1=NC2=C(CCCC2)N1', 
-            'NC1=NC2CCCC=C2N1',
-            'NC1=NC2CCCCC2=N1' ]
-        mol = Molecule.load_from_smiles(smiles)
-        expected_mols = {Molecule.load_from_smiles(sm) for sm in smiles_out}
-        self.assertEqual({m for m in mol.major_tautomers()}, expected_mols)
-

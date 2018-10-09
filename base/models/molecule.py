@@ -55,24 +55,6 @@ class Molecule(models.Model):
         br_count = self.smiles().count('Br')
         return [ mass + 1.9979535*(inc) for inc in range(br_count + 1) ]
 
-    def major_tautomers(self):
-        import subprocess
-        tautomer_major = set([])
-        tautomer_all = subprocess.check_output([
-                'cxcalc', 'tautomers',
-                self.smiles(),
-                '-f','smiles'])\
-            .decode().split('\n')
-        for sm in tautomer_all[:-1]:
-            tautomer_major_ = subprocess.check_output([
-                    'cxcalc', 'majortautomer',
-                    sm,
-                    '-f','smiles'])\
-                .decode().split('\n')
-            tautomer_major = tautomer_major | {Molecule.load_from_smiles(sm) for sm in tautomer_major_ }
-        tautomer_major = tautomer_major - {False}
-        return list(tautomer_major)
-
     @classmethod
     def create_from_smiles(cls, sm):
         try:
