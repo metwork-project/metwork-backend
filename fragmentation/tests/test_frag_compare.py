@@ -54,5 +54,5 @@ class FragCompareModelTests(TransactionTestCase):
 		fsim = FragCommonTests.new_frag_sim()
 		fms = fsim.frag_molecule(m)
 		fmc = fc.compare_frag_mols([fsample.fragmolsample_set.first(), fms])
-		print(fmc.cosine)#, fmc.num_frag_match
+		#print(fmc.cosine)#, fmc.num_frag_match
 		self.assertTrue(fmc.cosine >= 0.2, fmc.cosine)

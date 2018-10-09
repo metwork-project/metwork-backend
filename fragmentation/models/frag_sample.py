@@ -178,7 +178,7 @@ class FragSample(models.Model):
         self.status_code = 3
         self.save()
 
-    def gen_mass_delta(self):
+    def gen_mass_delta(self, update_reaction_mass_max=True):
         from metabolization.models import Reaction
         reaction_max = Reaction.max_delta()
 
@@ -186,7 +186,8 @@ class FragSample(models.Model):
             fms.parent_mass for fms in self.fragmolsample_set.all() ])
         allfms = np.unique(allfms)
 
-        self.reaction_mass_max = max(reaction_max, min(allfms))
+        if update_reaction_mass_max:
+            self.reaction_mass_max = max(reaction_max, min(allfms))
 
         def diff_values(a1,a2):
             res = np.reshape(a2, (len(a2),1))
