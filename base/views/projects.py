@@ -70,47 +70,37 @@ class ProjectViewSet(ModelAuthViewSet):
         return Response({'first_test': 'ok'})
         #return Response(ReactionSerializer(project.reactions_conf.reactions.all()).data)
 
-    @detail_route(methods=['patch'])
-    def toggle_item(self, request, pk=None):
-        project = self.get_object()
+    def change_item(self, self_, request, func):
+        project = self_.get_object()
         data = JSONParser().parse(request)
-        item_id = data['id']
-        field = data['field']
-        project.toggle_item(field, item_id)
+        dataLabel = data['dataLabel']
+        if 'item_ids' in data:
+            getattr(project, func)(dataLabel, data['item_ids'])
+        else:
+            print(getattr(project, func))
+            getattr(project, func)(dataLabel)
         return Response({'project_id': project.id})
 
     @detail_route(methods=['patch'])
     def add_items(self, request, pk=None):
-        project = self.get_object()
-        data = JSONParser().parse(request)
-        field = data['field']
-        item_ids = data['item_ids']
-        project.add_items(field, item_ids)
-        return Response({'project_id': project.id})
+        return self.change_item(self, request, 'add_items')
 
     @detail_route(methods=['patch'])
     def add_all(self, request, pk=None):
-        project = self.get_object()
-        data = JSONParser().parse(request)
-        field = data['field']
-        project.add_all(field)
-        return Response({'project_id': project.id})
+        return self.change_item(self, request, 'add_all')
 
     @detail_route(methods=['patch'])
     def remove_all(self, request, pk=None):
-        project = self.get_object()
-        data = JSONParser().parse(request)
-        field = data['field']
-        project.remove_all(field)
-        return Response({'project_id': project.id})
+        return self.change_item(self, request, 'remove_all')
 
     @detail_route(methods=['patch'])
     def remove_item(self, request, pk=None):
+        return self.change_item(self, request, 'remove_item')
+
+    @detail_route(methods=['patch'])
+    def select_reactions_by_mass(self, request, pk=None):
         project = self.get_object()
-        data = JSONParser().parse(request)
-        item_id = data['id']
-        field = data['field']
-        project.remove_item(field, item_id)
+        project.select_reactions_by_mass()
         return Response({'project_id': project.id})
 
     @detail_route(methods=['patch'])

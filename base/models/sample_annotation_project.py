@@ -190,9 +190,9 @@ class SampleAnnotationProject(Project):
         self.change_reactions(reaction_ids)
         return self
 
-    def toggle_item(self, field, item_id):
-    # Select or unselect the item of type "field" identified by its id "item_id"
-        if field == 'reaction':
+    def toggle_item(self, dataLabel, item_id):
+    # Select or unselect the item of type "dataLabel" identified by its id "item_id"
+        if dataLabel == 'reaction':
             reaction = Reaction.objects.get(id=item_id)
             reaction_ids = self.reaction_ids()
             to_remove = item_id in reaction_ids
@@ -207,7 +207,7 @@ class SampleAnnotationProject(Project):
 
             self.change_reactions(reaction_ids, reaction=reaction, to_remove=to_remove)
 
-        if field == 'frag-annotation':
+        if dataLabel == 'annotations':
             fa = FragAnnotationDB.objects.get(id=item_id)
             if fa in self.frag_annotations_init.all():
                 self.frag_annotations_init.remove(fa)
@@ -216,41 +216,39 @@ class SampleAnnotationProject(Project):
             self.save()
         return self
 
-    def add_all(self, field):
-    # Select or unselect the item of type "field" identified by its id "item_id"
-        # if field == 'reaction':
-            # reaction_ids = []
-            # self.change_reactions(reaction_ids)
-        if field == 'frag-annotation':
+    def add_all(self, dataLabel):
+        if dataLabel == 'reactions':
+            reaction_ids = [r.id for r in Reaction.activated()]
+            self.change_reactions(reaction_ids)
+        if dataLabel == 'annotations':
             self.add_all_annotations()
         return self
 
-    def add_items(self, field, item_ids):
-        if field == 'reaction':
-            self.change_reactions(item_ids)
-        if field == 'frag-annotation':
+    def add_items(self, dataLabel, item_ids):
+        if dataLabel == 'reactions':
+            reaction_ids = self.reaction_ids() + item_ids
+            self.change_reactions(reaction_ids)
+        if dataLabel == 'annotations':
             for id in item_ids:
                 annot = FragAnnotationDB.objects.get(id = id)
                 self.frag_annotations_init.add(annot)
         return self
 
-    def remove_all(self, field):
-    # Select or unselect the item of type "field" identified by its id "item_id"
-        if field == 'reaction':
-            reaction_ids = []
-            self.change_reactions(reaction_ids)
-        if field == 'frag-annotation':
+    def remove_all(self, dataLabel):
+        if dataLabel == 'reactions':
+            self.remove_reactions()
+        if dataLabel == 'annotations':
             self.frag_annotations_init.clear()
         return self
 
-    def remove_item(self, field, item_id):
-    # Select or unselect the item of type "field" identified by its id "item_id"
-        if field == 'reaction':
+    def remove_item(self, dataLabel, item_ids):
+        item_id = item_ids[0]
+        if dataLabel == 'reactions':
             reaction = Reaction.objects.get(id=item_id)
             reaction_ids = self.reaction_ids()
             reaction_ids.remove(item_id)
-            self.change_reactions(reaction_ids, reaction=reaction, to_remove=to_remove)
-        if field == 'frag-annotation':
+            self.change_reactions(reaction_ids, reaction=reaction, to_remove=True)
+        if dataLabel == 'annotations':
             fa = FragAnnotationDB.objects.get(id=item_id)
             self.frag_annotations_init.remove(fa)
         return self
