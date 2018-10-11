@@ -80,6 +80,23 @@ class ProjectViewSet(ModelAuthViewSet):
         return Response({'project_id': project.id})
 
     @detail_route(methods=['patch'])
+    def remove_all(self, request, pk=None):
+        project = self.get_object()
+        data = JSONParser().parse(request)
+        field = data['field']
+        project.remove_all(field)
+        return Response({'project_id': project.id})
+
+    @detail_route(methods=['patch'])
+    def remove_item(self, request, pk=None):
+        project = self.get_object()
+        data = JSONParser().parse(request)
+        item_id = data['id']
+        field = data['field']
+        project.remove_item(field, item_id)
+        return Response({'project_id': project.id})
+
+    @detail_route(methods=['patch'])
     def update_frag_compare_conf(self, request, pk=None):
         project = self.get_object()
         params = JSONParser().parse(request)

@@ -213,6 +213,27 @@ class SampleAnnotationProject(Project):
             self.save()
         return self
 
+    def remove_all(self, field):
+    # Select or unselect the item of type "field" identified by its id "item_id"
+        if field == 'reaction':
+            reaction_ids = []
+            self.change_reactions(reaction_ids)
+        if field == 'frag-annotation':
+            self.frag_annotations_init.clear()
+        return self
+
+    def remove_item(self, field, item_id):
+    # Select or unselect the item of type "field" identified by its id "item_id"
+        if field == 'reaction':
+            reaction = Reaction.objects.get(id=item_id)
+            reaction_ids = self.reaction_ids()
+            reaction_ids.remove(item_id)
+            self.change_reactions(reaction_ids, reaction=reaction, to_remove=to_remove)
+        if field == 'frag-annotation':
+            fa = FragAnnotationDB.objects.get(id=item_id)
+            self.frag_annotations_init.remove(fa)
+        return self
+
     def change_reactions(self, reaction_ids, reaction=None, to_remove=False):
         from django.db.models import Count
         # Manage which ReactionConf to applied to project
