@@ -190,32 +190,6 @@ class SampleAnnotationProject(Project):
         self.change_reactions(reaction_ids)
         return self
 
-    def toggle_item(self, dataLabel, item_id):
-    # Select or unselect the item of type "dataLabel" identified by its id "item_id"
-        if dataLabel == 'reaction':
-            reaction = Reaction.objects.get(id=item_id)
-            reaction_ids = self.reaction_ids()
-            to_remove = item_id in reaction_ids
-            if to_remove:
-                reaction_ids.remove(item_id)
-
-            # Check if not exceed REACTIONS_LIMIT before add
-            elif len(reaction_ids)<self.REACTIONS_LIMIT:
-                reaction_ids.append(item_id)
-            else:
-                return {'error' : 'Only ' +  str(self.REACTIONS_LIMIT) + 'are allowed'}
-
-            self.change_reactions(reaction_ids, reaction=reaction, to_remove=to_remove)
-
-        if dataLabel == 'annotations':
-            fa = FragAnnotationDB.objects.get(id=item_id)
-            if fa in self.frag_annotations_init.all():
-                self.frag_annotations_init.remove(fa)
-            else:
-                self.frag_annotations_init.add(fa)
-            self.save()
-        return self
-
     def add_all(self, dataLabel):
         if dataLabel == 'reactions':
             reaction_ids = [r.id for r in Reaction.activated()]
