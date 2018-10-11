@@ -80,6 +80,23 @@ class ProjectViewSet(ModelAuthViewSet):
         return Response({'project_id': project.id})
 
     @detail_route(methods=['patch'])
+    def add_items(self, request, pk=None):
+        project = self.get_object()
+        data = JSONParser().parse(request)
+        field = data['field']
+        item_ids = data['item_ids']
+        project.add_items(field, item_ids)
+        return Response({'project_id': project.id})
+
+    @detail_route(methods=['patch'])
+    def add_all(self, request, pk=None):
+        project = self.get_object()
+        data = JSONParser().parse(request)
+        field = data['field']
+        project.add_all(field)
+        return Response({'project_id': project.id})
+
+    @detail_route(methods=['patch'])
     def remove_all(self, request, pk=None):
         project = self.get_object()
         data = JSONParser().parse(request)

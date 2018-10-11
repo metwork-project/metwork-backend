@@ -133,11 +133,14 @@ class SampleAnnotationProject(Project):
         self.frag_annotations_init.clear()
         self.frag_sample = fs
         # By default, all annotation of FragSample are selected for the project
-        for fa in FragAnnotationDB.objects.filter(
-                frag_mol_sample__frag_sample = fs):
-            self.frag_annotations_init.add(fa)
+        self.add_all_annotations()
         self.save()
         return self
+
+    def add_all_annotations(self):
+        for fa in FragAnnotationDB.objects.filter(
+                frag_mol_sample__frag_sample = self.frag_sample):
+            self.frag_annotations_init.add(fa)
 
     def update_status(self):
     # Manage which status can be grant on the project depend on its state
@@ -211,6 +214,24 @@ class SampleAnnotationProject(Project):
             else:
                 self.frag_annotations_init.add(fa)
             self.save()
+        return self
+
+    def add_all(self, field):
+    # Select or unselect the item of type "field" identified by its id "item_id"
+        # if field == 'reaction':
+            # reaction_ids = []
+            # self.change_reactions(reaction_ids)
+        if field == 'frag-annotation':
+            self.add_all_annotations()
+        return self
+
+    def add_items(self, field, item_ids):
+        if field == 'reaction':
+            self.change_reactions(item_ids)
+        if field == 'frag-annotation':
+            for id in item_ids:
+                annot = FragAnnotationDB.objects.get(id = id)
+                self.frag_annotations_init.add(annot)
         return self
 
     def remove_all(self, field):
