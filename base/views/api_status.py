@@ -18,7 +18,9 @@ class APIStatusSerializer(serializers.ModelSerializer):
         model = APIStatus
         fields = (
             'available',
-            'molecules_count',)
+            'molecules_count',
+            'achieved_projects_count',
+            'running_projects_count')
 
 class APIStatusViewSet(viewsets.ModelViewSet):
     serializer_class = APIStatusSerializer

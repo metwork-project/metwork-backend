@@ -121,3 +121,15 @@ class Project(FileManagement, PolymorphicModel):
 			else:
 				self.refresh_from_db()
 		return self
+
+	@classmethod
+	def achieved_projects(cls):
+		return cls.objects\
+            .filter(status_code=cls.status.DONE)
+
+	@classmethod
+	def running_projects(cls):
+		return cls.objects\
+            .filter(
+				models.Q(status_code=cls.status.QUEUE) \
+				| models.Q(status_code=cls.status.RUNNING))
