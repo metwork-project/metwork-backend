@@ -12,6 +12,7 @@ from base.modules import RDKit
 from django.conf import settings
 from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
+from django.db.models import Count
 
 class Reaction(FileManagement, models.Model):
 
@@ -19,10 +20,6 @@ class Reaction(FileManagement, models.Model):
         resource_name = "reactions"
 
     REACTANTS_MAX = 2
-
-    METHODS_CHOICES = (
-        ('reactor', 'Reactor'),
-        ('rdkit', 'RDKit'),)
 
     name = models.CharField(
             max_length=128,
@@ -39,10 +36,6 @@ class Reaction(FileManagement, models.Model):
                     db_index = True)
     reactants_number = models.SmallIntegerField(
             default=0)
-    method_priority = models.CharField(
-            max_length=32,
-            choices = METHODS_CHOICES,
-            default='rdkit') # cls. methods_allowed
     smarts = models.CharField(
             max_length=1024,
             default=None,
@@ -94,8 +87,6 @@ class Reaction(FileManagement, models.Model):
             prev_status = Reaction.objects.get(id=self.id).status_code
         else:
             prev_status = Reaction.status.EDIT
-        if self.smarts is None:
-            self.smarts = self.get_smarts_from_mrv()
         if self.status_code == Reaction.status.INIT:
             self.status_code = Reaction.status.EDIT
         if self.status_code == Reaction.status.EDIT and prev_status != Reaction.status.VALID:
@@ -106,7 +97,7 @@ class Reaction(FileManagement, models.Model):
                 react = RDKit.reaction_from_smarts(smarts)
                 self.chemdoodle_json = cd.react_to_json(react)
                 self.chemdoodle_json_error = None
-                if self.rdkit_ready():
+                if self.ready():
                     self.status_code = Reaction.status.VALID
                 else:
                     self.chemdoodle_json_error = 'error with RDKit'
@@ -133,29 +124,25 @@ class Reaction(FileManagement, models.Model):
     def user_name(self):
         return self.user.username
 
-    def gen_image(self):
-        svg = subprocess.check_output(["molconvert", "svg:w400h200", self.mrv_path()]).decode('utf-8')
-        with open( self.image_path(), 'w') as fw:
-            fw.write(svg)
+    def is_reactor(self):
+        return os.path.isfile(self.image_path())
 
     def get_image(self):
-        if not os.path.isfile(self.image_path()):
-            self.gen_image()
-        return open( self.image_path(), 'r').read()
+        if self.is_reactor():
+            return open( self.image_path(), 'r').read()
 
     @classmethod
-    def import_file(cls, file_object, name, user, description=None):
-        r = cls(
-            name = name,
-            user=user,
-            description=description,
-            method_priority='reactor')
-        r.save()
-        with open(r.mrv_path(), 'w') as f:
-            f.write(file_object.read().decode('utf-8'))
-        r.save()
-        r.gen_image()
-        return r
+    def activated(cls):
+        return cls.objects.filter(status_code = cls.status.ACTIVE)
+
+    @classmethod
+    def max_delta(cls):
+        max = 0
+        for r in cls.activated():
+            rd = r.mass_delta()
+            if  rd is not None and rd > max:
+                max = rd
+        return max
 
     @classmethod
     def create_from_smarts(cls, smarts, name, user, description=None):
@@ -165,8 +152,7 @@ class Reaction(FileManagement, models.Model):
             name = name,
             user=user,
             description=description,
-            smarts=smarts,
-            method_priority='rdkit')
+            smarts=smarts)
         r.save()
         return r
 
@@ -174,56 +160,21 @@ class Reaction(FileManagement, models.Model):
         from metabolization.models import ReactionsConf
         return ReactionsConf.objects.filter(reactions__in = [self]).count() == 0
 
-    def mrv_path(self):
-        return '/'.join([
-            self.item_path(),
-            'reaction.mrv'])
-
     def image_path(self):
         return '/'.join([
             self.item_path(),
             'image.svg'])
 
-    def mrv_exist(self):
-        return os.path.isfile(self.mrv_path())
-
-    def method_to_apply(self):
-        prio = self.method_priority
-        default = 'reactor'
-        available = self.methods_available()
-        if prio in available:
-            return prio
-        elif default in available:
-            return default
-
-    def methods_available(self):
-        res = []
-        if self.mrv_exist():
-            res.append('reactor')
-        if self.rdkit_ready():
-            res.append('rdkit')
-        return res
-
-    def is_reactor(self):
-        return 'reactor' in self.methods_available()
-
-    def rdkit_ready(self):
+    def ready(self):
         try:
             cd  = ChemDoodle()
             self.chemdoodle_json = cd.react_to_json(
                 RDKit.reaction_from_smarts(
                     self.smarts))
-            # self.save()
             rx = self.react_rdkit()
             return rx.Validate() == (0,0)
         except:
             return False
-
-    def get_smarts_from_mrv(self):
-        if self.mrv_exist():
-            return subprocess.check_output(['molconvert', 'smarts', self.mrv_path()]).decode('utf-8')
-        else:
-            return None
 
     def react_rdkit(self):
         return self.react_rdkit_(self.smarts)
@@ -231,14 +182,6 @@ class Reaction(FileManagement, models.Model):
     def react_rdkit_(self, smarts):
         if smarts is not None:
             return RDKit.reaction_from_smarts(smarts)
-
-    def get_reactants_number_from_mrv(self):
-        smarts = self.get_smarts_from_mrv()
-        if smarts:
-            rx = self.react_rdkit_(smarts)
-            return rx.GetNumReactantTemplates()
-        else:
-            return 0
 
     def get_reactants_number(self):
         smarts = self.smarts
@@ -248,36 +191,21 @@ class Reaction(FileManagement, models.Model):
         else:
             return 0
 
-    def run_reaction(self, reactants, method=None):
+    def run_reaction(self, reactants, method='rdkit'):
+        if self.status_code < Reaction.status.ACTIVE:
+            self.reactprocess_set.all().delete()
         from metabolization.models import ReactProcess
         rp = ReactProcess.objects.create()
         rp.reaction = self
         rp.reactants.set(reactants)
-        if method in self.methods_available():
-            rp.method = method
-        else:
-            rp.method = self.methods_available()[0]
         rp.save()
         rp.run_reaction()
         return rp
 
-## Hash management ##
-# file_hash aims to check if reaction file has not be changed since last DB update
-    # def file_hash_compute(self):
-    #     if self.mrv_exist():
-    #         with open(self.mrv_path(), 'rb') as f:
-    #             return hashlib.md5(f.read()).hexdigest()
-    #     else:
-    #         return ''
-    #
-    # def file_hash_update(self):
-    #     self.file_hash = self.file_hash_compute()
-    #     return self
-    #
-    # def file_hash_check(self):
-    #     return self.file_hash == self.file_hash_compute()
-    #
-    # def __unicode__(self):
-    #     return self.name
-
-####
+    def mass_delta(self):
+        from metabolization.models import ReactProcess
+        rps = self.reactprocess_set.annotate(Count('products')).filter(products__count__gt=0)
+        if len(rps) > 0:
+            return rps.first().mass_delta()
+        else:
+            return None

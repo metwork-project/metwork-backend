@@ -49,7 +49,7 @@ class MolGraph:
             }
         } for id, ion in enumerate(self.frag_sample.ions_list())]
 
-        cosine_matrix = self.frag_sample.cosine_matrix
+        cosine_matrix = self.frag_sample.cosine_matrix.value
         matrix_size = len(cosine_matrix)
 
         edges = [

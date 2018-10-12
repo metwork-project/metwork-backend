@@ -12,8 +12,7 @@ from base.models import Molecule
 from fragmentation.models import *
 from django.db.models import Q
 import re
-
-import re
+import numpy as np
 
 class SampleAnnotationProject(Project):
 
@@ -134,11 +133,14 @@ class SampleAnnotationProject(Project):
         self.frag_annotations_init.clear()
         self.frag_sample = fs
         # By default, all annotation of FragSample are selected for the project
-        for fa in FragAnnotationDB.objects.filter(
-                frag_mol_sample__frag_sample = fs):
-            self.frag_annotations_init.add(fa)
+        self.add_all_annotations()
         self.save()
         return self
+
+    def add_all_annotations(self):
+        for fa in FragAnnotationDB.objects.filter(
+                frag_mol_sample__frag_sample = self.frag_sample):
+            self.frag_annotations_init.add(fa)
 
     def update_status(self):
     # Manage which status can be grant on the project depend on its state
@@ -164,65 +166,105 @@ class SampleAnnotationProject(Project):
         if self.reactions_conf != None:
             return [fa.id for fa in self.frag_annotations_init.all()]
 
-    def toggle_item(self, field, item_id):
-    # Select or unselect the item of type "field" identified by its id "item_id"
-        from django.db.models import Count
-        if field == 'reaction':
+    def remove_reactions(self):
+        self.change_reactions([])
+        return self
+
+    def select_reactions_by_mass(self):
+        # regen frag_sample.mass_delta_* if necessary
+        if Reaction.max_delta() > self.frag_sample.reaction_mass_max:
+            self.frag_sample.gen_mass_delta()
+        delta={
+            1: np.array(self.frag_sample.mass_delta_single.value),
+            2: np.array(self.frag_sample.mass_delta_double.value)
+        }
+        reaction_ids = [
+            r.id \
+            for r in Reaction.activated()
+            if r.mass_delta() is not None \
+                and True in np.isclose(
+                    r.mass_delta(),
+                    delta[r.reactants_number],
+                    atol=5*1e-03,
+                    rtol=0 )]
+        self.change_reactions(reaction_ids)
+        return self
+
+    def add_all(self, dataLabel):
+        if dataLabel == 'reactions':
+            reaction_ids = [r.id for r in Reaction.activated()]
+            self.change_reactions(reaction_ids)
+        if dataLabel == 'annotations':
+            self.add_all_annotations()
+        return self
+
+    def add_items(self, dataLabel, item_ids):
+        if dataLabel == 'reactions':
+            reaction_ids = self.reaction_ids() + item_ids
+            self.change_reactions(reaction_ids)
+        if dataLabel == 'annotations':
+            for id in item_ids:
+                annot = FragAnnotationDB.objects.get(id = id)
+                self.frag_annotations_init.add(annot)
+        return self
+
+    def remove_all(self, dataLabel):
+        if dataLabel == 'reactions':
+            self.remove_reactions()
+        if dataLabel == 'annotations':
+            self.frag_annotations_init.clear()
+        return self
+
+    def remove_item(self, dataLabel, item_ids):
+        item_id = item_ids[0]
+        if dataLabel == 'reactions':
             reaction = Reaction.objects.get(id=item_id)
             reaction_ids = self.reaction_ids()
-            to_remove = item_id in reaction_ids
-            if to_remove:
-                reaction_ids.remove(item_id)
-
-            # Check if not exceed REACTIONS_LIMIT before add
-            elif len(reaction_ids)<self.REACTIONS_LIMIT:
-                reaction_ids.append(item_id)
-            else:
-                return {'error' : 'Only ' +  str(self.REACTIONS_LIMIT) + 'are allowed'}
-
-            # Manage which ReactionConf to applied to project
-            reactions = Reaction.objects.filter(id__in=reaction_ids)
-            # Look for existing conf that match the critteria
-            rcs = ReactionsConf.objects\
-                        .annotate(Count('reactions'))\
-                        .filter(
-                            reactions__count = len(reaction_ids),
-                            method_priority = self.reactions_conf.method_priority)\
-                        .distinct()
-            for r in reactions:
-                rcs = rcs.filter(reactions__in = [r])
-            prev_rc = self.reactions_conf
-            # Does previous conf is not associated with other project ?
-            prev_rc_uniq = self.reactions_conf.sampleannotationproject_set.count() == 1
-            # Does new conf to applies already exist ?
-            new_rc_exist = rcs.count() > 0
-            if new_rc_exist:
-                rc = rcs.first()
-                self.reactions_conf = rc
-                self.save()
-                if prev_rc_uniq:
-                    prev_rc.delete()
-            elif prev_rc_uniq:
-                if to_remove:
-                    self.reactions_conf.reactions.remove(reaction)
-                else:
-                    self.reactions_conf.reactions.add(reaction)
-                self.reactions_conf.save()
-            else:
-                rc = ReactionsConf.objects.create(
-                        method_priority = self.reactions_conf.method_priority)
-                for r in reactions:
-                    rc.reactions.add(r)
-                rc.save()
-                self.reactions_conf = rc
-        if field == 'frag-annotation':
+            reaction_ids.remove(item_id)
+            self.change_reactions(reaction_ids, reaction=reaction, to_remove=True)
+        if dataLabel == 'annotations':
             fa = FragAnnotationDB.objects.get(id=item_id)
-            if fa in self.frag_annotations_init.all():
-                self.frag_annotations_init.remove(fa)
-            else:
-                self.frag_annotations_init.add(fa)
-        self.save()
+            self.frag_annotations_init.remove(fa)
         return self
+
+    def change_reactions(self, reaction_ids, reaction=None, to_remove=False):
+        from django.db.models import Count
+        # Manage which ReactionConf to applied to project
+        reactions = Reaction.objects.filter(id__in=reaction_ids)
+        # Look for existing conf that match the critteria
+        rcs = ReactionsConf.objects\
+                    .annotate(Count('reactions'))\
+                    .filter(
+                        reactions__count = len(reaction_ids),
+                        method_priority = self.reactions_conf.method_priority)\
+                    .distinct()
+        for r in reactions:
+            rcs = rcs.filter(reactions__in = [r])
+        prev_rc = self.reactions_conf
+        # Does previous conf is not associated with other project ?
+        prev_rc_uniq = self.reactions_conf.sampleannotationproject_set.count() == 1
+        # Does new conf to applies already exist ?
+        new_rc_exist = rcs.count() > 0
+        if new_rc_exist:
+            rc = rcs.first()
+            self.reactions_conf = rc
+            self.save()
+            if prev_rc_uniq and prev_rc != rc:
+                prev_rc.delete()
+        elif reaction is not None and prev_rc_uniq:
+            if to_remove:
+                self.reactions_conf.reactions.remove(reaction)
+            else:
+                self.reactions_conf.reactions.add(reaction)
+            self.reactions_conf.save()
+        else:
+            rc = ReactionsConf.objects.create(
+                    method_priority = self.reactions_conf.method_priority)
+            for r in reactions:
+                rc.reactions.add(r)
+            rc.save()
+            self.reactions_conf = rc
+        self.save()
 
     def run(self):
         from base.tasks import start_run
