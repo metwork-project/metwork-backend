@@ -260,6 +260,7 @@ class FragSample(models.Model):
         for i, fl in enumerate(fls[1:]):
             try:
                 if file_format == 'default':
+                    adduct = 'M+H'
                     ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
                     adduct = 'M+H'
                 elif file_format == 'GNPS':
