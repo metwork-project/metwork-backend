@@ -18,6 +18,7 @@ class ChemDoodle(object):
         value_dic  = {
             1: Chem.rdchem.BondType.SINGLE,
             2: Chem.rdchem.BondType.DOUBLE,
+            3: Chem.rdchem.BondType.TRIPLE,
         }
         return value_dic[value]
 
@@ -259,23 +260,23 @@ class ChemDoodle(object):
                 mw.ReplaceAtom(atoms_cd[id],m_a.GetAtoms()[0])
 
         # Map atoms
-        dic_type = {
-            'reactant': 'a1',
-            'product': 'a2' }
         i = 1
         for m in map:
             if m['t'] == 'AtomMapping':
-                a_target = m[ dic_type[mol_type] ]
-                if a_target in atoms_cd:
-                    a_rd_id = atoms_cd[ a_target ]
+                a_rd_id = None
+                for a in ['a1', 'a2']:
+                    if m[a] in atoms_cd:
+                        a_rd_id = atoms_cd[ m[a] ]
+                if a_rd_id is not None:
                     mw.GetAtoms()[a_rd_id].SetAtomMapNum(i)
                 i += 1
 
 
         mol = mw.GetMol()
         Chem.rdmolops.SanitizeMol(mol)
-        # Chem.Kekulize(mol, True)
-        Chem.Kekulize(mol)
+        Chem.Kekulize(mol, True)
+        # Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE)
+        Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_MDL)
         # To keep stereo in MolToSmiles
         Chem.rdDepictor.Compute2DCoords(mol)
 
@@ -348,26 +349,37 @@ class ChemDoodle(object):
                             chiral_bonds[b.GetIdx()] = CHIRAL_CONFIG[ct][i]
             json_res['a'].append(mol_json)
 
-        # Transform aromatic bonds in kekulize form
-        arom_bond_type = Chem.rdchem.BondType.SINGLE
-        def propagate_kekulize(atom, arom_bond_type):
-            for b in atom.GetBonds():
-                if b.GetBondType() == Chem.rdchem.BondType.AROMATIC:
-                    if arom_bond_type == Chem.rdchem.BondType.SINGLE:
-                        arom_bond_type = Chem.rdchem.BondType.DOUBLE
-                    else:
-                        arom_bond_type = Chem.rdchem.BondType.SINGLE
-                    b.SetBondType( arom_bond_type )
-                    if atom.GetIdx() != b.GetBeginAtomIdx():
-                        target = b.GetBeginAtom()
-                    else:
-                        target = b.GetEndAtom()
-                    propagate_kekulize(target, arom_bond_type)
 
-        for b in mr.GetBonds():
-            if b.GetBondType() == Chem.rdchem.BondType.AROMATIC:
-                b.SetBondType( arom_bond_type )
-                propagate_kekulize(b.GetBeginAtom(), arom_bond_type)
+        try:
+            # Force atom to be aromatic if is in ring
+            for a in mr.GetAtoms():
+                a.SetIsAromatic(a.IsInRing())
+            # Kekulize mol
+            Chem.rdmolops.SanitizeMol(mr)
+            Chem.Kekulize(mr, True)
+
+        except:
+            # Transform aromatic bonds in kekulize form
+            # This should not be used ...
+            arom_bond_type = Chem.rdchem.BondType.SINGLE
+            def propagate_kekulize(atom, arom_bond_type):
+                for b in atom.GetBonds():
+                    if b.GetBondType() == Chem.rdchem.BondType.AROMATIC:
+                        if arom_bond_type == Chem.rdchem.BondType.SINGLE:
+                            arom_bond_type = Chem.rdchem.BondType.DOUBLE
+                        else:
+                            arom_bond_type = Chem.rdchem.BondType.SINGLE
+                        b.SetBondType( arom_bond_type )
+                        if atom.GetIdx() != b.GetBeginAtomIdx():
+                            target = b.GetBeginAtom()
+                        else:
+                            target = b.GetEndAtom()
+                        propagate_kekulize(target, arom_bond_type)
+
+            for b in mr.GetBonds():
+                if b.GetBondType() == Chem.rdchem.BondType.AROMATIC:
+                    b.SetBondType( arom_bond_type )
+                    propagate_kekulize(b.GetBeginAtom(), arom_bond_type)
 
         for i, b in enumerate(mr.GetBonds()):
             b_id = b.GetIdx()

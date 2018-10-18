@@ -65,7 +65,8 @@ class ReactProcess(models.Model):
             return Chem.AddHs(mol)
         else:
             Chem.Kekulize(mol,True)
-            Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE)
+            # Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE)
+            Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_MDL)
             return mol
 
     def wait_run_end(self, timeout = 30):

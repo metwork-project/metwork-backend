@@ -174,7 +174,7 @@ class FragSample(models.Model):
         self.gen_cosine_matrix()
 
 
-        if len(error_log) > 0 : print ('ERROR LOG', error_log )
+        # if len(error_log) > 0 : print ('ERROR LOG', error_log )
         self.status_code = 3
         self.save()
 
@@ -287,7 +287,7 @@ class FragSample(models.Model):
                         db_source = db_source,
                         db_id = db_id)
             except Exception as err:
-                print(err)
+                # print(err)
                 errors[i] = {'err': str(err), 'smiles': smiles}
         return {'success': 'Annotations successfully imported', 'errors': errors}
 
