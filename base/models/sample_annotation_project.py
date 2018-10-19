@@ -104,6 +104,8 @@ class SampleAnnotationProject(Project):
         for f in fields:
             clone.__setattr__( f, self.__getattribute__(f) )
         clone.save()
+        reaction_ids = [r.id for r in self.reactions_conf.reactions.exclude(status_code=Reaction.status.OBSOLETE)]
+        clone.change_reactions(reaction_ids)
         for fai in self.frag_annotations_init.all():
             clone.frag_annotations_init.add(fai)
         clone.save()
