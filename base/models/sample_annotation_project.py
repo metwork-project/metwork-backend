@@ -329,7 +329,7 @@ class SampleAnnotationProject(Project):
         # Send email to user
         self.user.email_user(
             subject = "MetWork run finished",
-            message = "The run of the project {0} is finished.".format(self.name) )
+            message = "The run of the project {0} is finished.\n https://metwork.pharmacie.parisdescartes.fr/#/projects/{1}".format(self.name, self.id))
 
     def gen_all_molecules(self):
         file_path = self.item_path() + '/all_molecules.csv'
