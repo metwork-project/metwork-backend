@@ -11,7 +11,7 @@ def import_sample_task(frag_sample_id, data, energy):
 	fs = FragSample.objects.get(id=frag_sample_id)
 	error_log = []
 
-	fs.import_sample_( data, energy)
+	fs.import_sample_( data, energy, True)
 
 @shared_task
 def gen_cosine_matrix_task(frag_sample_id):
