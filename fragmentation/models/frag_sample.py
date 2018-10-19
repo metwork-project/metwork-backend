@@ -64,7 +64,7 @@ class FragSample(models.Model):
                     db_index = True)
 
     # Limit the number of ions per sample
-    IONS_LIMIT = 100000
+    IONS_LIMIT = 2000
 
     class status:
         INIT = 0
@@ -124,11 +124,12 @@ class FragSample(models.Model):
         if task:
             import_sample_task.apply_async(args = [fs.id, data, energy], queue = settings.CELERY_WEB_QUEUE)
         else:
-            fs.import_sample_(data, energy)
+            fs.import_sample_(data, energy, task)
         return fs
 
-    def import_sample_(self, data, energy):
+    def import_sample_(self, data, energy, task=False):
         from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
+        from fragmentation.tasks import gen_cosine_matrix_task, gen_mass_delta_task
         import re
         error_log = []
 
@@ -170,11 +171,14 @@ class FragSample(models.Model):
             #except:
             #    error_log.append(l)
 
-        self.gen_mass_delta()
-        self.gen_cosine_matrix()
+        if task:
+            gen_cosine_matrix_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
+            gen_mass_delta_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
+        else:
+            self.gen_cosine_matrix()
+            self.gen_mass_delta()
 
-
-        if len(error_log) > 0 : print ('ERROR LOG', error_log )
+        # if len(error_log) > 0 : print ('ERROR LOG', error_log )
         self.status_code = 3
         self.save()
 
@@ -260,6 +264,7 @@ class FragSample(models.Model):
         for i, fl in enumerate(fls[1:]):
             try:
                 if file_format == 'default':
+                    adduct = 'M+H'
                     ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
                     adduct = 'M+H'
                 elif file_format == 'GNPS':
@@ -286,7 +291,7 @@ class FragSample(models.Model):
                         db_source = db_source,
                         db_id = db_id)
             except Exception as err:
-                print(err)
+                # print(err)
                 errors[i] = {'err': str(err), 'smiles': smiles}
         return {'success': 'Annotations successfully imported', 'errors': errors}
 

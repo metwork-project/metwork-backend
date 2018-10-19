@@ -65,23 +65,6 @@ class Reaction(FileManagement, models.Model):
     def __str__(self):
         return self.name
 
-    def __init__(self, *args, **kwargs):
-        res = super().__init__(*args, **kwargs)
-        if self.smarts is None:
-            try:
-                self.smarts = self.get_smarts_from_mrv()
-            except:
-                pass
-        if self.chemdoodle_json is None:
-            try:
-                cd  = ChemDoodle()
-                self.chemdoodle_json = cd.react_to_json(
-                    RDKit.reaction_from_smarts(
-                        self.smarts))
-            except:
-                pass
-        return res
-
     def save(self, *args, **kwargs):
         if self.id is not None:
             prev_status = Reaction.objects.get(id=self.id).status_code
@@ -113,8 +96,8 @@ class Reaction(FileManagement, models.Model):
         try:
             cd  = ChemDoodle()
             react = RDKit.reaction_from_smarts(smarts)
-            json.dumps(cd.react_to_json(react))
             self.smarts = smarts
+            self.chemdoodle_json = cd.react_to_json(react)
             self.status_code = Reaction.status.VALID
         except:
             self.status_code = Reaction.status.EDIT

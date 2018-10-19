@@ -47,7 +47,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 
         smarts = {
             'methylation': '[N,O:1]>>[*:1]-[#6]',
-            'diels_alder': '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1',
+            'diels_alder': '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1',
         }
 
         reactions = [

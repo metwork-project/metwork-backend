@@ -11,6 +11,7 @@ from metabolization.models import *
 from base.models import Molecule
 from fragmentation.models import *
 from django.db.models import Q
+from django.conf import settings
 import re
 import numpy as np
 
@@ -327,9 +328,12 @@ class SampleAnnotationProject(Project):
         cache.delete('project_molecules_all_' + str(self.id))
 
         # Send email to user
+        message = """
+The run of the project {0} is finished.\n
+Link to project : {1}/#/projects/{2}""".format(self.name, settings.FRONTEND_URL, self.id)
         self.user.email_user(
             subject = "MetWork run finished",
-            message = "The run of the project {0} is finished.".format(self.name) )
+            message = message)
 
     def gen_all_molecules(self):
         file_path = self.item_path() + '/all_molecules.csv'
