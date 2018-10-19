@@ -331,7 +331,6 @@ class SampleAnnotationProject(Project):
         message = """
 The run of the project {0} is finished.\n
 Link to project : {1}/#/projects/{2}""".format(self.name, settings.FRONTEND_URL, self.id)
-        print(message)
         self.user.email_user(
             subject = "MetWork run finished",
             message = message)
