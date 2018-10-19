@@ -9,6 +9,7 @@ from metabolization.models import Reaction
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 from itertools import chain
+from base.modules.rdkit_functions import RDKit
 
 class ReactProcess(models.Model):
 
@@ -62,12 +63,9 @@ class ReactProcess(models.Model):
         smarts = self.reaction.smarts
         mol=Chem.MolFromSmiles(Chem.MolToSmiles(mol))
         if 'H' in smarts or '#1' in smarts:
-            return Chem.AddHs(mol)
-        else:
-            Chem.Kekulize(mol,True)
-            # Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE)
-            Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_MDL)
-            return mol
+            mol = Chem.AddHs(mol)
+        RDKit.apply_aromaticity(mol)
+        return mol
 
     def wait_run_end(self, timeout = 30):
         begin = time.time()

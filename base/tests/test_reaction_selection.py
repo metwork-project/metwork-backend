@@ -24,7 +24,7 @@ class ReactionSelectionTests(TransactionTestCase):
         diels_alder = Reaction.objects.create(
             user=u,
             name = 'diels_alder',
-            smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1' )
+            smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1' )
         diels_alder.run_reaction([
             Molecule.load_from_smiles('C=Cc1c[nH]c(N)n1'),
             Molecule.load_from_smiles('C=C')])

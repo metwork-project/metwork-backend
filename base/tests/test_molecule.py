@@ -16,10 +16,10 @@ class MoleculeModelTests(TransactionTestCase):
         self.assertFalse(Molecule.create_from_smiles('C(C)(C)(C)(C)'))
     # Check create only for valid smiles
         self.assertFalse(Molecule.create_from_smiles('C(C)(C)(C)(C)(C)'))
-        m = Molecule.create_from_smiles('NC1=NC(C=C)=CN1')
+        m = Molecule.create_from_smiles('CC1=CC=CC=C1')
         kekulize_options = {\
-            False: 'C=Cc1c[nH]c(N)n1', \
-            True: 'C=CC1=C[NH]C(N)=N1'}
+            False: 'Cc1ccccc1', \
+            True: 'CC1=CC=CC=C1'}
         for k in kekulize_options:
             self.assertEqual(RDKit.mol_to_smiles(m.mol_rdkit, kekulize = k), kekulize_options[k])
 

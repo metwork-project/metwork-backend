@@ -10,12 +10,21 @@ class RDKit:
     @classmethod
     def mol_from_smiles(self, smiles):
         m = Chem.MolFromSmiles(smiles)
-        Chem.Kekulize(m)
+        m = self.apply_aromaticity(m)
         return m
 
     @classmethod
+    def apply_aromaticity(self, mol_rdkit):
+        Chem.Kekulize(mol_rdkit, True)
+        Chem.SetAromaticity(mol_rdkit,Chem.rdmolops.AromaticityModel.AROMATICITY_MDL)
+        return mol_rdkit
+
+    @classmethod
     def mol_to_smiles(self, mol_rdkit, kekulize = False):
-        return Chem.MolToSmiles(mol_rdkit, isomericSmiles = True, kekuleSmiles = kekulize)
+        self.apply_aromaticity(mol_rdkit)
+        if kekulize:
+            Chem.Kekulize(mol_rdkit, True)
+        return Chem.MolToSmiles(mol_rdkit, isomericSmiles = True)#, kekuleSmiles = kekulize)
 
     @classmethod
     def mol_to_molfile(self, mol_rdkit):

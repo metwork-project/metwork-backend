@@ -24,11 +24,12 @@ class ChemDoodle(object):
 
     def json_to_mol(self, json_data):
         from base.models import Molecule
-        # mol_rdkit = Molecule.load_from_rdkit( self.json_to_rdkit(json_data) )
+
         mol_rdkit = self.json_to_rdkit(json_data)
         smiles = Chem.MolToSmiles(mol_rdkit)
-        return Molecule.load_from_smiles(smiles)
-        # return Chem.MolFromSmiles(Chem.MolToSmiles(mol_rdkit))
+        smiles = RDKit.mol_to_smiles(mol_rdkit)
+        # return Molecule.load_from_rdkit(mol_rdkit)
+        return Molecule.load_from_smiles(Chem.MolToSmiles(mol_rdkit))
 
     def json_to_smarts(self, json_data, map, mol_type):
         mol = self.json_to_rdkit(json_data, map, mol_type)
@@ -252,7 +253,6 @@ class ChemDoodle(object):
                             bond.SetStereo(Chem.rdchem.BondStereo.STEREOCIS)
 
         # replace query_atoms
-
         if len(query_atoms) > 0:
             for id, smarts in query_atoms:
                 m_a = Chem.MolFromSmarts(smarts)
@@ -273,11 +273,7 @@ class ChemDoodle(object):
 
 
         mol = mw.GetMol()
-        Chem.rdmolops.SanitizeMol(mol)
-        Chem.Kekulize(mol, True)
-        # Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE)
-        Chem.SetAromaticity(mol,Chem.rdmolops.AromaticityModel.AROMATICITY_MDL)
-        # To keep stereo in MolToSmiles
+        RDKit.apply_aromaticity(mol)
         Chem.rdDepictor.Compute2DCoords(mol)
 
         return mol

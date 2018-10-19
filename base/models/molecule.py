@@ -109,10 +109,14 @@ class Molecule(models.Model):
     def load_from_rdkit(cls, mol):
     # Return a Molecule instance corresponding to the rdkit mol in input
     # create it if not exist
-        #from rdkit import Chem
-        #Chem.Kekulize(mol)
-        m_smiles = RDKit.mol_to_smiles(mol)
-        return Molecule.load_from_smiles(m_smiles)
+        from rdkit import Chem
+        try:
+            Chem.SanitizeMol(mol)
+            m_smiles = RDKit.mol_to_smiles(mol)
+            m = Molecule.load_from_smiles(m_smiles)
+            return m
+        except:
+            return False
 
     @classmethod
     def gen_molecules(cls, file_path, queryset):

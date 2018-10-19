@@ -35,7 +35,7 @@ class ReactProcessTests(ReactionTestManagement):
             'CCC1CCC=C2N=C(N)NC12', \
             'CCC1CC=C2N=C(N)NC2C1']
         ml = [Molecule.load_from_smiles(sm) for sm in smiles]
-        smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4]-[H].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1'
+        smarts = '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1'
         r.load_smarts(smarts)
         for i in range(2):
             rp = ReactProcess.objects.create(reaction = r)

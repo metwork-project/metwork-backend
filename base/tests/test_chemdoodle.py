@@ -21,7 +21,7 @@ class ChemDoodleTests(TransactionTestCase):
         self.assertEqual(cd.json_to_mol(json_mol).smiles(),smiles)
 
     def test_json_to_smarts(self):
-        smarts = '[N,O:1]/[#6](-[#9])=[#6]/[#6@@](-[#6])(-[#7])/[#6]1:[#6]:[#6]:[#6](-[*:2]):[#6]:[#6]:1'
+        smarts = '[N,O:1]/[#6](-[#9])=[#6]/[#6@@](-[#6])(-[#7])-[#6]1:[#6]:[#6]:[#6](-[*:2]):[#6]:[#6]:1'
         json_path = 'base/tests/files/chemdoodle_mol_2.json'
         cd  = ChemDoodle()
         with open(json_path, 'r') as fjson:
