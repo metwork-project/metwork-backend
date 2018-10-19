@@ -64,7 +64,7 @@ class FragSample(models.Model):
                     db_index = True)
 
     # Limit the number of ions per sample
-    IONS_LIMIT = 100000
+    IONS_LIMIT = 2000
 
     class status:
         INIT = 0
