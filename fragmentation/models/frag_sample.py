@@ -129,6 +129,7 @@ class FragSample(models.Model):
 
     def import_sample_(self, data, energy):
         from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
+        from fragmentation.tasks import gen_cosine_matrix_task, gen_mass_delta_task
         import re
         error_log = []
 
@@ -170,9 +171,9 @@ class FragSample(models.Model):
             #except:
             #    error_log.append(l)
 
-        self.gen_mass_delta()
-        self.gen_cosine_matrix()
 
+        gen_cosine_matrix_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
+        gen_mass_delta_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
 
         # if len(error_log) > 0 : print ('ERROR LOG', error_log )
         self.status_code = 3
