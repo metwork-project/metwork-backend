@@ -10,7 +10,7 @@ from django.http import FileResponse, HttpResponse
 from rest_framework.parsers import JSONParser
 from wsgiref.util import FileWrapper
 from django.http import JsonResponse
-import os
+import os, json
 
 class ProjectSerializer(serializers.ModelSerializer):
     frag_sample = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -77,7 +77,6 @@ class ProjectViewSet(ModelAuthViewSet):
         if 'item_ids' in data:
             getattr(project, func)(dataLabel, data['item_ids'])
         else:
-            print(getattr(project, func))
             getattr(project, func)(dataLabel)
         return Response({'project_id': project.id})
 
@@ -118,36 +117,24 @@ class ProjectViewSet(ModelAuthViewSet):
         return Response({'status_code':project.status_code})
 
     @detail_route(methods=['get'])
-    def download_all_molecules(self, request, pk=None):
+    def download_file(self, request, pk=None):
+        file = self.request.query_params.get('file', None)
+        file_name = self.request.query_params.get('file_name', None)
+        methods = {
+            'annotations' : 'gen_annotations',
+            'annotations_details' : 'gen_annotations_details',
+            'metexplore' : 'gen_metexplore',
+            'all_molecules' : 'gen_all_molecules',
+        }
         project = self.get_object()
-        fileAddress = project.item_path() + '/all_molecules.csv'
+        fileAddress = project.item_path() + '/' + file_name
         if not os.path.isfile(fileAddress):
-            project.gen_all_molecules()
-        return FileResponse(open(fileAddress, 'rb'))
-
-    @detail_route(methods=['get'])
-    def download_annotations(self, request, pk=None):
-        project = self.get_object()
-        fileAddress = project.item_path() + '/metwork_annotations.csv'
-        if not os.path.isfile(fileAddress):
-            project.gen_annotations()
-        return FileResponse(open(fileAddress, 'rb'))
-
-    @detail_route(methods=['get'])
-    def download_annotations_details(self, request, pk=None):
-        project = self.get_object()
-        fileAddress = project.item_path() + '/metwork_annotations_details.csv'
-        if not os.path.isfile(fileAddress):
-            project.gen_annotations_details()
-        return FileResponse(open(fileAddress, 'rb'))
-
-    @detail_route(methods=['get'])
-    def download_metexplore(self, request, pk=None):
-        project = self.get_object()
-        fileAddress = project.item_path() + '/metexplore.json'
-        if not os.path.isfile(fileAddress):
-            project.gen_metexplore()
-        return FileResponse(open(fileAddress, 'rb'))
+            getattr(project, methods[file])()
+        json_data = json.dumps({
+            'data': open(fileAddress, 'r').read() })
+        return JsonResponse(
+            json_data,
+            safe=False)
 
     @detail_route(methods=['get'])
     def metabolization_network(self, request, pk=None):

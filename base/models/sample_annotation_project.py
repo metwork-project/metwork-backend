@@ -338,7 +338,7 @@ Link to project : {1}/#/projects/{2}""".format(self.name, settings.FRONTEND_URL,
             message = message)
 
     def gen_all_molecules(self):
-        file_path = self.item_path() + '/all_molecules.csv'
+        file_path = self.item_path() + '/metwork_all_molecules.csv'
         query_set = self.molecules.all()
         Molecule.gen_molecules(file_path, query_set)
 
