@@ -123,7 +123,7 @@ class MetGraph:
             for rp in self.rps for m in self.products(rp) ]
         res = '"nodes":' + json.dumps(nodes) +    ',\n"links":' + json.dumps(links)
 
-        with open(self.project.item_path() + '/metexplore.json', 'w') as fw:
+        with open(self.project.item_path() + '/metwork_metexplore.json', 'w') as fw:
             with open('metabolization/modules/templates/metexplore_header', 'r') as fr:
                 fw.writelines(fr.readlines())
             fw.writelines(res)
