@@ -43,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         resource_name = "users"
 
     def __str__(self):
-        return 'user' #self.email
+        return self.username
 
     def get_short_name(self):
         return self.email
