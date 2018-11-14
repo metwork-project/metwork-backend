@@ -170,7 +170,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
 DATA_FILES_PATH = get_env('METWORK_DATA_FILES_PATH')
-APP_CONFIG = get_env('METWORK_APP_CONFIG')
+try:
+	APP_CONFIG = get_env('METWORK_APP_CONFIG')
+except:
+	APP_CONFIG = "WEB"
 
 DATABASES = {
 	'default': {
