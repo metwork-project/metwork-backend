@@ -22,10 +22,10 @@ class FileManagement(object):
 
 	def save(self, *args, **kwargs):
 		super(FileManagement, self).save(*args, **kwargs)
-		if settings.APP_CONFIG == "WEB":
+		if settings.EDIT_FILES:
 			self.gen_item()
 		return self
-		
+
 	def delete(self, *args, **kwargs):
 		d = self.item_path()
 		super(FileManagement, self).delete(*args, **kwargs)
@@ -33,4 +33,3 @@ class FileManagement(object):
 		#try: ???
 			shutil.rmtree(d)
 		return self
-
