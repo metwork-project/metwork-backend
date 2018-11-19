@@ -1,10 +1,6 @@
 # Celery settings
 from .utils import APP_VERSION, get_env
 
-print('APP_VERSION',APP_VERSION)
-
-# APP_VERSION = get_app_version()
-
 #: Only add pickle to this list if your broker is secured
 #: from unwanted access (see userguide/security.html)
 CELERY_ACCEPT_CONTENT = ['json']
