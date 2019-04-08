@@ -1,0 +1,2 @@
+nodeId,name,smiles,source,sourceId
+523,input_adduct,OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)CO,test_adducts,523

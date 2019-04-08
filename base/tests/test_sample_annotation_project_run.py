@@ -18,7 +18,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
             print ('\n###### {0} ######'.format(p['name']))
             self.eval_annotation_project(**p)
 
-    def eval_specific_annotation_project(self, name = 'bromination'):
+    def eval_specific_annotation_project(self, name = 'adducts'):
         for p in self.params:
             if p['name'] == name:
                 self.eval_annotation_project(**p)
@@ -48,6 +48,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
         smarts = {
             'methylation': '[N,O:1]>>[*:1]-[#6]',
             'diels_alder': '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1',
+            'test_adducts': '[#8:3]-[#6]-[#6](-[#6]-[#8:1])-[#8:2]>>[#8:3]-[#6]-[#6](-[#6]-[#8:1]-[#6](=,:[#8])-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6])-[#8:2]'
         }
 
         reactions = [
@@ -213,6 +214,17 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
             'depth_total' : 2,
             'depth_last_match' : 1,
             'sample_file_name' : 'test_annotation_project_GAP.mgf',
+        }, {
+            'name' : 'adducts',
+            'sample_file_name' : 'test_adducts.mgf',
+            'anno_file' : 'test_adducts_annot',
+            'smiles' : ['OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)CO'],
+            'reactions_name' : [ 'test_adducts' ],
+            'expected_anno' : [('OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)COC(CCCCCCCCCCCCCCC)=O',979)],
+            'not_expected_smiles' : [],
+            'depth_total' : 1,
+            'depth_last_match' : 0,
+
         }, {
             'name' : 'bi_reactants_reaction',
             'anno_file' : 'anno_2',

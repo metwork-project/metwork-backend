@@ -19,3 +19,4 @@ class AdductTests(TransactionTestCase):
         m = Molecule.load_from_smiles(SMILES)
         ad = AdductManager(ION_CHARGE)
         self.assertEqual(ad.get_adduct(m, fms), ADDUCT_TARGET)
+        
