@@ -33,7 +33,7 @@ class FragAnnotationModelTests(TransactionTestCase):
 				'annotation_file_path': 'fragmentation/tests/files/import_GNPS.tsv',
 				'expected_res': [
 					(1,
-						'C1=CC2=C(C=C1O)C(=CN2)CC(C(=O)O)N',
+						'CN=C1NC2=C(C)C3=C(C=CC2=N1)N=C(N3)N(C)C',
 						'GNPS : Commercial standard, Prasad',
 						'895096'),
 					(36,
