@@ -11,11 +11,12 @@ class FragSim:
     def __init__(self, frag_sim_conf):
         self.frag_sim_conf = frag_sim_conf
 
-    def get_frag_mol(self, molecule):
+    def get_frag_mol(self, molecule, adduct='M+H'):
         #return FragMol.objects.instance_of(FragMolSim).filter(\
         fm_search = FragMolSim.objects.filter(
-                    frag_sim_conf = self.frag_sim_conf,
-                    molecule = molecule)
+                    frag_sim_conf=self.frag_sim_conf,
+                    molecule=molecule,
+                    adduct=adduct)
         if fm_search.count() > 0:
             return fm_search.first()
         else:
