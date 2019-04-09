@@ -12,10 +12,10 @@ class FragMolModelTests(TransactionTestCase):
 
   ## FragSet
 
-    def new_frag_mol_sim(self, smiles = 'N=C([NH3+])'):
+    def new_frag_mol_sim(self, smiles = 'N=C([NH3+])', adduct='M+'):
         fs = FragCommonTests.new_frag_sim()
         m = Molecule.load_from_smiles(smiles)
-        return fs.create_frag_mol_sim(molecule = m), fs
+        return fs.create_frag_mol_sim(molecule=m, adduct=adduct), fs
 
     def test_create_frag_set(self):
         fms, fs = self.new_frag_mol_sim()
@@ -30,7 +30,7 @@ class FragMolModelTests(TransactionTestCase):
         smiles = FragCommonTests.test_data['smiles']
         m = Molecule.load_from_smiles(smiles)
         fs = FragCommonTests.new_frag_sim()
-        fm = fs.frag_molecule(m)
+        fm = fs.frag_molecule(m, adduct='M+')
         #'PEPMASS=45.0447245801'
         #'MOLECULAR_FORMULA=CH5N2+'
         exp_res = '\n'.join([\

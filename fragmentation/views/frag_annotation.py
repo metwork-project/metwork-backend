@@ -18,7 +18,8 @@ class FragAnnotationSerializer(serializers.ModelSerializer):
             'db_source',
             'db_id',
             'has_no_project',
-            'chemdoodle_json')
+            'chemdoodle_json',
+			'adduct')
 
     chemdoodle_json = JSONSerializerField()
 

@@ -25,6 +25,9 @@ class FragAnnotation(PolymorphicModel):
     def chemdoodle_json(self):
         return self.molecule.chemdoodle_json
 
+    def adduct(self):
+        return self.frag_mol_sample.adduct
+
 class FragAnnotationDB(FragAnnotation):
 
     class JSONAPIMeta:

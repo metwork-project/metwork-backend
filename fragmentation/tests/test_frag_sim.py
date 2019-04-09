@@ -14,7 +14,8 @@ class FragSimModelTests(TransactionTestCase):
         fs = FragCommonTests.new_frag_sim()
         smiles = FragCommonTests.test_data['smiles']
         m = Molecule.load_from_smiles(smiles)
-        self.assertFalse(fs.get_frag_mol(m))
-        fs.frag_molecule(m)
-        self.assertTrue(fs.get_frag_mol(m))
+        adduct = 'M+'
+        self.assertFalse(fs.get_frag_mol(m, adduct=adduct))
+        fs.frag_molecule(m, adduct=adduct)
+        self.assertTrue(fs.get_frag_mol(m, adduct=adduct))
 

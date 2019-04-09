@@ -5,6 +5,7 @@ from base.modules.cache_management import model_from_cache
 from django.core.cache import cache
 from django.conf import settings
 import numpy as np
+from fragmentation.utils import AdductManager
 
 @shared_task
 def start_run(project_id):
@@ -139,27 +140,35 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
         p.frag_sample )
 
     fm_search_ids = []
-    #for mass_exact in m.mass_exact_isotopes():
-        #mass_exact += 1.007
-    #for mass_exact in [m.mass_exact()]:
-    mass_exact = m.mass_exact() + settings.PROTON_MASS
-    mass_var = float(p.frag_compare_conf.ppm_tolerance) * 10**-6
-    mass_window = (
-        mass_exact * ( 1 - mass_var) ,
-        mass_exact * (1 + mass_var) )
-
     ms1 = cache.get( 'project_ms1_not_init_' + str(project_id) )
-    pos_id_min, pos_id_max = ( np.searchsorted(ms1[1], mw) for mw in mass_window )
-    fm_search_ids = ms1[0][pos_id_min:pos_id_max]
+    am = AdductManager()
+    adducts_mass = np.array(am.adducts.mass).reshape((1,-1))
+
+    mass_exact = m.mass_exact() # + settings.PROTON_MASS
+
+    diff_mass = abs(ms1[1].reshape((-1,1)) - mass_exact - adducts_mass)
+    mass_tol = mass_exact * float(p.frag_compare_conf.ppm_tolerance) * 10**-6
+    test = np.where(diff_mass <= mass_tol)
+    # fm_search_ids = [(mol_id, adduct), ...]
+    fm_search_ids = [
+        (ms1[0][pos_idx], am.adducts.index[adduct_idx]) 
+        for pos_idx, adduct_idx in zip(test[0], test[1])
+    ]
+    adducts = [
+        am.adducts.index[adduct_idx] for adduct_idx in set(test[1])
+    ]
 
     p.add_process()
-    tsk = evaluate_molecule_2.apply_async( args= [m.id, fm_search_ids, project_id, depth_total, depth_last_match], queue = settings.CELERY_RUN_QUEUE)
+    tsk = evaluate_molecule_2.apply_async(
+        args=[m.id, fm_search_ids, adducts, project_id, depth_total, depth_last_match],
+        queue=settings.CELERY_RUN_QUEUE)
 
     p.close_process()
     return 0
 
 @shared_task
-def evaluate_molecule_2(molecule_id, fm_search_ids, project_id, depth_total, depth_last_match):
+def evaluate_molecule_2(
+    molecule_id, fm_search_ids, adducts, project_id, depth_total, depth_last_match):
     from fragmentation.models import FragMolSample, FragAnnotationCompare
     from fragmentation.modules import FragSim, FragCompare
 
@@ -174,11 +183,13 @@ def evaluate_molecule_2(molecule_id, fm_search_ids, project_id, depth_total, dep
 
         ### Fragmentation
         fsim = FragSim(p.frag_sim_conf)
-        fmsim = fsim.frag_molecule(m)
+        fmsim = {}
+        for adduct in adducts:
+            fmsim[adduct] = fsim.frag_molecule(m, adduct)
 
         ### Compare with each sample of same mass
         fcomp = FragCompare(p.frag_compare_conf)
-        for fmsample_id in fm_search_ids:
+        for fmsample_id, adduct in fm_search_ids:
             fmsample = FragMolSample.objects.get(id = fmsample_id)
             fac_search = FragAnnotationCompare.objects.filter(
                 project = p,
@@ -189,7 +200,7 @@ def evaluate_molecule_2(molecule_id, fm_search_ids, project_id, depth_total, dep
                     project = p,
                     frag_mol_sample = fmsample,
                     molecule = m)
-                fmcomp = fcomp.compare_frag_mols([fmsim, fmsample])
+                fmcomp = fcomp.compare_frag_mols([fmsim[adduct], fmsample])
                 fac.frag_mol_compare = fmcomp
                 fac.save()
                 match = fmcomp.match

@@ -10,8 +10,10 @@ from libmetgem.cosine import compute_distance_matrix
 from django.contrib.postgres.fields import ArrayField
 import numpy as np
 from libmetgem.mgf import filter_data
+from fragmentation.utils.adducts import AdductManager
 
-class FragSample(models.Model):
+
+class FragSample(models.Model, AdductManager):
 
     class JSONAPIMeta:
         resource_name = "fragsamples"
@@ -29,6 +31,9 @@ class FragSample(models.Model):
     file_name = models.CharField(
                     max_length=255,
                     default='')
+    ion_charge = models.CharField(
+                    max_length=16,
+                    default='positive')
     description = models.CharField(
                     max_length=255,
                     default='',
@@ -258,19 +263,17 @@ class FragSample(models.Model):
 
     def import_annotation_file(self, file_object, file_format='default'):
         from fragmentation.models import FragMolSample, FragAnnotationDB
+        am = AdductManager(ion_charge=self.ion_charge)
         fls = [l.decode('utf-8') for l in file_object.readlines()]
         errors = {}
         col_titles = fls[0].split("\t")
         for i, fl in enumerate(fls[1:]):
             try:
                 if file_format == 'default':
-                    adduct = 'M+H'
                     ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
-                    adduct = 'M+H'
                 elif file_format == 'GNPS':
                     data = fl.split("\t")
                     ion_id = data[col_titles.index('#Scan#')]
-                    adduct = data[col_titles.index('Adduct')]
                     name = data[col_titles.index('Compound_Name')]
                     smiles = data[col_titles.index('Smiles')]
 
@@ -279,17 +282,26 @@ class FragSample(models.Model):
                         data[col_titles.index('Data_Collector')])
                     db_id = data[col_titles.index('CAS_Number')]
 
-                if int(ion_id) > 0 and adduct == 'M+H':
+                if int(ion_id) > 0:
                     m = Molecule.load_from_smiles(smiles)
                     fms = self.fragmolsample_set.get(
                             ion_id = ion_id)
 
-                    fa = FragAnnotationDB.objects.create(
-                        frag_mol_sample = fms,
-                        molecule = m,
-                        name = name,
-                        db_source = db_source,
-                        db_id = db_id)
+                    adduct = am.get_adduct(m, fms)
+
+                    if adduct is not None:
+                        if fms.adduct is None: 
+                            fms.adduct = adduct
+                            fms.save()
+
+                        if fms.adduct == adduct:
+                            fa = FragAnnotationDB.objects.create(
+                                frag_mol_sample = fms,
+                                molecule = m,
+                                name = name,
+                                db_source = db_source,
+                                db_id = db_id)
+
             except Exception as err:
                 # print(err)
                 errors[i] = {'err': str(err), 'smiles': smiles}
