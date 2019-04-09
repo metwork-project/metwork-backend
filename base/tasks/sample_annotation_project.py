@@ -147,8 +147,7 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
     mass_exact = m.mass_exact() # + settings.PROTON_MASS
 
     diff_mass = abs(ms1[1].reshape((-1,1)) - mass_exact - adducts_mass)
-    mass_tol = float(p.frag_compare_conf.ppm_tolerance) * 10**-3
-    # !! vs * 10**-6 ???
+    mass_tol = mass_exact * float(p.frag_compare_conf.ppm_tolerance) * 10**-6
     test = np.where(diff_mass <= mass_tol)
     # fm_search_ids = [(mol_id, adduct), ...]
     fm_search_ids = [
@@ -158,14 +157,6 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
     adducts = [
         am.adducts.index[adduct_idx] for adduct_idx in set(test[1])
     ]
-
-    # mass_window = (
-    #     mass_exact * ( 1 - mass_var) ,
-    #     mass_exact * (1 + mass_var) )
-
-
-    # pos_id_min, pos_id_max = ( np.searchsorted(ms1[1], mw) for mw in mass_window )
-    # fm_search_ids = ms1[0][pos_id_min:pos_id_max]
 
     p.add_process()
     tsk = evaluate_molecule_2.apply_async(
