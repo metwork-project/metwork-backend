@@ -31,11 +31,10 @@ class Molecule(models.Model):
         return self.smiles()
 
     def __init__(self, *args, **kwargs):
-        res = super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.chemdoodle_json is None:
             self.chemdoodle_json = ChemDoodle().mol_to_json(self)
             self.save()
-        return res
 
     class JSONAPIMeta:
         resource_name = "molecules"
