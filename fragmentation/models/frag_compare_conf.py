@@ -20,6 +20,6 @@ class FragCompareConf(ConfManagement, models.Model):
 
     cosine_mz_tolerance = models.FloatField(default=0.02)
     cosine_min_matched_peaks = models.PositiveSmallIntegerField(default=2)
-    cosine_threshold = models.FloatField(default=0.18)
+    cosine_threshold = models.FloatField(default=0.2)
     #Obsolete
     ppm_tolerance = models.DecimalField(max_digits=6, decimal_places=4, default=20)
