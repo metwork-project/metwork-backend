@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from base.views.model_auth import ModelAuthViewSet
+from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from fragmentation.models import FragSample
 from rest_framework import serializers
 from rest_framework.decorators import list_route, detail_route
@@ -20,9 +20,13 @@ class FragSampleSerializer(serializers.ModelSerializer):
 class FragSampleViewSet(ModelAuthViewSet):
     serializer_class = FragSampleSerializer
     queryset = FragSample.objects.all()
+    permission_classes = (IsOwnerOrPublic, )
 
     def get_queryset(self):
-        return FragSample.objects.filter(user=self.request.user).order_by('-id')
+        if self.action == 'list':
+            return FragSample.objects.filter(user=self.request.user).order_by('-id')
+        else:
+            return FragSample.objects.all() 
 
     @list_route(methods=['post'])
     def uploadfile(self, request):

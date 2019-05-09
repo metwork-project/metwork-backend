@@ -81,6 +81,11 @@ class FragSample(models.Model, AdductManager):
     def __str__(self):
         return self.name
 
+    def is_public(self):
+        for p in self.sampleannotationproject_set.all():
+            if p.public:
+                return True
+
     def obsolete(self):
         return True in ( fms.obsolete() \
             for fms in self.fragmolsample_set.all() )
