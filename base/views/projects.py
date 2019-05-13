@@ -20,6 +20,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'description',
+            'user_name',
             'public',
             'frag_sample',
             'status_code',
@@ -39,13 +40,17 @@ class ProjectViewSet(ModelAuthViewSet):
 
     def get_queryset(self):
         if self.action == 'list':
-            return SampleAnnotationProject.objects \
-                .filter(user=self.request.user).order_by('-id')
+            list_filter = self.request.query_params.get('filter', None)
+            if list_filter == "public":
+                return SampleAnnotationProject.objects \
+                    .filter(public=True).order_by('-id')
+            else:
+                return SampleAnnotationProject.objects \
+                    .filter(user=self.request.user).order_by('-id')
         else:
             return SampleAnnotationProject.objects.all()
 
     def perform_create(self, serializer):
-        #print self.request.user
         serializer.save(user=self.request.user)
 
     @detail_route(methods=['post'])
