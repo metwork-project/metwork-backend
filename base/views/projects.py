@@ -20,6 +20,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'description',
+            'public',
             'frag_sample',
             'status_code',
             'reaction_ids',
