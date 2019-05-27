@@ -32,7 +32,7 @@ router.register(r'users', UserViewSet)
 router.register(r'molecules', MoleculeViewSet)
 router.register(r'projects', ProjectViewSet, base_name='projects')
 router.register(r'fragsamples', FragSampleViewSet)
-router.register(r'frag-annotations', FragAnnotationViewSet)
+router.register(r'frag-annotations', FragAnnotationViewSet, base_name='frag-annotations')
 router.register(r'reactions', ReactionViewSet)
 router.register(r'frag-compare-confs', FragCompareConfViewSet)
 
