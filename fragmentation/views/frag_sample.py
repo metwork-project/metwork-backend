@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+import os
+import json
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from fragmentation.models import FragSample
 from rest_framework import serializers
@@ -75,3 +76,13 @@ class FragSampleViewSet(ModelAuthViewSet):
         frag_sample = self.get_object()
         data = frag_sample.molecular_network()
         return JsonResponse(data, safe=False)
+
+    @detail_route(methods=['get'])
+    def download_mgf(self, request, pk=None):
+        fs = self.get_object()
+        fileAddress = os.path.join(fs.item_path(), fs.file_name)
+        json_data = json.dumps({
+            'data': open(fileAddress, 'r').read() })
+        return JsonResponse(
+            json_data,
+            safe=False)
