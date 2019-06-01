@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from base.models import Molecule
-from base.modules import JSONSerializerField, ChemDoodle
+from base.modules import JSONSerializerField, ChemDoodle, TagViewMethods
 from base.views import MoleculeSerializer
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -24,6 +24,7 @@ class ReactionSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'description',
+            'tags_list',
             'user',
             'user_name',
             'reactants_number',
@@ -37,7 +38,7 @@ class ReactionSerializer(serializers.ModelSerializer):
 
     chemdoodle_json = JSONSerializerField()
 
-class ReactionViewSet(ModelAuthViewSet):
+class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
     queryset = Reaction.objects.all().order_by('name')
     serializer_class = ReactionSerializer
 
@@ -121,3 +122,4 @@ class ReactionViewSet(ModelAuthViewSet):
             return JsonResponse(response)
         else:
             return JsonResponse({'error': 'test'})
+

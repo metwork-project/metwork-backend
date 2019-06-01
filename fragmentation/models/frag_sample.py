@@ -5,7 +5,7 @@ from decimal import *
 import time
 from django.db import models, IntegrityError
 from django.conf import settings
-from base.models import Molecule, Array1DModel, Array2DModel
+from base.models import Molecule, Array1DModel, Array2DModel, Tag
 from libmetgem.cosine import compute_distance_matrix
 from django.contrib.postgres.fields import ArrayField
 import numpy as np
@@ -32,6 +32,10 @@ class FragSample(FileManagement, models.Model, AdductManager):
     file_name = models.CharField(
                     max_length=255,
                     default='')
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="fragsample_tags",
+        default=None)
     ion_charge = models.CharField(
                     max_length=16,
                     default='positive')
@@ -90,6 +94,9 @@ class FragSample(FileManagement, models.Model, AdductManager):
     def obsolete(self):
         return True in ( fms.obsolete() \
             for fms in self.fragmolsample_set.all() )
+            
+    def tags_list(self):
+        return [tag.name for tag in self.tags.all()]
 
     def has_no_project(self):
         return self.sampleannotationproject_set.count() == 0

@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from base.views import APIStatusViewSet, UserViewSet, \
-    MoleculeViewSet, ProjectViewSet, \
+    MoleculeViewSet, ProjectViewSet, TagViewSet, \
     register, password_reset #, get_status
 from metabolization.views import ReactionViewSet
 from fragmentation.views import FragSampleViewSet, FragAnnotationViewSet, FragCompareConfViewSet
@@ -31,6 +31,7 @@ router.register(r'api-statuses', APIStatusViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'molecules', MoleculeViewSet)
 router.register(r'projects', ProjectViewSet, base_name='projects')
+router.register(r'tags', TagViewSet, base_name='tags')
 router.register(r'fragsamples', FragSampleViewSet)
 router.register(r'frag-annotations', FragAnnotationViewSet, base_name='frag-annotations')
 router.register(r'reactions', ReactionViewSet)

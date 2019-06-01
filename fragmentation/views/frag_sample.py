@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 import json
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
+from base.modules import TagViewMethods
 from fragmentation.models import FragSample
 from rest_framework import serializers
 from rest_framework.decorators import list_route, detail_route
@@ -14,11 +15,18 @@ class FragSampleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FragSample
-        fields = ('name', 'file_name', 'description',
-            'ions_count', 'ions_total', 'annotations_count',
-            'has_no_project', 'status_code')
+        fields = (
+            'name',
+            'file_name',
+            'description',
+            'tags_list',
+            'ions_count',
+            'ions_total',
+            'annotations_count',
+            'has_no_project',
+            'status_code')
 
-class FragSampleViewSet(ModelAuthViewSet):
+class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
     serializer_class = FragSampleSerializer
     queryset = FragSample.objects.all()
     permission_classes = (IsOwnerOrPublic, )

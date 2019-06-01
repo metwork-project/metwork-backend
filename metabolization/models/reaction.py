@@ -8,8 +8,8 @@ import hashlib
 import subprocess
 import json
 import sys
-from base.modules import RDKit
 from django.conf import settings
+from base.models import Tag
 from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Count
@@ -30,6 +30,10 @@ class Reaction(FileManagement, models.Model):
                     default='',
                     null= True,
                     blank=True)
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="reaction_tags",
+        default=None)
     user = models.ForeignKey(
                     settings.AUTH_USER_MODEL,
                     on_delete=models.CASCADE,
@@ -91,6 +95,9 @@ class Reaction(FileManagement, models.Model):
         self.reactants_number = self.get_reactants_number()
         super(Reaction, self).save(*args, **kwargs)
         return self
+
+    def tags_list(self):
+        return [tag.name for tag in self.tags.all()]
 
     def load_smarts(self, smarts):
         try:
