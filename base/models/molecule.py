@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from base.modules import RDKit, ChemDoodle
-from django_rdkit import models
+from django_rdkit import models as rd_models
 from django.contrib.postgres.fields import JSONField
 
 class Molecule(models.Model):
@@ -16,7 +16,7 @@ class Molecule(models.Model):
         default=None,
         unique = True,
         db_index = True)
-    mol_rdkit = models.MolField(
+    mol_rdkit = rd_models.MolField(
         default=None)
     smiles_with_limit = models.CharField(
         max_length=255,
@@ -31,11 +31,10 @@ class Molecule(models.Model):
         return self.smiles()
 
     def __init__(self, *args, **kwargs):
-        res = super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.chemdoodle_json is None:
             self.chemdoodle_json = ChemDoodle().mol_to_json(self)
             self.save()
-        return res
 
     class JSONAPIMeta:
         resource_name = "molecules"

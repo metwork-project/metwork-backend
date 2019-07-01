@@ -67,12 +67,10 @@ class SampleAnnotationProject(Project):
             # While running only status_code can change.
             elif Project.status.RUNNING in (self.status_code, prev_status) or \
                     Project.status.QUEUE in (self.status_code, prev_status):
-                kwargs['update_fields']=['status_code',]
+                kwargs['update_fields'] = ['status_code',]
                 super(SampleAnnotationProject, self).save(update_fields=['status_code'])
-            #else:
-            #    super(SampleAnnotationProject, self).save(*args, **kwargs)
-            # Once done no field can be changed
-            # ===> Allow to change name ?
+            else:
+                super(SampleAnnotationProject, self).save(update_fields=['public'])
 
         self.refresh_from_db()
         return self

@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+import os
 from decimal import *
 import time
 from django.db import models, IntegrityError
 from django.conf import settings
-from base.models import Molecule, Array1DModel, Array2DModel
+from base.models import Molecule, Array1DModel, Array2DModel, Tag
 from libmetgem.cosine import compute_distance_matrix
 from django.contrib.postgres.fields import ArrayField
 import numpy as np
 from libmetgem.mgf import filter_data
 from fragmentation.utils.adducts import AdductManager
+from base.modules import FileManagement
 
 
-class FragSample(models.Model, AdductManager):
+class FragSample(FileManagement, models.Model, AdductManager):
 
     class JSONAPIMeta:
         resource_name = "fragsamples"
@@ -31,6 +32,10 @@ class FragSample(models.Model, AdductManager):
     file_name = models.CharField(
                     max_length=255,
                     default='')
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="fragsample_tags",
+        default=None)
     ion_charge = models.CharField(
                     max_length=16,
                     default='positive')
@@ -81,9 +86,17 @@ class FragSample(models.Model, AdductManager):
     def __str__(self):
         return self.name
 
+    def is_public(self):
+        for p in self.sampleannotationproject_set.all():
+            if p.public:
+                return True
+
     def obsolete(self):
         return True in ( fms.obsolete() \
             for fms in self.fragmolsample_set.all() )
+            
+    def tags_list(self):
+        return [tag.name for tag in self.tags.all()]
 
     def has_no_project(self):
         return self.sampleannotationproject_set.count() == 0
@@ -106,7 +119,7 @@ class FragSample(models.Model, AdductManager):
             db_id = db_id)
 
     @classmethod
-    def import_sample(cls, file_object, user, name='', file_name='', description='', energy=1, task=False):
+    def import_sample(cls, file_object, user, name='', file_name='data.mgf', description='', energy=1, task=False):
         from fragmentation.models import FragMolSample
         from fragmentation.tasks import import_sample_task
 
@@ -126,10 +139,13 @@ class FragSample(models.Model, AdductManager):
             ions_total = total_ions)
         fs.status_code = 2
         fs.save()
+        fs.gen_item()
         if task:
             import_sample_task.apply_async(args = [fs.id, data, energy], queue = settings.CELERY_WEB_QUEUE)
         else:
             fs.import_sample_(data, energy, task)
+        with open(os.path.join(fs.item_path(), fs.file_name), 'w') as fw:
+            fw.writelines(data)
         return fs
 
     def import_sample_(self, data, energy, task=False):

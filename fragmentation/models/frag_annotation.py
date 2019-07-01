@@ -28,6 +28,12 @@ class FragAnnotation(PolymorphicModel):
     def adduct(self):
         return self.frag_mol_sample.adduct
 
+    def is_public(self):
+        try:
+            return self.frag_mol_sample.frag_sample.is_public()
+        except:
+            return False
+
 class FragAnnotationDB(FragAnnotation):
 
     class JSONAPIMeta:

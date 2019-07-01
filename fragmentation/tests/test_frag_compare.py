@@ -29,7 +29,7 @@ class FragCompareModelTests(TransactionTestCase):
 		fm = []
 		for fn in ['cosine_1.mgf', 'cosine_2.mgf']:
 			with open( self.TEST_FILES_PATH + fn , 'rb' ) as fr:
-				fs = FragSample.import_sample(fr, FragCompareModelTests.user, 'name', 'file_name', energy=0)
+				fs = FragSample.import_sample(fr, FragCompareModelTests.user, 'name', fn, energy=0)
 				fs.wait_import_done()
 				fm.append(fs.fragmolsample_set.first())
 		fmc = fc.compare_frag_mols(fm)
