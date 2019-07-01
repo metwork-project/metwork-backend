@@ -4,3 +4,4 @@ from .projects import *
 # from .status import get_status
 from .model_auth import ModelAuthViewSet
 from .api_status import *
+from .tags import TagViewSet

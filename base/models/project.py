@@ -21,17 +21,19 @@ class Project(FileManagement, PolymorphicModel):
 	description = models.CharField(
 					max_length=255,
 					default='',
-					null= True,
+					null=True,
 					blank=True)
 	user = models.ForeignKey(
 					settings.AUTH_USER_MODEL,
 					on_delete=models.CASCADE,
-					db_index = True)
+					db_index=True)
 	molecules = models.ManyToManyField(
 					Molecule)
 	status_code = models.PositiveSmallIntegerField(
 					default=0,
-					db_index = True)
+					db_index=True)
+	public = models.BooleanField(
+            default=False)
 
 	class JSONAPIMeta:
 		resource_name = "projects"
@@ -46,6 +48,9 @@ class Project(FileManagement, PolymorphicModel):
 
 	def __str__(self):
 		return self.name
+
+	def user_name(self):
+		return self.user.username
 
 	def load_default_conf(self):
 		for f in self._meta.local_fields:

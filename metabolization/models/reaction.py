@@ -8,8 +8,9 @@ import hashlib
 import subprocess
 import json
 import sys
-from base.modules import RDKit
+import re
 from django.conf import settings
+from base.models import Tag
 from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Count
@@ -30,6 +31,10 @@ class Reaction(FileManagement, models.Model):
                     default='',
                     null= True,
                     blank=True)
+    tags = models.ManyToManyField(
+        Tag,
+        related_name="reaction_tags",
+        default=None)
     user = models.ForeignKey(
                     settings.AUTH_USER_MODEL,
                     on_delete=models.CASCADE,
@@ -53,6 +58,8 @@ class Reaction(FileManagement, models.Model):
         default=None,
         null= True,
         blank=True)
+
+    public = True
 
     class status:
         INIT = 0
@@ -92,6 +99,9 @@ class Reaction(FileManagement, models.Model):
         super(Reaction, self).save(*args, **kwargs)
         return self
 
+    def tags_list(self):
+        return [tag.name for tag in self.tags.all()]
+
     def load_smarts(self, smarts):
         try:
             cd  = ChemDoodle()
@@ -103,6 +113,9 @@ class Reaction(FileManagement, models.Model):
             self.status_code = Reaction.status.EDIT
         self.save()
         return self
+
+    def user_id(self):
+        return self.user.id
 
     def user_name(self):
         return self.user.username
@@ -192,3 +205,21 @@ class Reaction(FileManagement, models.Model):
             return rps.first().mass_delta()
         else:
             return None
+
+    def update_name_tags(self):
+        tag_pattern = re.compile(r'\[([\w\s]*)\]')
+        name_pattern = re.compile(r'^([^\[\]]*\w)')
+
+        new_name = re.findall(name_pattern, self.name)[0]
+        tags = re.findall(tag_pattern, self.name)
+
+        for tag_name in tags:
+            tag_find = Tag.objects.filter(name=tag_name)
+            if tag_find.count() == 1:
+                tag = tag_find.first()
+            else:
+                tag = Tag.objects.create(name=tag_name)
+            self.tags.add(tag)
+        
+        self.name = new_name
+        self.save()

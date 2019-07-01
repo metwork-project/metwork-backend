@@ -1,3 +1,4 @@
+from .tag import Tag
 from .array_model import Array1DModel, Array2DModel
 from .user import User
 from .molecule import Molecule

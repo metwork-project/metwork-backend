@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
-from base.views.model_auth import ModelAuthViewSet
+import os
+import json
+from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
+from base.modules import TagViewMethods
 from fragmentation.models import FragSample
 from rest_framework import serializers
 from rest_framework.decorators import list_route, detail_route
@@ -13,16 +15,27 @@ class FragSampleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FragSample
-        fields = ('name', 'file_name', 'description',
-            'ions_count', 'ions_total', 'annotations_count',
-            'has_no_project', 'status_code')
+        fields = (
+            'name',
+            'file_name',
+            'description',
+            'tags_list',
+            'ions_count',
+            'ions_total',
+            'annotations_count',
+            'has_no_project',
+            'status_code')
 
-class FragSampleViewSet(ModelAuthViewSet):
+class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
     serializer_class = FragSampleSerializer
     queryset = FragSample.objects.all()
+    permission_classes = (IsOwnerOrPublic, )
 
     def get_queryset(self):
-        return FragSample.objects.filter(user=self.request.user).order_by('-id')
+        if self.action == 'list':
+            return FragSample.objects.filter(user=self.request.user).order_by('-id')
+        else:
+            return FragSample.objects.all() 
 
     @list_route(methods=['post'])
     def uploadfile(self, request):
@@ -71,3 +84,13 @@ class FragSampleViewSet(ModelAuthViewSet):
         frag_sample = self.get_object()
         data = frag_sample.molecular_network()
         return JsonResponse(data, safe=False)
+
+    @detail_route(methods=['get'])
+    def download_mgf(self, request, pk=None):
+        fs = self.get_object()
+        fileAddress = os.path.join(fs.item_path(), fs.file_name)
+        json_data = json.dumps({
+            'data': open(fileAddress, 'r').read() })
+        return JsonResponse(
+            json_data,
+            safe=False)

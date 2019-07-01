@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from base.views.model_auth import ModelAuthViewSet
+from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from metabolization.models import Reaction
 from rest_framework import serializers
 from rest_framework.decorators import list_route, detail_route
@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from base.models import Molecule
-from base.modules import JSONSerializerField, ChemDoodle
+from base.modules import JSONSerializerField, ChemDoodle, TagViewMethods
 from base.views import MoleculeSerializer
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -24,7 +24,9 @@ class ReactionSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'description',
+            'tags_list',
             'user',
+            'user_id',
             'user_name',
             'reactants_number',
             'has_no_project',
@@ -37,28 +39,31 @@ class ReactionSerializer(serializers.ModelSerializer):
 
     chemdoodle_json = JSONSerializerField()
 
-class ReactionViewSet(ModelAuthViewSet):
+class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
     queryset = Reaction.objects.all().order_by('name')
     serializer_class = ReactionSerializer
+    permission_classes = (IsOwnerOrPublic, )
 
     def get_queryset(self):
         queryset = Reaction.objects.all()
         project_id = self.request.query_params.get('project_id', None)
         if project_id is not None:
-                from base.models import SampleAnnotationProject
-                selected = self.request.query_params.get('selected', None)
-                if selected is not None:
-                    if selected == 'true':
-                        if project_id != '':
-                            queryset = SampleAnnotationProject.objects.get(id=project_id).reactions()
-                        else:
-                            queryset = Reaction.objects.none()
+            from base.models import SampleAnnotationProject
+            selected = self.request.query_params.get('selected', None)
+            if selected is not None:
+                if selected == 'true':
+                    if project_id != '':
+                        queryset = SampleAnnotationProject.objects\
+                            .get(id=project_id).reactions()
                     else:
-                        if project_id != '':
-                            queryset = SampleAnnotationProject.objects.get(id=project_id).reactions_not_selected()
+                        queryset = Reaction.objects.none()
+                else:
+                    if project_id != '':
+                        queryset = SampleAnnotationProject.objects\
+                            .get(id=project_id).reactions_not_selected()
         else:
-            filter = self.request.query_params.get('filter', None)
-            if filter == 'not_obsolete':
+            get_filter = self.request.query_params.get('filter', None)
+            if get_filter == 'not_obsolete':
                 queryset = queryset.filter(status_code__lt = Reaction.status.OBSOLETE)
         return queryset.order_by('name')
 
@@ -121,3 +126,4 @@ class ReactionViewSet(ModelAuthViewSet):
             return JsonResponse(response)
         else:
             return JsonResponse({'error': 'test'})
+

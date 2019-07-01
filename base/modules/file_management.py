@@ -21,15 +21,15 @@ class FileManagement(object):
 		return self
 
 	def save(self, *args, **kwargs):
-		super(FileManagement, self).save(*args, **kwargs)
+		super().save(*args, **kwargs)
 		if settings.EDIT_FILES:
 			self.gen_item()
 		return self
 
 	def delete(self, *args, **kwargs):
 		d = self.item_path()
-		super(FileManagement, self).delete(*args, **kwargs)
 		if os.path.isdir(d):
 		#try: ???
 			shutil.rmtree(d)
-		return self
+		super().delete(*args, **kwargs)
+

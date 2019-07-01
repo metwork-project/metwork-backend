@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from base.models import SampleAnnotationProject
-from base.views.model_auth import ModelAuthViewSet
+from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from rest_framework import serializers
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
@@ -20,6 +20,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'description',
+            'user_name',
+            'public',
             'frag_sample',
             'status_code',
             'reaction_ids',
@@ -32,15 +34,23 @@ class ProjectSerializer(serializers.ModelSerializer):
             'frag_compare_conf_id', )
 
 class ProjectViewSet(ModelAuthViewSet):
+    permission_classes = (IsOwnerOrPublic, )
     serializer_class = ProjectSerializer
-    queryset = SampleAnnotationProject.objects.all()
 
 
     def get_queryset(self):
-        return SampleAnnotationProject.objects.filter(user=self.request.user).order_by('-id')
+        if self.action == 'list':
+            list_filter = self.request.query_params.get('filter', None)
+            if list_filter == "public":
+                return SampleAnnotationProject.objects \
+                    .filter(public=True).order_by('-id')
+            else:
+                return SampleAnnotationProject.objects \
+                    .filter(user=self.request.user).order_by('-id')
+        else:
+            return SampleAnnotationProject.objects.all()
 
     def perform_create(self, serializer):
-        #print self.request.user
         serializer.save(user=self.request.user)
 
     @detail_route(methods=['post'])
