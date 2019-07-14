@@ -5,9 +5,9 @@ numpy=1.13
 
 # Django app
 
-django=2.1.2
+django=2.2.3
 django-extensions=2.1.0
-djangorestframework=3.8.2
+djangorestframework=3.9.4
 pygraphviz
 psycopg2=2.7.5
 celery=4.1.0
