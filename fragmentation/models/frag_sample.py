@@ -329,3 +329,11 @@ class FragSample(FileManagement, models.Model, AdductManager):
                     fm.gen_mgf(energy) \
                     for fm in FragMolSample.objects.filter(frag_sample = self).order_by("ion_id") ])
         return res
+
+    def gen_mgf_file(self):
+        self.gen_item()
+        file_path = os.path.join(self.item_path(), self.file_name)
+        if not os.path.exists(file_path):
+            data = self.gen_mgf()
+            with open(file_path, 'w') as fw:
+                fw.writelines(data)

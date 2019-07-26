@@ -88,6 +88,10 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
     @detail_route(methods=['get'])
     def download_mgf(self, request, pk=None):
         fs = self.get_object()
+
+        # Generate .mgf file from database if not exist
+        fs.gen_mgf_file()
+        
         fileAddress = os.path.join(fs.item_path(), fs.file_name)
         json_data = json.dumps({
             'data': open(fileAddress, 'r').read() })
