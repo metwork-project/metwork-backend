@@ -70,7 +70,8 @@ class SampleAnnotationProject(Project):
                 kwargs['update_fields'] = ['status_code',]
                 super(SampleAnnotationProject, self).save(update_fields=['status_code'])
             else:
-                super(SampleAnnotationProject, self).save(update_fields=['public'])
+                super(SampleAnnotationProject, self).save(
+                    update_fields=['public', 'name', 'description'])
 
         self.refresh_from_db()
         return self

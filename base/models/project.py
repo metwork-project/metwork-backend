@@ -52,6 +52,9 @@ class Project(FileManagement, PolymorphicModel):
 	def user_name(self):
 		return self.user.username
 
+	def user_id(self):
+		return self.user.id
+
 	def load_default_conf(self):
 		for f in self._meta.local_fields:
 			if f.name.endswith('_conf'):

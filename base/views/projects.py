@@ -21,6 +21,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'name',
             'description',
             'user_name',
+            'user_id',
             'public',
             'frag_sample',
             'status_code',
