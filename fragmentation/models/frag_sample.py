@@ -5,7 +5,7 @@ from decimal import *
 import time
 from django.db import models, IntegrityError
 from django.conf import settings
-from base.models import Molecule, Array1DModel, Array2DModel, Tag
+from base.models import Molecule, Array2DModel, Tag
 from libmetgem.cosine import compute_distance_matrix
 from django.contrib.postgres.fields import ArrayField
 import numpy as np
@@ -53,22 +53,6 @@ class FragSample(FileManagement, models.Model, AdductManager):
         on_delete=models.CASCADE,
         null= True,
     )
-    mass_delta_single = models.OneToOneField(
-        Array1DModel,
-        related_name='mass_delta_single',
-        on_delete=models.CASCADE,
-        null= True,
-    )
-    mass_delta_double = models.OneToOneField(
-        Array1DModel,
-        related_name='mass_delta_double',
-        on_delete=models.CASCADE,
-        null= True,
-    )
-    # reaction_mass_max is the max value of reactions mass
-    # when mass_delta_* lists where evaluated
-    reaction_mass_max = models.FloatField(\
-            default = 0)
     status_code = models.PositiveIntegerField(
                     default=0,
                     db_index = True)
@@ -150,7 +134,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
     def import_sample_(self, data, energy, task=False):
         from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
-        from fragmentation.tasks import gen_cosine_matrix_task, gen_mass_delta_task
+        from fragmentation.tasks import gen_cosine_matrix_task
         import re
         error_log = []
 
@@ -194,43 +178,12 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
         if task:
             gen_cosine_matrix_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
-            gen_mass_delta_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
         else:
             self.gen_cosine_matrix()
-            self.gen_mass_delta()
 
         # if len(error_log) > 0 : print ('ERROR LOG', error_log )
         self.status_code = 3
         self.save()
-
-    def gen_mass_delta(self, update_reaction_mass_max=True):
-        from metabolization.models import Reaction
-        reaction_max = Reaction.max_delta()
-
-        allfms = np.array([
-            fms.parent_mass for fms in self.fragmolsample_set.all() ])
-        allfms = np.unique(allfms)
-
-        if update_reaction_mass_max:
-            self.reaction_mass_max = max(reaction_max, min(allfms))
-
-        def diff_values(a1,a2):
-            res = np.reshape(a2, (len(a2),1))
-            res = np.round(a1 - res,6)
-            res = np.unique(np.abs(res))
-            mass_max = self.reaction_mass_max + settings.PROTON_MASS
-            res = res[np.where( res <= mass_max )[0]]
-            return res
-
-        single = diff_values(allfms ,allfms)
-        double = diff_values(single, allfms - settings.PROTON_MASS)
-
-        mass_delta_single = Array1DModel.objects.create(value=single.tolist())
-        mass_delta_double = Array1DModel.objects.create(value=double.tolist())
-        self.mass_delta_single = mass_delta_single
-        self.mass_delta_double = mass_delta_double
-        self.save()
-        return self
 
     def ions_list(self):
         return self.fragmolsample_set.all().order_by('ion_id').distinct()
