@@ -108,9 +108,9 @@ class ProjectViewSet(ModelAuthViewSet):
         return self.change_item(self, request, 'remove_item')
 
     @detail_route(methods=['patch'])
-    def select_reactions_by_mass(self, request, pk=None):
+    def select_reactions_by_tag(self, request, pk=None):
         project = self.get_object()
-        project.select_reactions_by_mass()
+        project.select_reactions_by_tag()
         return Response({'project_id': project.id})
 
     @detail_route(methods=['patch'])

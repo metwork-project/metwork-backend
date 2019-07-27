@@ -172,23 +172,11 @@ class SampleAnnotationProject(Project):
         self.change_reactions([])
         return self
 
-    def select_reactions_by_mass(self):
-        # regen frag_sample.mass_delta_* if necessary
-        if Reaction.max_delta() > self.frag_sample.reaction_mass_max:
-            self.frag_sample.gen_mass_delta()
-        delta={
-            1: np.array(self.frag_sample.mass_delta_single.value),
-            2: np.array(self.frag_sample.mass_delta_double.value)
-        }
+    def select_reactions_by_tag(self):
         reaction_ids = [
             r.id \
-            for r in Reaction.activated()
-            if r.mass_delta() is not None \
-                and True in np.isclose(
-                    r.mass_delta(),
-                    delta[r.reactants_number],
-                    atol=5*1e-03,
-                    rtol=0 )]
+            for r in Reaction.activated().filter(
+                tags__in=self.frag_sample.tags.all()) ]
         self.change_reactions(reaction_ids)
         return self
 
