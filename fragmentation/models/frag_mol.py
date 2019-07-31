@@ -48,9 +48,11 @@ class FragMol(PolymorphicModel):
         res = 'BEGIN IONS\n'
         res += self.gen_info(decimal)
         res += '\n'
-        res += '\n'.join([ \
-            ' '.join([ str( Decimal(v).quantize(DECIMALS) ) for v in peak ])
-            for peak in self.fragmolspectrum_set.filter(energy = energy).first().spectrum ]) + '\n'
+        spectrum_set = self.fragmolspectrum_set.filter(energy = energy)
+        if spectrum_set.count() > 0:
+            res += '\n'.join([ \
+                ' '.join([ str( Decimal(v).quantize(DECIMALS) ) for v in peak ])
+                for peak in spectrum_set.first().spectrum ]) + '\n'
         res += 'END IONS\n'
         return res
 

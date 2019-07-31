@@ -30,19 +30,3 @@ class FragSampleModelTests(TransactionTestCase):
                 fs = FragSample.import_sample(fss, u, 'name', 'file_name', energy=0)
                 fs.wait_import_done()
         FragSample.IONS_LIMIT = 10000
-
-    def test_mass_delta(self):
-        u = get_user_model().objects.create()
-        sample_folder = 'fragmentation/tests/files/test_annotation_project/'
-        sample_file_path = sample_folder + 'test_annotation_project.mgf'
-        with open(sample_file_path, 'rb') as fss:
-            fs = FragSample.import_sample(fss, u, 'name', 'file_name', energy=0, task=False)
-            fs.wait_import_done()
-        self.assertIsNotNone(fs.mass_delta_single)
-        self.assertIsNotNone(fs.mass_delta_double)
-        self.assertIn(14.01565, fs.mass_delta_single.value)
-        self.assertNotIn(77.074168, fs.mass_delta_double.value)
-        fs.reaction_mass_max = 100.0
-        fs.save()
-        fs.gen_mass_delta(update_reaction_mass_max=False)
-        self.assertIn(77.074168, fs.mass_delta_double.value)

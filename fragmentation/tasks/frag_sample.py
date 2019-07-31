@@ -18,7 +18,3 @@ def gen_cosine_matrix_task(frag_sample_id):
 	fs = FragSample.objects.get(id=frag_sample_id)
 	fs.gen_cosine_matrix()
 
-@shared_task
-def gen_mass_delta_task(frag_sample_id):
-	fs = FragSample.objects.get(id=frag_sample_id)
-	fs.gen_mass_delta()
