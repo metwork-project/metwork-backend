@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 from decimal import *
 import time
+import re
 from django.db import models, IntegrityError
 from django.conf import settings
 from base.models import Molecule, Array2DModel, Tag
@@ -12,7 +13,7 @@ import numpy as np
 from libmetgem.mgf import filter_data
 from fragmentation.utils.adducts import AdductManager
 from base.modules import FileManagement
-
+from celery import group, chain
 
 class FragSample(FileManagement, models.Model, AdductManager):
 
@@ -103,104 +104,124 @@ class FragSample(FileManagement, models.Model, AdductManager):
             db_id = db_id)
 
     @classmethod
-    def import_sample(cls, file_object, user, name='', file_name='data.mgf', description='', energy=1, task=False):
-        from fragmentation.models import FragMolSample
-        from fragmentation.tasks import import_sample_task
+    def import_sample(
+            cls,
+            file_object,
+            user,
+            name='',
+            file_name='data.mgf',
+            description='',
+            energy=1,
+            task=False):
 
-        data = [l.decode('utf-8') for l in file_object.readlines()]
-        #data = file_object.readlines()
-        error_log = []
-        total_ions = data.count('BEGIN IONS\n')
+        from fragmentation import tasks
+
+        pattern = re.compile(r'BEGIN IONS\n([\w\W\n]*?)END IONS')
+        data = file_object.read().decode('utf-8')
+        ions = re.findall(pattern, data)
+    
+        total_ions = len(ions)
         if total_ions > FragSample.IONS_LIMIT:
             raise IntegrityError(
                 '{0} ions max authorized, {1} in the sample.'.format(FragSample.IONS_LIMIT, total_ions))
+
         fs = FragSample.objects.create(
-            user = user,
-            name = name,
-            file_name = file_name,
-            description = description,
-            status_code = 1,
-            ions_total = total_ions)
+            user=user,
+            name=name,
+            file_name=file_name,
+            description=description,
+            status_code=1,
+            ions_total=total_ions)
         fs.status_code = 2
         fs.save()
         fs.gen_item()
-        if task:
-            import_sample_task.apply_async(args = [fs.id, data, energy], queue = settings.CELERY_WEB_QUEUE)
-        else:
-            fs.import_sample_(data, energy, task)
         with open(os.path.join(fs.item_path(), fs.file_name), 'w') as fw:
             fw.writelines(data)
-        return fs
-
-    def import_sample_(self, data, energy, task=False):
-        from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
-        from fragmentation.tasks import gen_cosine_matrix_task
-        import re
-        error_log = []
-
-        for ion in re.findall("(?<=BEGIN IONS\|)(.+?)(?=END IONS)", ''.join(data).replace('\n', '|'), re.U):
-
-            params = re.findall( "([^|]*)=([^|]*)" , ion, re.U)
-            peaks = re.findall( "([\d]*\.+[\d]*) ([\d]*\.+[\d]*)" , ion, re.U)
-            has_pepmass = 'PEPMASS' in [ v[0] for v in params ]
-            has_id = 'SCANS' in [ v[0] for v in params ]
-            has_peaks = len(peaks) > 1
-
-            if has_pepmass and has_id and has_peaks:
-                fsm = FragMolSample.objects.create(frag_sample = self)
-                p = 1
-                for param in params:
-                    if param[0] == 'PEPMASS':
-                        fsm.parent_mass = float(param[1])
-                        # fsm.mass = Decimal(av[1])
-                        fsm.save()
-                    elif param[0] == 'SCANS':
-                        fsm.ion_id = int(param[1])
-                        fsm.save()
-                    else:
-                        FragMolAttribute.objects.create(
-                            frag_mol = fsm,\
-                            title = param[0],\
-                            value = param[1],\
-                            position = p)
-                    p +=1
-                FragMolSpectrum.objects.create(
-                    frag_mol = fsm,
-                    spectrum = \
-                        [ [float(peak[0]), float(peak[1])] \
-                        for peak in peaks ],
-                    energy = energy,
-                    )
-            else:
-                self.ions_total -= 1
-            #except:
-            #    error_log.append(l)
 
         if task:
-            gen_cosine_matrix_task.apply_async(args = [self.id], queue = settings.CELERY_WEB_QUEUE)
+            queue = settings.CELERY_WEB_QUEUE
+            g = group(
+                tasks.import_ion.s(fs.id, ion, energy) for ion in ions)
+            s = chain(
+                g,
+                tasks.set_ions_count.s(fs.id),
+                tasks.gen_cosine_matrix.s(),
+                tasks.finalize_import.s())
+            s.apply_async(queue=queue)
+            return fs
         else:
-            self.gen_cosine_matrix()
+            return fs.import_sample_sync(ions, energy)
 
-        # if len(error_log) > 0 : print ('ERROR LOG', error_log )
+    def import_sample_sync(self, ions, energy):
+
+        ions_count = 0
+
+        for ion in ions:
+            ion_count = self.import_ion(ion, energy)
+            ions_count += ion_count
+        self.gen_cosine_matrix()
+
+        return self.finalise_import()
+
+    def finalise_import(self):
         self.status_code = 3
         self.save()
+        return self
+
+    def import_ion(self, ion, energy):
+        from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
+
+        params = re.findall( r"([^\n]*)=([^\n]*)" , ion, re.U)
+        peaks = re.findall( r"([\d]*\.+[\d]*) ([\d]*\.+[\d]*)" , ion, re.U)
+        has_pepmass = 'PEPMASS' in [ v[0] for v in params ]
+        has_id = 'SCANS' in [ v[0] for v in params ]
+        has_peaks = len(peaks) > 1
+
+        if has_pepmass and has_id and has_peaks:
+            fsm = FragMolSample.objects.create(frag_sample = self)
+            p = 1
+            for param in params:
+                if param[0] == 'PEPMASS':
+                    fsm.parent_mass = float(param[1])
+                    # fsm.mass = Decimal(av[1])
+                    fsm.save()
+                elif param[0] == 'SCANS':
+                    fsm.ion_id = int(param[1])
+                    fsm.save()
+                else:
+                    FragMolAttribute.objects.create(
+                        frag_mol = fsm,\
+                        title = param[0],\
+                        value = param[1],\
+                        position = p)
+                p +=1
+            FragMolSpectrum.objects.create(
+                frag_mol = fsm,
+                spectrum = \
+                    [ [float(peak[0]), float(peak[1])] \
+                    for peak in peaks ],
+                energy = energy,
+                )
+            return 1
+        else:
+            return 0
 
     def ions_list(self):
         return self.fragmolsample_set.all().order_by('ion_id').distinct()
 
     def mzs(self):
-        return [ fms.parent_mass for fms in self.ions_list() ]
+        return [fms.parent_mass for fms in self.ions_list()]
 
     def gen_cosine_matrix(self):
         query = self.ions_list()
         try:
             cosine_matrix = compute_distance_matrix(
-                [ fms.parent_mass for fms in query ],
-                [ filter_data(
-                    np.array(fms.fragmolspectrum_set.get(energy = 1).spectrum),
+                [fms.parent_mass for fms in query],
+                [filter_data(
+                    np.array(fms.fragmolspectrum_set.get(energy=1).spectrum),
                     fms.parent_mass,
-                    0.0, 0.0, 0.0, 0)
-                    for fms in query ],
+                    0.0, 0.0, 0.0, 0) \
+                    for fms in query],
                 0.002,
                 5
             )
