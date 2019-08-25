@@ -36,6 +36,10 @@ class MetGraph:
             mol.id: mol.mass_exact() + self.get_adduct_mass(mol) \
                 for mol in self.mols}
         self.mols_dic = { val[1].id : val[0] + len(self.rps) for val in enumerate(self.mols) }
+        self.public_mols_id = {
+            fad.molecule.id \
+                for fad in FragAnnotationDB.objects.all() \
+                if fad.is_public()}
 
     def get_adduct_mass(self, mol):
         from fragmentation.models import FragAnnotation
@@ -71,6 +75,13 @@ class MetGraph:
                 .aggregate(Max('frag_mol_compare__cosine'))
         return query['frag_mol_compare__cosine__max']
 
+    def get_annotation_type(self, molecule):
+        if molecule in self.project.molecules_init():
+            return 'init'
+        if molecule.id in self.public_mols_id:
+            return 'public'
+        return 'proposal'
+
     def metabolization_network(self):
 
         def node_id(node_type, element):
@@ -99,7 +110,7 @@ class MetGraph:
                 # 'name':  str(round( m.mass_exact(), 3 )),
                 'parent_mass': str(round(self.mols_mass[m.id], 3)),
                 'nodeType': 'molecule',
-                'annotationType': 'init' if m in self.project.molecules_init() else 'proposal',
+                'annotationType': self.get_annotation_type(m),
                 'smiles': m.smiles(),
                 'molJSON': m.chemdoodle_json,
                 'cosine': self.get_cosine(m),
