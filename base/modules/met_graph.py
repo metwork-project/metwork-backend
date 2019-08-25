@@ -82,6 +82,10 @@ class MetGraph:
             return 'public'
         return 'proposal'
 
+    def get_public_projects(self, molecule):
+        """return list of public projects including this molecule"""
+        return [p.id for p in molecule.project_set.filter(public=True)]
+
     def metabolization_network(self):
 
         def node_id(node_type, element):
@@ -111,6 +115,7 @@ class MetGraph:
                 'parent_mass': str(round(self.mols_mass[m.id], 3)),
                 'nodeType': 'molecule',
                 'annotationType': self.get_annotation_type(m),
+                'public_projects': self.get_public_projects(m),
                 'smiles': m.smiles(),
                 'molJSON': m.chemdoodle_json,
                 'cosine': self.get_cosine(m),
