@@ -4,22 +4,49 @@ from django.db.models import Count
 import os, json
 from django.db.models import Q
 from django.db.models import Max
+from fragmentation.utils import AdductManager
 
 class MetGraph:
 
     def __init__(self, project):
         from fragmentation.models import FragAnnotationDB
         self.project = project
-        self.mols_in = [fa.molecule.id    for fa in FragAnnotationDB.objects.filter(frag_mol_sample__frag_sample = project.frag_sample)]
-        self.rps = [rp for rp in project.react_processes\
-            .annotate(Count('products'))\
-            .filter(products__count__gt = 0)\
-            .filter( Q(products__in=project.molecules_matching()) | Q(products__in=self.mols_in) )]
-        self.rps_dic = { val[1].id : val[0] for val in enumerate(self.rps) }
+        self.adducts_mass = AdductManager().adducts.mass
+        self.mols_in = [
+            fa.molecule.id for \
+                fa in FragAnnotationDB.objects.filter(
+                    frag_mol_sample__frag_sample=project.frag_sample)]
+        self.rps = [rp for rp in project.react_processes \
+            .annotate(Count('products')) \
+            .filter(products__count__gt=0) \
+            .filter(Q(products__in=project.molecules_matching()) | Q(products__in=self.mols_in))]
+        self.rps_dic = {val[1].id : val[0] for val in enumerate(self.rps)}
         self.mols = list( \
-            set([ m for rp in self.rps for m in rp.reactants.all() ]) |
-            set([ m for rp in self.rps for m in self.products(rp) ]) )
+            set([m for rp in self.rps for m in rp.reactants.all()]) |
+            set([m for rp in self.rps for m in self.products(rp)]))
+
+        self.fm_ids = [fms.id for fms in self.project.frag_sample.fragmolsample_set.all()]
+        self.fm_sims = {
+            fac.frag_mol_compare.frag_mols.exclude(id=fac.frag_mol_sample.id).first() \
+                for fac in self.project.fragannotationcompare_set.all()}
+        self.fms_mols_mass = {
+            fms.molecule.id: self.adducts_mass[fms.adduct] \
+                for fms in self.fm_sims}
+        self.mols_mass = {
+            mol.id: mol.mass_exact() + self.get_adduct_mass(mol) \
+                for mol in self.mols}
         self.mols_dic = { val[1].id : val[0] + len(self.rps) for val in enumerate(self.mols) }
+
+    def get_adduct_mass(self, mol):
+        from fragmentation.models import FragAnnotation
+        # try:
+        fas = FragAnnotation.objects.filter(molecule=mol, frag_mol_sample__in=self.fm_ids)
+        if fas.count() > 0:
+            if fas.first().adduct() is not None:
+                return self.adducts_mass[fas.first().adduct()]
+        return self.fms_mols_mass[mol.id]
+        # except:
+        #     return 0
 
     def products(self, rp):
         return rp.products.filter( Q(id__in=self.project.molecules_matching()) | Q(id__in=self.mols_in) ).distinct()
@@ -68,8 +95,9 @@ class MetGraph:
             'group': 'nodes',
             'data': {
                 'id': node_id('mol', m),
-                'name': str(round( m.mass_exact(), 3 )) ,
-                'parent_mass': str(round( m.mass_exact(), 3 )) ,
+                'name': str(round(self.mols_mass[m.id], 3)),
+                # 'name':  str(round( m.mass_exact(), 3 )),
+                'parent_mass': str(round(self.mols_mass[m.id], 3)),
                 'nodeType': 'molecule',
                 'annotationType': 'init' if m in self.project.molecules_init() else 'proposal',
                 'smiles': m.smiles(),
