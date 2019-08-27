@@ -58,8 +58,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                     default=0,
                     db_index = True)
 
-    # Limit the number of ions per sample
-    IONS_LIMIT = 9000
+    conf = settings.METWORK_CONF['FRAG']
 
     class status:
         INIT = 0
@@ -121,9 +120,10 @@ class FragSample(FileManagement, models.Model, AdductManager):
         ions = re.findall(pattern, data)
     
         total_ions = len(ions)
-        if total_ions > FragSample.IONS_LIMIT:
+        ions_limit = int(cls.conf['ions_limit'])
+        if total_ions > ions_limit:
             raise IntegrityError(
-                '{0} ions max authorized, {1} in the sample.'.format(FragSample.IONS_LIMIT, total_ions))
+                '{0} ions max authorized, {1} in the sample.'.format(ions_limit, total_ions))
 
         fs = FragSample.objects.create(
             user=user,

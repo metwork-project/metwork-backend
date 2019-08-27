@@ -50,7 +50,7 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
                                 task=True)
             return Response({'status': 'ok'})
         except IntegrityError as e:
-            return Response({'error': e.message})
+            return Response({'error': str(e)})
 
 
     @detail_route(methods=['post'])
