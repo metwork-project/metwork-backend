@@ -8,6 +8,7 @@ from .data import *
 from .email import *
 from .chemistry import *
 from .rest_framework import *
+from .config import *
 from .utils import APP_VERSION, get_env
 
 #get secret key
