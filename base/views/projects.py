@@ -27,6 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'status_code',
             'reaction_ids',
             'REACTIONS_LIMIT',
+            'DEPTH_LIMIT',
             'annotation_init_ids',
             'depth_total',
             'depth_last_match',
