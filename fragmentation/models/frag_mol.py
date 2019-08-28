@@ -131,6 +131,9 @@ class FragMolSample(FragMol):
     def scan_id(self):
         return self.ion_id
 
+    def user(self):
+        return self.frag_sample.user
+
     def get_attributes(self):
         return[ ( at.title, at.value ) for at in self.fragmolattribute_set.order_by('position') ]
 

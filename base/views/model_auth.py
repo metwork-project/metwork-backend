@@ -11,7 +11,12 @@ class IsOwnerOrPublic(BasePermission):
 
     def has_object_permission(self, request, view, obj):
 
-        if obj.user == request.user:
+        if type(obj.user).__name__ == 'method':
+            user = obj.user()
+        else:
+            user = obj.user  
+
+        if  user == request.user:
             return True
 
         if request.method in permissions.SAFE_METHODS:
