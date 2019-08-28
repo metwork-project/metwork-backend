@@ -24,7 +24,7 @@ class FragSampleModelTests(TransactionTestCase):
 
     def test_ions_limit(self):
         sample_file_path, u = self.path_and_user()
-        FragSample.IONS_LIMIT = 2
+        FragSample.conf['IONS_LIMIT'] = "2"
         with self.assertRaises(IntegrityError):
             with open(sample_file_path, 'rb') as fss:
                 fs = FragSample.import_sample(fss, u, 'name', 'file_name', energy=0)

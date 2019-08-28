@@ -11,7 +11,9 @@ class MetGraph:
     def __init__(self, project):
         from fragmentation.models import FragAnnotationDB
         self.project = project
-        self.adducts_mass = AdductManager().adducts.mass
+        self.adducts_mass = AdductManager(
+            ion_charge=self.project.frag_sample.ion_charge)\
+                .adducts.mass
         self.mols_in = [
             fa.molecule.id for \
                 fa in FragAnnotationDB.objects.filter(

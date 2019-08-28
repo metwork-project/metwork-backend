@@ -110,6 +110,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
             name='',
             file_name='data.mgf',
             description='',
+            ion_charge='positive',
             energy=1,
             task=False):
 
@@ -130,6 +131,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
             name=name,
             file_name=file_name,
             description=description,
+            ion_charge=ion_charge,
             status_code=1,
             ions_total=total_ions)
         fs.status_code = 2
@@ -172,7 +174,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
         from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
 
         params = re.findall( r"([^\n]*)=([^\n]*)" , ion, re.U)
-        peaks = re.findall( r"([\d]*\.+[\d]*) ([\d]*\.+[\d]*)" , ion, re.U)
+        peaks = re.findall( r"([\d]*\.+[\d]*)[\t\s]([\d]*\.+[\d]*)" , ion, re.U)
         has_pepmass = 'PEPMASS' in [ v[0] for v in params ]
         has_id = 'SCANS' in [ v[0] for v in params ]
         has_peaks = len(peaks) > 1
