@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from .models import FragSample, FragMolSim
+from .models import FragSample, FragMolSim, FragMolCompare
 
 @admin.register(FragSample)
 class FragSampleAdmin(admin.ModelAdmin):
@@ -25,3 +25,23 @@ class FragMolSimAdmin(admin.ModelAdmin):
     def smiles(self, instance):
         return instance.molecule.smiles()
     smiles.short_description = 'Smiles'
+
+@admin.register(FragMolCompare)
+class FragSampleAdmin(admin.ModelAdmin):
+    readonly_fields = ('match', 'cosine', 'str_frag_mols')
+    fields = ('match', 'cosine', 'str_frag_mols')
+    list_display = ('id', 'str_frag_mols')
+    list_filter = ('cosine',)
+
+    def frag_mol_label(self, frag_mol):
+        if frag_mol.__class__.__name__ == "FragMolSim":
+            return frag_mol.molecule.smiles()
+        if frag_mol.__class__.__name__ == "FragMolSample":
+            return 'sample: {0}, ion_id: {1}'.format(
+                frag_mol.frag_sample.id,
+                frag_mol.ion_id)
+        return 'None'
+
+    def str_frag_mols(self, instance):
+        return ', '.join([self.frag_mol_label(fm) for fm in instance.frag_mols.all()])
+    str_frag_mols.short_description = 'Mols'

@@ -18,6 +18,7 @@ class FragSampleSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'file_name',
+            'ion_charge',
             'description',
             'tags_list',
             'ions_count',
@@ -47,10 +48,11 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
                 file_name = req_data['file_name'],
                 name = req_data['name'],
                 description = req_data['description'],
-                                task=True)
+                ion_charge = req_data['ion_charge'],
+                task=True)
             return Response({'status': 'ok'})
         except IntegrityError as e:
-            return Response({'error': e.message})
+            return Response({'error': str(e)})
 
 
     @detail_route(methods=['post'])

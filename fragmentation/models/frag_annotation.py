@@ -19,6 +19,9 @@ class FragAnnotation(PolymorphicModel):
     def ion_id(self):
         return self.frag_mol_sample.ion_id
 
+    def user(self):
+        return self.frag_mol_sample.frag_sample.user
+
     def smiles(self):
         return self.molecule.smiles()
 

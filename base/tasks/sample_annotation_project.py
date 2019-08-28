@@ -141,7 +141,7 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
 
     fm_search_ids = []
     ms1 = cache.get( 'project_ms1_not_init_' + str(project_id) )
-    am = AdductManager()
+    am = AdductManager(ion_charge=p.frag_sample.ion_charge)
     adducts_mass = np.array(am.adducts.mass).reshape((1,-1))
 
     mass_exact = m.mass_exact() # + settings.PROTON_MASS
@@ -185,7 +185,10 @@ def evaluate_molecule_2(
         fsim = FragSim(p.frag_sim_conf)
         fmsim = {}
         for adduct in adducts:
-            fmsim[adduct] = fsim.frag_molecule(m, adduct)
+            fmsim[adduct] = fsim.frag_molecule(
+                m,
+                adduct,
+                ion_charge=p.frag_sample.ion_charge)
 
         ### Compare with each sample of same mass
         fcomp = FragCompare(p.frag_compare_conf)

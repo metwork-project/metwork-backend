@@ -45,7 +45,8 @@ class SampleAnnotationProject(Project):
     react_processes = models.ManyToManyField(
         ReactProcess)
 
-    REACTIONS_LIMIT = 60
+    REACTIONS_LIMIT = settings.METWORK_CONF['MET']['reactions_limit']
+    DEPTH_LIMIT = settings.METWORK_CONF['MET']['depth_limit']
 
     class JSONAPIMeta:
         resource_name = "projects"
