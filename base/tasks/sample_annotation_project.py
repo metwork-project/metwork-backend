@@ -30,7 +30,10 @@ def start_run(project_id):
 def run_reactions_molecule(molecule_id, project_id, depth_total, depth_last_match ):
 
     m = model_from_cache( Molecule, molecule_id )
-    p = model_from_cache( SampleAnnotationProject, project_id )
+    p = SampleAnnotationProject.objects.get(id=project_id)
+    if p.is_stopped():
+        p.close_process()
+        return 'project stopped'
 
     grp_tsk = group(\
                 run_reaction_molecule.s([molecule_id], r.id, project_id, depth_total, depth_last_match) \
@@ -47,7 +50,10 @@ def run_reaction_molecule(reactants_id, reaction_id, project_id, depth_total, de
     from metabolization.models import Reaction, ReactProcess
     from django.db.models import Count
 
-    p = model_from_cache( SampleAnnotationProject, project_id )
+    p = SampleAnnotationProject.objects.get(id=project_id)
+    if p.is_stopped():
+        p.close_process()
+        return 'project stopped'
     r = model_from_cache( Reaction,reaction_id )
 
     reactants_count = len(reactants_id)
@@ -104,7 +110,11 @@ def run_reaction_molecule(reactants_id, reaction_id, project_id, depth_total, de
 @shared_task
 def load_molecule(molecule_id, project_id, depth_total, depth_last_match):
 
-    p = model_from_cache( SampleAnnotationProject, project_id )
+    p = SampleAnnotationProject.objects.get(id=project_id)
+    if p.is_stopped():
+        p.close_process()
+        return 'project stopped'
+
     molecules_ids = cache.get('project_molecules_all_' + str(project_id))
 
     if not molecule_id in molecules_ids :
@@ -121,7 +131,9 @@ def load_molecule(molecule_id, project_id, depth_total, depth_last_match):
 
         if added:
             p.add_process()
-            tsk = evaluate_molecule.apply_async( args= [molecule_id, project_id, depth_total, depth_last_match], queue = settings.CELERY_RUN_QUEUE)
+            tsk = evaluate_molecule.apply_async(
+                args=[molecule_id, project_id, depth_total, depth_last_match],
+                queue=settings.CELERY_RUN_QUEUE)
 
     p.close_process()
     return 0
@@ -131,7 +143,10 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
     from fragmentation.models import FragMolSample, FragAnnotationDB
 
     m = model_from_cache( Molecule, molecule_id )
-    p = model_from_cache( SampleAnnotationProject, project_id )
+    p = SampleAnnotationProject.objects.get(id=project_id)
+    if p.is_stopped():
+        p.close_process()
+        return 'project stopped'
 
     # check if sample exist with the same mass
 
@@ -173,7 +188,10 @@ def evaluate_molecule_2(
     from fragmentation.modules import FragSim, FragCompare
 
     m = model_from_cache( Molecule, molecule_id )
-    p = model_from_cache( SampleAnnotationProject, project_id )
+    p = SampleAnnotationProject.objects.get(id=project_id)
+    if p.is_stopped():
+        p.close_process()
+        return 'project stopped'
 
     # If mass match, frag molecule and check if frag match
 

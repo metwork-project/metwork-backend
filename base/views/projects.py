@@ -128,6 +128,12 @@ class ProjectViewSet(ModelAuthViewSet):
         project.run()
         return Response({'status_code':project.status_code})
 
+    @detail_route(methods=['post'])
+    def stop_run(self, request, pk=None):
+        project = self.get_object()
+        project.finish_run()
+        return Response({'status_code':project.status_code})
+
     @detail_route(methods=['get'])
     def download_file(self, request, pk=None):
         file = self.request.query_params.get('file', None)

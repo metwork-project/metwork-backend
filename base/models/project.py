@@ -116,6 +116,9 @@ class Project(FileManagement, PolymorphicModel):
 		self.status_code = Project.status.DONE
 		self.save()
 
+	def is_stopped(self):
+		return self.status_code == Project.status.DONE
+
 	def wait_run_end(self, timeout = 360):
 		# Used for test only
 		# timeout is in seconds
