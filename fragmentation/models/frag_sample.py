@@ -118,6 +118,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
         pattern = re.compile(r'BEGIN IONS\n([\w\W\n]*?)END IONS')
         data = file_object.read().decode('utf-8')
+        data = data.replace('\r\n', '\n').replace('\r', '\n')
         ions = re.findall(pattern, data)
     
         total_ions = len(ions)
