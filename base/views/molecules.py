@@ -6,7 +6,7 @@ from base.models import Molecule
 from base.views.model_auth import ModelAuthViewSet
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import list_route, detail_route
+from rest_framework.decorators import action
 from django.http import HttpResponse, JsonResponse
 from rest_framework.parsers import JSONParser
 
@@ -29,7 +29,7 @@ class MoleculeViewSet(ModelAuthViewSet):
             return Molecule.met_run_out(met_run_out)
         return self.queryset
 
-    @list_route(methods=['patch'])
+    @action(detail=False, methods=['patch'])
     def load_smiles(self, request, pk=None):
         data = JSONParser().parse(request)
         mols = Molecule.load_from_smiles(data['smiles'].replace('\n','.'))

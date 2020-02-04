@@ -6,7 +6,7 @@ from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from base.modules import TagViewMethods
 from fragmentation.models import FragSample
 from rest_framework import serializers
-from rest_framework.decorators import list_route, detail_route
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -38,7 +38,7 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
         else:
             return FragSample.objects.all() 
 
-    @list_route(methods=['post'])
+    @action(detail=False, methods=['post'])
     def uploadfile(self, request):
         req_data =  request.data
         try:
@@ -55,7 +55,7 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
             return Response({'error': str(e)})
 
 
-    @detail_route(methods=['post'])
+    @action(detail=True, methods=['post'])
     def add_annotation(self, request, pk=None):
         fs = self.get_object()
         req_data =  request.data
@@ -70,7 +70,7 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
             db_id = db_id)
         return Response({'status': 'ok'})
 
-    @detail_route(methods=['post'])
+    @action(detail=True, methods=['post'])
     def uploadfile_annotation(self, request, pk=None):
         fs = self.get_object()
         req_data =  request.data
@@ -81,13 +81,13 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
         except:
             return Response({'error': 'unkown error while upploading file'})
 
-    @detail_route(methods=['get'])
+    @action(detail=True, methods=['get'])
     def molecular_network(self, request, pk=None):
         frag_sample = self.get_object()
         data = frag_sample.molecular_network()
         return JsonResponse(data, safe=False)
 
-    @detail_route(methods=['get'])
+    @action(detail=True, methods=['get'])
     def download_mgf(self, request, pk=None):
         fs = self.get_object()
 

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from metabolization.models import Reaction
 from rest_framework import serializers
-from rest_framework.decorators import list_route, detail_route
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.parsers import JSONParser
@@ -76,7 +76,7 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
             del request.data['user']
         return super().update(request, *args, **kwargs)
 
-    @list_route(methods=['post'])
+    @action(detail= False, methods=['post'])
     def uploadfile(self, request):
         req_data =  request.data
         try:
@@ -89,12 +89,12 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
         except:
             return Response({'error': 'unkown error while upploading file'})
 
-    @detail_route(methods=['get'])
+    @action(detail=True, methods=['get'])
     def get_image(self, request, pk=None):
         reaction = self.get_object()
         return Response({'image': reaction.get_image()})
 
-    @detail_route(methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def load_smarts(self, request, pk=None):
         try:
             reaction = self.get_object()
@@ -105,7 +105,7 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
         except:
             return JsonResponse({'error': 'error import smarts'})
 
-    @detail_route(methods=['post'])
+    @action(detail=True, methods=['post'])
     def run_reaction(self, request, pk=None):
         data = JSONParser().parse(request)
         chemdoodle_json = data['reactants']['chemdoodle_json']
