@@ -120,13 +120,6 @@ class Reaction(FileManagement, models.Model):
     def user_name(self):
         return self.user.username
 
-    def is_reactor(self):
-        return os.path.isfile(self.image_path())
-
-    def get_image(self):
-        if self.is_reactor():
-            return open( self.image_path(), 'r').read()
-
     @classmethod
     def activated(cls):
         return cls.objects.filter(status_code = cls.status.ACTIVE)

@@ -5,11 +5,11 @@ from rest_framework import viewsets
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from base.models import  Tag
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 
 class TagViewMethods(viewsets.ModelViewSet):
 
-    @detail_route(methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def add_tag(self, request, pk=None):
         # try:
             target = self.get_object()
@@ -24,7 +24,7 @@ class TagViewMethods(viewsets.ModelViewSet):
         # except:
         #     return JsonResponse({'error': 'error import smarts'})
 
-    @detail_route(methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def remove_tag(self, request, pk=None):
         # try:
             target = self.get_object()

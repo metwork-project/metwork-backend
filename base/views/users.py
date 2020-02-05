@@ -4,7 +4,7 @@ from base.views.model_auth import ModelAuthViewSet
 #from django.contrib.auth.models import User
 #from base.models import User
 from rest_framework import serializers
-from rest_framework.decorators import list_route, detail_route
+from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse, JsonResponse
 from rest_framework.response import Response
@@ -33,7 +33,7 @@ class UserViewSet(ModelAuthViewSet):
             super(UserViewSet, self).update( *args, **kwargs )
         return Response( UserSerializer( get_user_model().objects.get(id=data['id']) ).data )
 
-    @detail_route(methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def change_password(self, request, pk=None):
         if  self.request.user.email != settings.GUEST_USER_EMAIL:
             user = self.get_object()

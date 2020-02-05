@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import time
 from django.test import TransactionTestCase
 from base.models import *
 from metabolization.models import *
@@ -18,10 +19,18 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
             print ('\n###### {0} ######'.format(p['name']))
             self.eval_annotation_project(**p)
 
-    def eval_specific_annotation_project(self, name = 'adducts'):
+    def test_manual_stop(self):
+        """Test if project is stopped manually before and of all run"""
+        def run_test():
+            self.eval_specific_annotation_project(
+                name='depth_3',
+                interrupt=0.5)
+        self.assertRaises(Exception, run_test)
+        
+    def eval_specific_annotation_project(self, name='adducts', interrupt=None):
         for p in self.params:
             if p['name'] == name:
-                self.eval_annotation_project(**p)
+                self.eval_annotation_project(interrupt=interrupt, **p)
 
     def eval_annotation_project(self,
                 name, anno_file,
@@ -29,7 +38,8 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
                 not_expected_smiles, reactions_name,
                 depth_total, depth_last_match = 0,
                 react_process_count_expected = None,
-                sample_file_name = 'test_annotation_project.mgf'):
+                sample_file_name = 'test_annotation_project.mgf',
+                interrupt=None):
 
         for m in [FragMolSim, SampleAnnotationProject, FragSimConf, Reaction, DefaultConf]:
             m.objects.all().delete()
@@ -91,6 +101,12 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
         self.assertEqual(p.status_code, Project.status.READY)
         p.run()
         self.assertTrue(p.status_code >= Project.status.QUEUE, p.status_code)
+        if interrupt is not None:
+            print('begin wait')
+            time.sleep(interrupt)
+            print('end wait')
+            p.finish_run()
+            time.sleep(5)
         p.wait_run_end()
         self.assertEqual(p.status_code, Project.status.DONE)
 

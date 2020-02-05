@@ -118,6 +118,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
         pattern = re.compile(r'BEGIN IONS\n([\w\W\n]*?)END IONS')
         data = file_object.read().decode('utf-8')
+        data = data.replace('\r\n', '\n').replace('\r', '\n')
         ions = re.findall(pattern, data)
     
         total_ions = len(ions)
@@ -173,8 +174,15 @@ class FragSample(FileManagement, models.Model, AdductManager):
     def import_ion(self, ion, energy):
         from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
 
-        params = re.findall( r"([^\n]*)=([^\n]*)" , ion, re.U)
-        peaks = re.findall( r"([\d]*\.+[\d]*)[\t\s]([\d]*\.+[\d]*)" , ion, re.U)
+        params = re.findall( r"([^\n]*)=([^\n]*)", ion, re.U)
+        pat = r"(\d+\.\d+)*E(\d+)"
+        def conv_E(m):
+            if m.group(1) is None:
+                return m.group(0)
+            else:
+                return str(float(m.group(1))*10**int(m.group(2)))
+        ion = re.sub(pat, conv_E, ion)
+        peaks = re.findall( r"([\d]+\.+[\d]+)[\t\s]([\d]+\.+[\d]+)", ion, re.U)
         has_pepmass = 'PEPMASS' in [ v[0] for v in params ]
         has_id = 'SCANS' in [ v[0] for v in params ]
         has_peaks = len(peaks) > 1
@@ -196,13 +204,13 @@ class FragSample(FileManagement, models.Model, AdductManager):
                         title = param[0],\
                         value = param[1],\
                         position = p)
-                p +=1
+                p+=1
             FragMolSpectrum.objects.create(
-                frag_mol = fsm,
-                spectrum = \
-                    [ [float(peak[0]), float(peak[1])] \
+                frag_mol=fsm,
+                spectrum=\
+                    [ [ float(peak[0]), float(peak[1])] \
                     for peak in peaks ],
-                energy = energy,
+                energy=energy,
                 )
             return 1
         else:

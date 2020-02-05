@@ -11,6 +11,9 @@ class IsOwnerOrPublic(BasePermission):
 
     def has_object_permission(self, request, view, obj):
 
+        if view.action in ['run_reaction']:
+            return True
+
         if type(obj.user).__name__ == 'method':
             user = obj.user()
         else:
@@ -29,4 +32,3 @@ class IsOwnerOrPublic(BasePermission):
             except:
                 pass
             return False
-
