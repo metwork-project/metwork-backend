@@ -285,12 +285,12 @@ class FragSample(FileManagement, models.Model, AdductManager):
                 if int(ion_id) > 0:
                     m = Molecule.load_from_smiles(smiles)
                     fms = self.fragmolsample_set.get(
-                            ion_id = ion_id)
+                            ion_id=ion_id)
 
                     adduct = am.get_adduct(m, fms)
 
                     if adduct is not None:
-                        if fms.adduct is None: 
+                        if fms.adduct != adduct:
                             fms.adduct = adduct
                             fms.save()
 
