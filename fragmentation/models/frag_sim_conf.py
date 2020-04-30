@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os.path
 from django.db import models
 from django.conf import settings
-import os.path
-import re
-from base.models import Molecule
 from base.modules import ConfManagement
 
 class FragSimConf(ConfManagement, models.Model):
@@ -23,14 +21,14 @@ class FragSimConf(ConfManagement, models.Model):
     #molecules = models.ManyToManyField(Molecule)
 
     def file_path(self, file_name):
-        return FragSimConf.CFM_ID_FOLDER + self.__getattribute__(file_name + '_path')
+        return FragSimConf.CFM_ID_FOLDER + getattr(self, file_name + '_path')
 
     def file_exist(self, file_name):
-        return os.path.isfile(self.file_path(file_name)) 
+        return os.path.isfile(self.file_path(file_name))
 
     def get_fragmol(self, mol):
-        return self.fragmol_set.filter(molecule = mol)
+        return self.fragmol_set.filter(molecule=mol)
 
     def frag_count(self, met_run):
-        return sum( self.has_frag_set(m) for m in met_run.molecules_all() )
+        return sum(self.has_frag_set(m) for m in met_run.molecules_all())
 
