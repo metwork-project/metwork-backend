@@ -5,6 +5,7 @@
 # Reactions
 
 from __future__ import unicode_literals
+from pathlib import Path
 import re
 from django.db.models import Q
 from django.conf import settings
@@ -41,6 +42,10 @@ class SampleAnnotationProject(Project):
 
     REACTIONS_LIMIT = settings.METWORK_CONF["MET"]["reactions_limit"]
     DEPTH_LIMIT = settings.METWORK_CONF["MET"]["depth_limit"]
+    CUSTOM_FRAG_PARAMS_FILENAME = {
+        "param": "param_output.log",
+        "conf": "param_config.txt",
+    }
 
     class JSONAPIMeta:
         resource_name = "projects"
@@ -418,3 +423,7 @@ Link to project : {1}/#/projects/{2}""".format(
 
         mg = MetGraph(self)
         return mg.metabolization_network()
+
+    def save_custom_frag_param_files(self, file_type, data):
+        file_path = Path(self.item_path()) / self.CUSTOM_FRAG_PARAMS_FILENAME[file_type]
+        file_path.write_text(data)
