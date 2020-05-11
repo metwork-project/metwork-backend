@@ -425,5 +425,13 @@ Link to project : {1}/#/projects/{2}""".format(
         return mg.metabolization_network()
 
     def save_custom_frag_param_files(self, file_type, data):
-        file_path = Path(self.item_path()) / self.CUSTOM_FRAG_PARAMS_FILENAME[file_type]
+        file_path = self._get_custom_frag_param_path(file_type)
         file_path.write_text(data)
+
+    def delete_custom_frag_param_files(self, file_type):
+        file_path = self._get_custom_frag_param_path(file_type)
+        if file_path.exists:
+            file_path.unlink()
+
+    def _get_custom_frag_param_path(self, file_type):
+        return Path(self.item_path()) / self.CUSTOM_FRAG_PARAMS_FILENAME[file_type]

@@ -12,6 +12,10 @@ from fragmentation.models import FragSample, FragSimConf
 class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 
     user = None
+    CUSTOM_FRAG_FILENAMES = {
+        "param": "param_output_custom.log",
+        "conf": "param_config_custom.txt",
+    }
 
     def create_user(self, user_email="user@test.com"):
         self.user = get_user_model().objects.create(email=user_email)
@@ -154,27 +158,47 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 
         self.assertEqual(fais(pc), fais(p))
 
-    def test_save_custom_frag_param_files(self):
-        from django.conf import settings
+    def custom_frag_param_file_path(self, project, file_type):
 
-        p = self.create_project()
-        CUSTOM_FILENAMES = {
-            "param": "param_output_custom.log",
-            "conf": "param_config_custom.txt",
-        }
         sample_file_path = Path("fragmentation") / "tests" / "files" / "frag_sim_conf"
-        for file_type in CUSTOM_FILENAMES:
-            file_path = sample_file_path / CUSTOM_FILENAMES[file_type]
-            data = file_path.read_text()
-            target_file_name = SampleAnnotationProject.CUSTOM_FRAG_PARAMS_FILENAME[
-                file_type
-            ]
-            target_file_path = Path(p.item_path()) / target_file_name
-            if target_file_path.exists():
-                target_file_path.unlink()
 
-            p.save_custom_frag_param_files(file_type, data)
-            assert target_file_path.exists
+        file_path = sample_file_path / self.CUSTOM_FRAG_FILENAMES[file_type]
+        data = file_path.read_text()
+
+        target_file_name = SampleAnnotationProject.CUSTOM_FRAG_PARAMS_FILENAME[
+            file_type
+        ]
+        target_file_path = Path(project.item_path()) / target_file_name
+        if target_file_path.exists():
+            target_file_path.unlink()
+
+        return target_file_path, data
+
+    def test_save_custom_frag_param_files(self):
+
+        project = self.create_project()
+
+        for file_type in self.CUSTOM_FRAG_FILENAMES:
+            target_file_path, data = self.custom_frag_param_file_path(
+                project, file_type
+            )
+
+            project.save_custom_frag_param_files(file_type, data)
+            assert target_file_path.exists()
             assert target_file_path.read_text() == data
 
             target_file_path.unlink()
+
+    def test_delete_custom_frag_param_files(self):
+
+        project = self.create_project()
+
+        for file_type in self.CUSTOM_FRAG_FILENAMES:
+            target_file_path, data = self.custom_frag_param_file_path(
+                project, file_type
+            )
+
+            project.save_custom_frag_param_files(file_type, data)
+            assert target_file_path.exists()
+            project.delete_custom_frag_param_files(file_type)
+            assert not target_file_path.exists()
