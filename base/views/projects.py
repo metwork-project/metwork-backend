@@ -118,7 +118,7 @@ class ProjectViewSet(ModelAuthViewSet):
     def update_frag_compare_conf(self, request, pk=None):
         project = self.get_object()
         params = JSONParser().parse(request)
-        project.update_conf('frag_compare_conf',params)
+        project.update_conf('frag_compare_conf', params)
         return Response({'frag_compare_conf':project.frag_compare_conf.id})
 
     @action(detail=True, methods=['post'])
