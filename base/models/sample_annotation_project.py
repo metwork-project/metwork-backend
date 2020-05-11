@@ -440,5 +440,16 @@ Link to project : {1}/#/projects/{2}""".format(
         if file_path.exists:
             file_path.unlink()
 
+    def list_custom_frag_param_files(self):
+        try:
+            return {
+                file_type: self.frag_sim_conf.file_path(file_type)
+                # file_type: str(self._get_custom_frag_param_path(file_type))
+                for file_type in self.CUSTOM_FRAG_PARAMS_FILENAME
+                if self._get_custom_frag_param_path(file_type).exists()
+            }
+        except:
+            return {}
+
     def _get_custom_frag_param_path(self, file_type):
         return Path(self.item_path()) / self.CUSTOM_FRAG_PARAMS_FILENAME[file_type]

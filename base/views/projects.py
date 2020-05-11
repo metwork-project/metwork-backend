@@ -35,6 +35,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "molecules_matching_count",
             "molecules_all_count",
             "frag_compare_conf_id",
+            "list_custom_frag_param_files",
         )
 
 
@@ -85,7 +86,14 @@ class ProjectViewSet(ModelAuthViewSet):
         req_data = request.data
         file_type = req_data["file_format"]
         file_data = request.data["file_data"].read().decode("utf-8")
-        project.load_custom_conf_file(file_type, file_data)
+        project.load_custom_frag_param_files(file_type, file_data)
+        return Response(ProjectSerializer(project).data)
+
+    @action(detail=True, methods=["post"])
+    def delete_custom_frag_param_files(self, request, pk=None):
+        project = self.get_object()
+        file_type = request.data["file_format"]
+        project.load_custom_frag_param_files(file_type)
         return Response(ProjectSerializer(project).data)
 
     # To delete ???

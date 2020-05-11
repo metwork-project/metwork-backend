@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import os.path
+from pathlib import Path
 from django.db import models
 from django.conf import settings
 from base.modules import ConfManagement
@@ -33,7 +34,10 @@ class FragSimConf(ConfManagement, models.Model):
     # molecules = models.ManyToManyField(Molecule)
 
     def file_path(self, file_name):
-        return FragSimConf.CFM_ID_FOLDER + getattr(self, file_name + "_path")
+        path = Path(getattr(self, file_name + "_path"))
+        if not path.is_absolute():
+            path = FragSimConf.CFM_ID_FOLDER / path
+        return str(path)
 
     def file_exist(self, file_name):
         return os.path.isfile(self.file_path(file_name))
