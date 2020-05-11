@@ -80,10 +80,10 @@ class ProjectViewSet(ModelAuthViewSet):
         return Response(ProjectSerializer(project).data)
 
     @action(detail=True, methods=["post"])
-    def load_custom_conf_file(self, request, pk=None):
+    def load_custom_frag_file(self, request, pk=None):
         project = self.get_object()
         req_data = request.data
-        file_type = req_data["file_type"]
+        file_type = req_data["file_format"]
         file_data = request.data["file_data"].read().decode("utf-8")
         project.load_custom_conf_file(file_type, file_data)
         return Response(ProjectSerializer(project).data)
