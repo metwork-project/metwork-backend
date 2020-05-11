@@ -202,3 +202,19 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             assert target_file_path.exists()
             project.delete_custom_frag_param_files(file_type)
             assert not target_file_path.exists()
+
+    def test_load_custom_frag_param_files(self):
+
+        project = self.create_project()
+
+        for file_type in self.CUSTOM_FRAG_FILENAMES:
+            target_file_path, data = self.custom_frag_param_file_path(
+                project, file_type
+            )
+
+            project.load_custom_frag_param_files(file_type, data)
+            assert target_file_path.exists()
+            assert target_file_path.read_text() == data
+            new_conf_path = getattr(project.frag_sim_conf, file_type + "_path")
+            assert Path(new_conf_path) == target_file_path
+

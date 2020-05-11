@@ -424,6 +424,13 @@ Link to project : {1}/#/projects/{2}""".format(
         mg = MetGraph(self)
         return mg.metabolization_network()
 
+    def load_custom_frag_param_files(self, file_type, data):
+        self.save_custom_frag_param_files(file_type, data)
+        file_path = self._get_custom_frag_param_path(file_type)
+        self.update_conf_params(
+            "frag_sim_conf", **{file_type + "_path": str(file_path)}
+        )
+
     def save_custom_frag_param_files(self, file_type, data):
         file_path = self._get_custom_frag_param_path(file_type)
         file_path.write_text(data)
