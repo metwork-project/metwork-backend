@@ -92,8 +92,9 @@ class ProjectViewSet(ModelAuthViewSet):
     @action(detail=True, methods=["post"])
     def delete_custom_frag_param_files(self, request, pk=None):
         project = self.get_object()
-        file_type = request.data["file_format"]
-        project.load_custom_frag_param_files(file_type)
+        data = JSONParser().parse(request)
+        file_type = data["file_format"]
+        project.delete_custom_frag_param_files(file_type)
         return Response(ProjectSerializer(project).data)
 
     # To delete ???
