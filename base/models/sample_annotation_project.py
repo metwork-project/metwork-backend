@@ -340,6 +340,8 @@ class SampleAnnotationProject(Project):
         cache.delete("project_ms1_not_init_" + str(self.id))
         cache.delete("project_molecules_all_" + str(self.id))
 
+        self.frag_sample.get_molecular_network(force=True)
+
         # Send email to user
         message = """
 The run of the project {0} is finished.\n
@@ -453,3 +455,4 @@ Link to project : {1}/#/projects/{2}""".format(
 
     def _get_custom_frag_param_path(self, file_type):
         return Path(self.item_path()) / self.CUSTOM_FRAG_PARAMS_FILENAME[file_type]
+

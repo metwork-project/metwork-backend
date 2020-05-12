@@ -4,16 +4,16 @@ import os
 from decimal import *
 import time
 import re
+import numpy as np
+from celery import group, chain
 from django.db import models, IntegrityError
 from django.conf import settings
-from base.models import Molecule, Array2DModel, Tag
-from libmetgem.cosine import compute_distance_matrix
 from django.contrib.postgres.fields import ArrayField
-import numpy as np
+from libmetgem.cosine import compute_distance_matrix
 from libmetgem.mgf import filter_data
-from fragmentation.utils.adducts import AdductManager
+from base.models import Molecule, Array2DModel, Tag
 from base.modules import FileManagement
-from celery import group, chain
+from fragmentation.utils.adducts import AdductManager
 
 
 class FragSample(FileManagement, models.Model, AdductManager):
@@ -136,6 +136,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                 g,
                 tasks.set_ions_count.s(fs.id),
                 tasks.gen_cosine_matrix.s(),
+                tasks.get_molecular_network.s(),
                 tasks.finalize_import.s(),
             )
             s.apply_async(queue=queue)
@@ -151,6 +152,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
             ion_count = self.import_ion(ion, energy)
             ions_count += ion_count
         self.gen_cosine_matrix()
+        self.get_molecular_network()
 
         return self.finalise_import()
 
@@ -234,17 +236,19 @@ class FragSample(FileManagement, models.Model, AdductManager):
             cosine_matrix = Array2DModel.objects.create(value=cosine_matrix.tolist())
             self.cosine_matrix = cosine_matrix
             self.save()
-        except:
+        except Exception as ex:
             pass
+            # raise ex
         return self
 
-    def molecular_network(self):
-        if self.cosine_matrix is None:
-            self.gen_cosine_matrix()
-        from fragmentation.modules import MolGraph
+    def get_molecular_network(self, force=False):
+        from base.models import MolecularGraph
 
-        mg = MolGraph(self)
-        return mg.gen_molecular_network()
+        try:
+            self.molecular_network
+        except FragSample.molecular_network.RelatedObjectDoesNotExist:
+            MolecularGraph.objects.create(frag_sample=self)
+        return self.molecular_network.get_data(force=force)
 
     def wait_import_done(self, timeout=360):
         begin = time.time()

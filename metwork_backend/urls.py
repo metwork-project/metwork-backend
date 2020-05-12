@@ -21,7 +21,6 @@ from base.views import (
     MoleculeViewSet,
     ProjectViewSet,
     TagViewSet,
-    GraphLayoutViewSet,
     register,
     password_reset,
 )
@@ -47,7 +46,6 @@ router.register(r"fragsamples", FragSampleViewSet)
 router.register(r"frag-annotations", FragAnnotationViewSet, basename="frag-annotations")
 router.register(r"reactions", ReactionViewSet)
 router.register(r"frag-compare-confs", FragCompareConfViewSet)
-router.register(r"graph-layouts", GraphLayoutViewSet, basename="graph-layouts")
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
