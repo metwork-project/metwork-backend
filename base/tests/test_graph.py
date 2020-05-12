@@ -17,10 +17,6 @@ class GraphTestUtils:
 
     GRAPH_MODEL = Graph
     DEFAULT_DATA = GraphGenerator.DEFAULT_DATA
-    user = None
-
-    def create_user(self, user_email="user@test.com"):
-        self.user = get_user_model().objects.create(email=user_email)
 
     def create_graph(self, data, **kwargs):
         return self.GRAPH_MODEL.objects.create(data=data, **kwargs)

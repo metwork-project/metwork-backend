@@ -17,7 +17,7 @@ class GraphGenerator:
 
 class Graph(PolymorphicModel):
 
-    data = JSONField(blank=True)
+    data = JSONField(blank=True, null=True)
 
     GRAPH_GENERATOR = GraphGenerator
 
