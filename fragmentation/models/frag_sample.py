@@ -15,50 +15,29 @@ from fragmentation.utils.adducts import AdductManager
 from base.modules import FileManagement
 from celery import group, chain
 
-class FragSample(FileManagement, models.Model, AdductManager):
 
+class FragSample(FileManagement, models.Model, AdductManager):
     class JSONAPIMeta:
         resource_name = "fragsamples"
 
     class Meta:
-        ordering = ('name', )
+        ordering = ("name",)
 
     user = models.ForeignKey(
-                settings.AUTH_USER_MODEL,
-                on_delete=models.PROTECT,
-                default=None)
-    name = models.CharField(
-                    max_length=128,
-                    default='')
-    file_name = models.CharField(
-                    max_length=255,
-                    default='')
-    tags = models.ManyToManyField(
-        Tag,
-        related_name="fragsample_tags",
-        default=None)
-    ion_charge = models.CharField(
-                    max_length=16,
-                    default='positive')
-    description = models.CharField(
-                    max_length=255,
-                    default='',
-                    null= True,
-                    blank=True)
-    ions_total = models.PositiveSmallIntegerField(
-                    default=0,
-                    db_index = True)
-    cosine_matrix = models.OneToOneField(
-        Array2DModel,
-        related_name='cosine_matrix',
-        on_delete=models.CASCADE,
-        null= True,
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, default=None
     )
-    status_code = models.PositiveIntegerField(
-                    default=0,
-                    db_index = True)
+    name = models.CharField(max_length=128, default="")
+    file_name = models.CharField(max_length=255, default="")
+    tags = models.ManyToManyField(Tag, related_name="fragsample_tags", default=None)
+    ion_charge = models.CharField(max_length=16, default="positive")
+    description = models.CharField(max_length=255, default="", null=True, blank=True)
+    ions_total = models.PositiveSmallIntegerField(default=0, db_index=True)
+    cosine_matrix = models.OneToOneField(
+        Array2DModel, related_name="cosine_matrix", on_delete=models.CASCADE, null=True,
+    )
+    status_code = models.PositiveIntegerField(default=0, db_index=True)
 
-    conf = settings.METWORK_CONF['FRAG']
+    conf = settings.METWORK_CONF["FRAG"]
 
     class status:
         INIT = 0
@@ -76,9 +55,8 @@ class FragSample(FileManagement, models.Model, AdductManager):
                 return True
 
     def obsolete(self):
-        return True in ( fms.obsolete() \
-            for fms in self.fragmolsample_set.all() )
-            
+        return True in (fms.obsolete() for fms in self.fragmolsample_set.all())
+
     def tags_list(self):
         return [tag.name for tag in self.tags.all()]
 
@@ -90,42 +68,51 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
     def annotations_count(self):
         from fragmentation.models import FragAnnotationDB
-        return FragAnnotationDB.objects.filter(frag_mol_sample__frag_sample = self).count()
 
-    def add_annotation(self, ion_id, smiles, db_source='', db_id=''):
-    # ===> Add ion_name !
+        return FragAnnotationDB.objects.filter(
+            frag_mol_sample__frag_sample=self
+        ).count()
+
+    def add_annotation(self, ion_id, smiles, db_source="", db_id=""):
+        # ===> Add ion_name !
         from fragmentation.models import FragAnnotationDB
-        fms = self.fragmolsample_set.get(ion_id = int(ion_id))
+
+        fms = self.fragmolsample_set.get(ion_id=int(ion_id))
         return FragAnnotationDB.objects.create(
-            frag_mol_sample = fms,
-            molecule = Molecule.load_from_smiles(smiles),
-            db_source = db_source,
-            db_id = db_id)
+            frag_mol_sample=fms,
+            molecule=Molecule.load_from_smiles(smiles),
+            db_source=db_source,
+            db_id=db_id,
+        )
 
     @classmethod
     def import_sample(
-            cls,
-            file_object,
-            user,
-            name='',
-            file_name='data.mgf',
-            description='',
-            ion_charge='positive',
-            energy=1,
-            task=False):
+        cls,
+        file_object,
+        user,
+        name="",
+        file_name="data.mgf",
+        description="",
+        ion_charge="positive",
+        energy=1,
+        task=False,
+    ):
 
         from fragmentation import tasks
 
-        pattern = re.compile(r'BEGIN IONS\n([\w\W\n]*?)END IONS')
-        data = file_object.read().decode('utf-8')
-        data = data.replace('\r\n', '\n').replace('\r', '\n')
+        pattern = re.compile(r"BEGIN IONS\n([\w\W\n]*?)END IONS")
+        data = file_object.read().decode("utf-8")
+        data = data.replace("\r\n", "\n").replace("\r", "\n")
         ions = re.findall(pattern, data)
-    
+
         total_ions = len(ions)
-        ions_limit = int(cls.conf['ions_limit'])
+        ions_limit = int(cls.conf["ions_limit"])
         if total_ions > ions_limit:
             raise IntegrityError(
-                '{0} ions max authorized, {1} in the sample.'.format(ions_limit, total_ions))
+                "{0} ions max authorized, {1} in the sample.".format(
+                    ions_limit, total_ions
+                )
+            )
 
         fs = FragSample.objects.create(
             user=user,
@@ -134,22 +121,23 @@ class FragSample(FileManagement, models.Model, AdductManager):
             description=description,
             ion_charge=ion_charge,
             status_code=1,
-            ions_total=total_ions)
+            ions_total=total_ions,
+        )
         fs.status_code = 2
         fs.save()
         fs.gen_item()
-        with open(os.path.join(fs.item_path(), fs.file_name), 'w') as fw:
+        with open(os.path.join(fs.item_path(), fs.file_name), "w") as fw:
             fw.writelines(data)
 
         if task:
             queue = settings.CELERY_WEB_QUEUE
-            g = group(
-                tasks.import_ion.s(fs.id, ion, energy) for ion in ions)
+            g = group(tasks.import_ion.s(fs.id, ion, energy) for ion in ions)
             s = chain(
                 g,
                 tasks.set_ions_count.s(fs.id),
                 tasks.gen_cosine_matrix.s(),
-                tasks.finalize_import.s())
+                tasks.finalize_import.s(),
+            )
             s.apply_async(queue=queue)
             return fs
         else:
@@ -172,52 +160,54 @@ class FragSample(FileManagement, models.Model, AdductManager):
         return self
 
     def import_ion(self, ion, energy):
-        from fragmentation.models import FragMolSample, FragMolAttribute, FragMolSpectrum
+        from fragmentation.models import (
+            FragMolSample,
+            FragMolAttribute,
+            FragMolSpectrum,
+        )
 
-        params = re.findall( r"([^\n]*)=([^\n]*)", ion, re.U)
+        params = re.findall(r"([^\n]*)=([^\n]*)", ion, re.U)
         pat = r"(\d+\.\d+)*E(\d+)"
+
         def conv_E(m):
             if m.group(1) is None:
                 return m.group(0)
             else:
-                return str(float(m.group(1))*10**int(m.group(2)))
+                return str(float(m.group(1)) * 10 ** int(m.group(2)))
+
         ion = re.sub(pat, conv_E, ion)
-        peaks = re.findall( r"([\d]+\.+[\d]+)[\t\s]([\d]+\.+[\d]+)", ion, re.U)
-        has_pepmass = 'PEPMASS' in [ v[0] for v in params ]
-        has_id = 'SCANS' in [ v[0] for v in params ]
+        peaks = re.findall(r"([\d]+\.+[\d]+)[\t\s]([\d]+\.+[\d]+)", ion, re.U)
+        has_pepmass = "PEPMASS" in [v[0] for v in params]
+        has_id = "SCANS" in [v[0] for v in params]
         has_peaks = len(peaks) > 1
 
         if has_pepmass and has_id and has_peaks:
-            fsm = FragMolSample.objects.create(frag_sample = self)
+            fsm = FragMolSample.objects.create(frag_sample=self)
             p = 1
             for param in params:
-                if param[0] == 'PEPMASS':
+                if param[0] == "PEPMASS":
                     fsm.parent_mass = float(param[1])
                     # fsm.mass = Decimal(av[1])
                     fsm.save()
-                elif param[0] == 'SCANS':
+                elif param[0] == "SCANS":
                     fsm.ion_id = int(param[1])
                     fsm.save()
                 else:
                     FragMolAttribute.objects.create(
-                        frag_mol = fsm,\
-                        title = param[0],\
-                        value = param[1],\
-                        position = p)
-                p+=1
+                        frag_mol=fsm, title=param[0], value=param[1], position=p
+                    )
+                p += 1
             FragMolSpectrum.objects.create(
                 frag_mol=fsm,
-                spectrum=\
-                    [ [ float(peak[0]), float(peak[1])] \
-                    for peak in peaks ],
+                spectrum=[[float(peak[0]), float(peak[1])] for peak in peaks],
                 energy=energy,
-                )
+            )
             return 1
         else:
             return 0
 
     def ions_list(self):
-        return self.fragmolsample_set.all().order_by('ion_id').distinct()
+        return self.fragmolsample_set.all().order_by("ion_id").distinct()
 
     def mzs(self):
         return [fms.parent_mass for fms in self.ions_list()]
@@ -227,13 +217,19 @@ class FragSample(FileManagement, models.Model, AdductManager):
         try:
             cosine_matrix = compute_distance_matrix(
                 [fms.parent_mass for fms in query],
-                [filter_data(
-                    np.array(fms.fragmolspectrum_set.get(energy=1).spectrum),
-                    fms.parent_mass,
-                    0.0, 0.0, 0.0, 0) \
-                    for fms in query],
+                [
+                    filter_data(
+                        np.array(fms.fragmolspectrum_set.get(energy=1).spectrum),
+                        fms.parent_mass,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0,
+                    )
+                    for fms in query
+                ],
                 0.002,
-                5
+                5,
             )
             cosine_matrix = Array2DModel.objects.create(value=cosine_matrix.tolist())
             self.cosine_matrix = cosine_matrix
@@ -246,6 +242,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
         if self.cosine_matrix is None:
             self.gen_cosine_matrix()
         from fragmentation.modules import MolGraph
+
         mg = MolGraph(self)
         return mg.gen_molecular_network()
 
@@ -254,38 +251,41 @@ class FragSample(FileManagement, models.Model, AdductManager):
         while self.status_code == FragSample.status.RUNNING:
             time.sleep(0.5)
             if (time.time() - begin) > timeout:
-                print ('\n#### close due to timeout #####\n')
+                print("\n#### close due to timeout #####\n")
                 return self
             else:
                 self.refresh_from_db()
-        #time.sleep(20)
+        # time.sleep(20)
         return self
 
-    def import_annotation_file(self, file_object, file_format='default'):
+    def import_annotation_file(self, file_object, file_format="default"):
         from fragmentation.models import FragMolSample, FragAnnotationDB
+
         am = AdductManager(ion_charge=self.ion_charge)
-        fls = [l.decode('utf-8') for l in file_object.readlines()]
+        fls = [l.decode("utf-8") for l in file_object.readlines()]
         errors = {}
         col_titles = fls[0].split("\t")
         for i, fl in enumerate(fls[1:]):
             try:
-                if file_format == 'default':
-                    ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(",")
-                elif file_format == 'GNPS':
+                if file_format == "default":
+                    ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(
+                        ","
+                    )
+                elif file_format == "GNPS":
                     data = fl.split("\t")
-                    ion_id = data[col_titles.index('#Scan#')]
-                    name = data[col_titles.index('Compound_Name')]
-                    smiles = data[col_titles.index('Smiles')]
+                    ion_id = data[col_titles.index("#Scan#")]
+                    name = data[col_titles.index("Compound_Name")]
+                    smiles = data[col_titles.index("Smiles")]
 
-                    db_source =  'GNPS : {0}, {1}'.format(
-                        data[col_titles.index('Compound_Source')],
-                        data[col_titles.index('Data_Collector')])
-                    db_id = data[col_titles.index('CAS_Number')]
+                    db_source = "GNPS : {0}, {1}".format(
+                        data[col_titles.index("Compound_Source")],
+                        data[col_titles.index("Data_Collector")],
+                    )
+                    db_id = data[col_titles.index("CAS_Number")]
 
                 if int(ion_id) > 0:
                     m = Molecule.load_from_smiles(smiles)
-                    fms = self.fragmolsample_set.get(
-                            ion_id=ion_id)
+                    fms = self.fragmolsample_set.get(ion_id=ion_id)
 
                     adduct = am.get_adduct(m, fms)
 
@@ -296,22 +296,29 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
                         if fms.adduct == adduct:
                             fa = FragAnnotationDB.objects.create(
-                                frag_mol_sample = fms,
-                                molecule = m,
-                                name = name,
-                                db_source = db_source,
-                                db_id = db_id)
+                                frag_mol_sample=fms,
+                                molecule=m,
+                                name=name,
+                                db_source=db_source,
+                                db_id=db_id,
+                            )
 
             except Exception as err:
                 # print(err)
-                errors[i] = {'err': str(err), 'smiles': smiles}
-        return {'success': 'Annotations successfully imported', 'errors': errors}
+                errors[i] = {"err": str(err), "smiles": smiles}
+        return {"success": "Annotations successfully imported", "errors": errors}
 
-    def gen_mgf(self, energy = 2, decimal = 6):
+    def gen_mgf(self, energy=2, decimal=6):
         from fragmentation.models import FragMolSample
-        res = '\n'.join([\
-                    fm.gen_mgf(energy) \
-                    for fm in FragMolSample.objects.filter(frag_sample = self).order_by("ion_id") ])
+
+        res = "\n".join(
+            [
+                fm.gen_mgf(energy)
+                for fm in FragMolSample.objects.filter(frag_sample=self).order_by(
+                    "ion_id"
+                )
+            ]
+        )
         return res
 
     def gen_mgf_file(self):
@@ -319,5 +326,5 @@ class FragSample(FileManagement, models.Model, AdductManager):
         file_path = os.path.join(self.item_path(), self.file_name)
         if not os.path.exists(file_path):
             data = self.gen_mgf()
-            with open(file_path, 'w') as fw:
+            with open(file_path, "w") as fw:
                 fw.writelines(data)

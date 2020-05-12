@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from pathlib import Path
 from django.contrib.auth import get_user_model
 from base.models import Project, SampleAnnotationProject
 from metabolization.models import Reaction, ReactionsConf
@@ -11,6 +12,10 @@ from fragmentation.models import FragSample, FragSimConf
 class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
 
     user = None
+    CUSTOM_FRAG_FILENAMES = {
+        "param": "param_output_custom.log",
+        "conf": "param_config_custom.txt",
+    }
 
     def create_user(self, user_email="user@test.com"):
         self.user = get_user_model().objects.create(email=user_email)
@@ -25,9 +30,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             self.create_user()
         sample_file_path = "fragmentation/tests/files/example.mgf"
         with open(sample_file_path, "rb") as fss:
-            fs = FragSample.import_sample(
-                fss, self.user, "name", "file_name", ion_charge=ion_charge
-            )
+            fs = FragSample.import_sample(fss, self.user, "name", ion_charge=ion_charge)
             fs.wait_import_done()
         return fs
 
@@ -86,7 +89,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
     def test_status_ready(self):
         initial_name = "initial name"
         # self.import_file(reaction_name = "methylation", user = u)
-        r = self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
         p = self.create_project(name=initial_name)
         self.assertEqual(p.status_code, Project.status.INIT)
         fs = self.create_frag_sample()
@@ -123,10 +126,9 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         # Reaction.reactions_update()
         initial_name = "origin name"
         clone_suffix = " COPY"
-        u = get_user_model().objects.create(email="user@test.com")
-        self.import_file(reaction_name="methylation", user=u)
-        p = SampleAnnotationProject.objects.create(name=initial_name, user=u,)
-        fs = self.create_frag_sample(user=u)
+        p = self.create_project(name=initial_name)
+        self.import_file(reaction_name="methylation", user=self.user)
+        fs = self.create_frag_sample()
         p.update_frag_sample(fs)
         fs.add_annotation(1, "CCC")
         p.update_frag_sample(fs)
@@ -155,3 +157,64 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             return {fai.id for fai in project.frag_annotations_init.all()}
 
         self.assertEqual(fais(pc), fais(p))
+
+    def custom_frag_param_file_path(self, project, file_type):
+
+        sample_file_path = Path("fragmentation") / "tests" / "files" / "frag_sim_conf"
+
+        file_path = sample_file_path / self.CUSTOM_FRAG_FILENAMES[file_type]
+        data = file_path.read_text()
+
+        target_file_name = SampleAnnotationProject.CUSTOM_FRAG_PARAMS_FILENAME[
+            file_type
+        ]
+        target_file_path = Path(project.item_path()) / target_file_name
+        if target_file_path.exists():
+            target_file_path.unlink()
+
+        return target_file_path, data
+
+    def test_save_custom_frag_param_files(self):
+
+        project = self.create_project()
+
+        for file_type in self.CUSTOM_FRAG_FILENAMES:
+            target_file_path, data = self.custom_frag_param_file_path(
+                project, file_type
+            )
+
+            project.save_custom_frag_param_files(file_type, data)
+            assert target_file_path.exists()
+            assert target_file_path.read_text() == data
+
+            target_file_path.unlink()
+
+    def test_delete_custom_frag_param_files(self):
+
+        project = self.create_project()
+
+        for file_type in self.CUSTOM_FRAG_FILENAMES:
+            target_file_path, data = self.custom_frag_param_file_path(
+                project, file_type
+            )
+
+            project.save_custom_frag_param_files(file_type, data)
+            assert target_file_path.exists()
+            project.delete_custom_frag_param_files(file_type)
+            assert not target_file_path.exists()
+
+    def test_load_custom_frag_param_files(self):
+
+        project = self.create_project()
+
+        for file_type in self.CUSTOM_FRAG_FILENAMES:
+            target_file_path, data = self.custom_frag_param_file_path(
+                project, file_type
+            )
+
+            project.load_custom_frag_param_files(file_type, data)
+            assert target_file_path.exists()
+            assert target_file_path.read_text() == data
+            new_conf_path = getattr(project.frag_sim_conf, file_type + "_path")
+            assert Path(new_conf_path) == target_file_path
+
