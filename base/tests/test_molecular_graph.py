@@ -18,7 +18,7 @@ class MolecularGraphTestUtils(GraphTestUtils, FragSampleTestUtils):
         frag_sample = kwargs.pop("frag_sample", None)
         if not frag_sample:
             frag_sample = self.create_frag_sample()
-        return super().create_graph(data=data, frag_sample=frag_sample, **kwargs)
+        return frag_sample.molecular_network
 
 
 class MolecularGraphTests(TransactionTestCase, MolecularGraphTestUtils):

@@ -46,7 +46,7 @@ class MetabolizationGraphTests(TransactionTestCase, MetabolizationGraphTestUtils
         graph = self.create_graph(project=project)
 
         assert graph.project == project
-        assert project.metabolization_graph == graph
+        assert project.metabolization_network == graph
 
     def test_delete_with_project(self):
 

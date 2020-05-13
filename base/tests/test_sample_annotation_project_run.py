@@ -11,79 +11,91 @@ from django.contrib.auth import get_user_model
 from metabolization.modules import ReactionTestManagement
 from django.core.cache import cache
 
-class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 
+class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
     def test_batch(self):
-        print ('\n###### Begin project run tests ######')
+        print("\n###### Begin project run tests ######")
         for p in self.params:
-            print ('\n###### {0} ######'.format(p['name']))
+            print("\n###### {0} ######".format(p["name"]))
             self.eval_annotation_project(**p)
 
     def test_manual_stop(self):
         """Test if project is stopped manually before and of all run"""
+
         def run_test():
-            self.eval_specific_annotation_project(
-                name='depth_3',
-                interrupt=0.5)
+            self.eval_specific_annotation_project(name="depth_3", interrupt=0.5)
+
         self.assertRaises(Exception, run_test)
-        
-    def eval_specific_annotation_project(self, name='adducts', interrupt=None):
+
+    def eval_specific_annotation_project(self, name="adducts", interrupt=None):
         for p in self.params:
-            if p['name'] == name:
+            if p["name"] == name:
                 self.eval_annotation_project(interrupt=interrupt, **p)
 
-    def eval_annotation_project(self,
-                name, anno_file,
-                smiles, expected_anno,
-                not_expected_smiles, reactions_name,
-                depth_total, depth_last_match = 0,
-                react_process_count_expected = None,
-                sample_file_name = 'test_annotation_project.mgf',
-                interrupt=None):
+    def eval_annotation_project(
+        self,
+        name,
+        anno_file,
+        smiles,
+        expected_anno,
+        not_expected_smiles,
+        reactions_name,
+        depth_total,
+        depth_last_match=0,
+        react_process_count_expected=None,
+        sample_file_name="test_annotation_project.mgf",
+        interrupt=None,
+    ):
 
-        for m in [FragMolSim, SampleAnnotationProject, FragSimConf, Reaction, DefaultConf]:
+        for m in [
+            FragMolSim,
+            SampleAnnotationProject,
+            FragSimConf,
+            Reaction,
+            DefaultConf,
+        ]:
             m.objects.all().delete()
         cache.clear()
 
-        u = get_user_model().objects.create(email = name + '@test.com')
+        u = get_user_model().objects.create(email=name + "@test.com")
 
-        sample_folder = 'fragmentation/tests/files/test_annotation_project/'
+        sample_folder = "fragmentation/tests/files/test_annotation_project/"
         sample_file_path = sample_folder + sample_file_name
-        anno_file_path = sample_folder + anno_file + '.csv'
+        anno_file_path = sample_folder + anno_file + ".csv"
 
-        #Reaction.reactions_update()
-        #reactions = [ Reaction.objects.get( name = rn) \
+        # Reaction.reactions_update()
+        # reactions = [ Reaction.objects.get( name = rn) \
         #    for rn in reactions_name]
 
         smarts = {
-            'methylation': '[N,O:1]>>[*:1]-[#6]',
-            'diels_alder': '[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1',
-            'test_adducts': '[#8:3]-[#6]-[#6](-[#6]-[#8:1])-[#8:2]>>[#8:3]-[#6]-[#6](-[#6]-[#8:1]-[#6](=,:[#8])-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6])-[#8:2]'
+            "methylation": "[N,O:1]>>[*:1]-[#6]",
+            "diels_alder": "[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1",
+            "test_adducts": "[#8:3]-[#6]-[#6](-[#6]-[#8:1])-[#8:2]>>[#8:3]-[#6]-[#6](-[#6]-[#8:1]-[#6](=,:[#8])-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6]-[#6])-[#8:2]",
         }
 
         reactions = [
-            Reaction.create_from_smarts( smarts=smarts[rn], name=rn, user=u ) \
-            for rn in reactions_name]
+            Reaction.create_from_smarts(smarts=smarts[rn], name=rn, user=u)
+            for rn in reactions_name
+        ]
 
-        print (reactions)
+        print(reactions)
 
         rc = ReactionsConf.objects.create()
         for r in reactions:
             rc.reactions.add(r)
-
-
-        with open(sample_file_path, 'rb') as fss:
-            fs = FragSample.import_sample(fss, u, energy=2)
+        with open(sample_file_path, "rb") as fss:
+            fs = FragSample.import_sample(fss, u)
 
         # Import annotation
-        with open(anno_file_path, 'rb') as f_annot:
+        with open(anno_file_path, "rb") as f_annot:
             fs.import_annotation_file(f_annot)
 
-        p = SampleAnnotationProject.objects.create(\
-            user = u,
-            #frag_sample = fs,
-            depth_total = depth_total,
-            depth_last_match = depth_last_match)
+        p = SampleAnnotationProject.objects.create(
+            user=u,
+            # frag_sample = fs,
+            depth_total=depth_total,
+            depth_last_match=depth_last_match,
+        )
         p.reactions_conf = rc
         p.save()
         self.assertEqual(p.status_code, Project.status.INIT)
@@ -102,27 +114,25 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
         p.run()
         self.assertTrue(p.status_code >= Project.status.QUEUE, p.status_code)
         if interrupt is not None:
-            print('begin wait')
+            print("begin wait")
             time.sleep(interrupt)
-            print('end wait')
+            print("end wait")
             p.finish_run()
             time.sleep(5)
         p.wait_run_end()
         self.assertEqual(p.status_code, Project.status.DONE)
 
-        print (p.molecules_matching())
+        print(p.molecules_matching())
 
-        print ('.'.join([m.smiles() for m in p.molecules.all()]) + '\n')
+        print(".".join([m.smiles() for m in p.molecules.all()]) + "\n")
 
-        for m in  p.molecules.all():
-            facs = FragAnnotationCompare.objects.filter(
-                project = p,
-                molecule = m)
+        for m in p.molecules.all():
+            facs = FragAnnotationCompare.objects.filter(project=p, molecule=m)
             if facs.count() > 0:
-              print (m.smiles(), facs.first().frag_mol_compare.cosine)
+                print(m.smiles(), facs.first().frag_mol_compare.cosine)
 
-        #fsim = FragSim(fsc)
-        #for m in p.molecules.all():
+        # fsim = FragSim(fsc)
+        # for m in p.molecules.all():
         #    print fsim.frag_molecule(m).gen_mgf()
 
         # Check if molecules expected added to project molecules
@@ -132,23 +142,26 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 
             # Check molecule existence
             m = Molecule.find_from_smiles(anno_exp[0])
-            self.assertTrue(m, name + ' - ' + anno_exp[0])
+            self.assertTrue(m, name + " - " + anno_exp[0])
             self.assertIn(m, p.molecules.all())
 
             # Check annotation correct
             fms_search = FragMolSample.objects.filter(
-                frag_sample = p.frag_sample,
-                ion_id = anno_exp[1])
+                frag_sample=p.frag_sample, ion_id=anno_exp[1]
+            )
             self.assertEqual(fms_search.count(), 1)
-                #project = p,
-                #frag_mol_sample = fms_search.first()).first().molecule.smiles()
+            # project = p,
+            # frag_mol_sample = fms_search.first()).first().molecule.smiles()
 
             fac_search = FragAnnotationCompare.objects.filter(
-                project = p,
-                molecule = m,
+                project=p,
+                molecule=m,
                 frag_mol_compare__match=True,
-                frag_mol_sample = fms_search.first())
-            self.assertNotEqual(fac_search.count(), 0, 'fac_search.count() = ' + str(fac_search.count()))
+                frag_mol_sample=fms_search.first(),
+            )
+            self.assertNotEqual(
+                fac_search.count(), 0, "fac_search.count() = " + str(fac_search.count())
+            )
 
         # Check non expected molecules (depth to high) has not been generateds
 
@@ -156,9 +169,9 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
             m = Molecule.load_from_smiles(sm_nexp)
             self.assertFalse(m in p.molecules.all())
 
-        #print '###### {0} ######'.format(name)
-        #print ReactProcess.objects.count()
-        #print '\n'.join([ '{0} with : {1}'.format(
+        # print '###### {0} ######'.format(name)
+        # print ReactProcess.objects.count()
+        # print '\n'.join([ '{0} with : {1}'.format(
         #                        rp.reaction,
         #                        ', '.join([ m.smiles() for m in rp.reactants.all() ])  ) \
         #                    for rp in ReactProcess.objects.all() ])
@@ -170,97 +183,105 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
 
         ReactProcess.objects.all().delete()
 
-    params = [ {
-            'name' : 'depth_0',
-            'anno_file' : 'anno_1',
-            'smiles' : ['OC=CCO'],
-            'reactions_name' : [ 'methylation' ],
-            'expected_anno' : [],
-            'not_expected_smiles' : ['COC=CCO'],
-            'depth_total' : 0
-        }, {
-            'name' : 'depth_1',
-            'anno_file' : 'anno_1',
-            'smiles' : ['OC=CCO'],
-            'reactions_name' : [ 'methylation' ],
-            'expected_anno' : [('COC=CCO',2)],
-            'not_expected_smiles' : ['COC=CCOC'],
-            'depth_total' : 1
-        }, {
-            'name' : 'depth_2',
-            'anno_file' : 'anno_1',
-            'smiles' : ['OC=CCO'],
-            'reactions_name' : [ 'methylation' ],
-            'expected_anno' : [
-                ('COC=CCO',2),
-                ('COCC=CO', 3),
-                ('COC=CCOC',15)],
-            'not_expected_smiles' : [],
-            'depth_total' : 2,
-            'react_process_count_expected' : 3
-        }, {
-            'name' : 'depth_3',
-            'anno_file' : 'anno_1',
-            'smiles' : ['OC=CCO'],
-            'reactions_name' : [ 'methylation' ],
-            'expected_anno' : [
-                ('COC=CCO',2),
-                ('COCC=CO', 3),
-                ('COC=CCOC',15)],
-            'not_expected_smiles' : [],
-            'depth_total' : 3,
-            'react_process_count_expected' : 4
-        }, {
-            'name' : 'depth_2_gap_0',
-            'anno_file' : 'anno_1',
-            'smiles' : ['OC=CCO'],
-            'reactions_name' : [ 'methylation' ],
-            'expected_anno' : [],
-            'not_expected_smiles' : ['COC=CCOC'],
-            'depth_total' : 2,
-            'depth_last_match' : 0,
-            'sample_file_name' : 'test_annotation_project_GAP.mgf',
-        }, {
-            'name' : 'depth_2_gap_1',
-            'anno_file' : 'anno_1',
-            'smiles' : ['OC=CCO'],
-            'reactions_name' : [ 'methylation' ],
-            'expected_anno' : [('COC=CCOC',15)],
-            'not_expected_smiles' : [],
-            'depth_total' : 2,
-            'depth_last_match' : 1,
-            'sample_file_name' : 'test_annotation_project_GAP.mgf',
-        }, {
-            'name' : 'adducts',
-            'sample_file_name' : 'test_adducts.mgf',
-            'anno_file' : 'test_adducts_annot',
-            'smiles' : ['OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)CO'],
-            'reactions_name' : [ 'test_adducts' ],
-            'expected_anno' : [('OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)COC(CCCCCCCCCCCCCCC)=O',979)],
-            'not_expected_smiles' : [],
-            'depth_total' : 1,
-            'depth_last_match' : 0,
-
-        }, {
-            'name' : 'bi_reactants_reaction',
-            'anno_file' : 'anno_2',
-            'smiles' :['OC=CCO', 'C=Cc1c[nH]c(N)n1', 'C=CCC'],
-            'reactions_name' : [ 'methylation', 'diels_alder' ],
-            'expected_anno' : [
-                ('COC=CCO',2),
-                ('CCC1CCC=C2N=C(N)NC12', 10),
-                ('CCC1CC=C2N=C(N)NC2C1', 9)],
-            'not_expected_smiles' : [],
-            'depth_total' : 1
-        #}, {
-        #    'name' : 'bromination',
-        #    'anno_file' : 'para_annotation_single',
-        #    'smiles' :[],
-        #    'reactions_name' : [ 'bromination_of_phenols', 'bromination_of_phenols_isotope_81' ],
-        #    'expected_anno' : [
-        #        ('NC(=N)NCC\\C=C1\\N=C(O)N(\\C=C\\c2cc(Br)c(O)c([81Br])c2)C1=O',451),
-        #        ],
-        #    'not_expected_smiles' : [],
-        #    'depth_total' : 10,
-        #    'sample_file_name' : 'paraz 3 ions.mgf'
-        } ]
+    params = [
+        {
+            "name": "depth_0",
+            "anno_file": "anno_1",
+            "smiles": ["OC=CCO"],
+            "reactions_name": ["methylation"],
+            "expected_anno": [],
+            "not_expected_smiles": ["COC=CCO"],
+            "depth_total": 0,
+        },
+        {
+            "name": "depth_1",
+            "anno_file": "anno_1",
+            "smiles": ["OC=CCO"],
+            "reactions_name": ["methylation"],
+            "expected_anno": [("COC=CCO", 2)],
+            "not_expected_smiles": ["COC=CCOC"],
+            "depth_total": 1,
+        },
+        {
+            "name": "depth_2",
+            "anno_file": "anno_1",
+            "smiles": ["OC=CCO"],
+            "reactions_name": ["methylation"],
+            "expected_anno": [("COC=CCO", 2), ("COCC=CO", 3), ("COC=CCOC", 15)],
+            "not_expected_smiles": [],
+            "depth_total": 2,
+            "react_process_count_expected": 3,
+        },
+        {
+            "name": "depth_3",
+            "anno_file": "anno_1",
+            "smiles": ["OC=CCO"],
+            "reactions_name": ["methylation"],
+            "expected_anno": [("COC=CCO", 2), ("COCC=CO", 3), ("COC=CCOC", 15)],
+            "not_expected_smiles": [],
+            "depth_total": 3,
+            "react_process_count_expected": 4,
+        },
+        {
+            "name": "depth_2_gap_0",
+            "anno_file": "anno_1",
+            "smiles": ["OC=CCO"],
+            "reactions_name": ["methylation"],
+            "expected_anno": [],
+            "not_expected_smiles": ["COC=CCOC"],
+            "depth_total": 2,
+            "depth_last_match": 0,
+            "sample_file_name": "test_annotation_project_GAP.mgf",
+        },
+        {
+            "name": "depth_2_gap_1",
+            "anno_file": "anno_1",
+            "smiles": ["OC=CCO"],
+            "reactions_name": ["methylation"],
+            "expected_anno": [("COC=CCOC", 15)],
+            "not_expected_smiles": [],
+            "depth_total": 2,
+            "depth_last_match": 1,
+            "sample_file_name": "test_annotation_project_GAP.mgf",
+        },
+        {
+            "name": "adducts",
+            "sample_file_name": "test_adducts.mgf",
+            "anno_file": "test_adducts_annot",
+            "smiles": ["OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)CO"],
+            "reactions_name": ["test_adducts"],
+            "expected_anno": [
+                (
+                    "OCC(OC/C=C(C)/CC/C=C(C)/CC/C=C(C)/CC/C=C(C)/C)COC(CCCCCCCCCCCCCCC)=O",
+                    979,
+                )
+            ],
+            "not_expected_smiles": [],
+            "depth_total": 1,
+            "depth_last_match": 0,
+        },
+        {
+            "name": "bi_reactants_reaction",
+            "anno_file": "anno_2",
+            "smiles": ["OC=CCO", "C=Cc1c[nH]c(N)n1", "C=CCC"],
+            "reactions_name": ["methylation", "diels_alder"],
+            "expected_anno": [
+                ("COC=CCO", 2),
+                ("CCC1CCC=C2N=C(N)NC12", 10),
+                ("CCC1CC=C2N=C(N)NC2C1", 9),
+            ],
+            "not_expected_smiles": [],
+            "depth_total": 1
+            # }, {
+            #    'name' : 'bromination',
+            #    'anno_file' : 'para_annotation_single',
+            #    'smiles' :[],
+            #    'reactions_name' : [ 'bromination_of_phenols', 'bromination_of_phenols_isotope_81' ],
+            #    'expected_anno' : [
+            #        ('NC(=N)NCC\\C=C1\\N=C(O)N(\\C=C\\c2cc(Br)c(O)c([81Br])c2)C1=O',451),
+            #        ],
+            #    'not_expected_smiles' : [],
+            #    'depth_total' : 10,
+            #    'sample_file_name' : 'paraz 3 ions.mgf'
+        },
+    ]
