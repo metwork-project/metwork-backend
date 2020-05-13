@@ -59,16 +59,16 @@ class MetGraph:
     def get_adduct_mass(self, mol):
         from fragmentation.models import FragAnnotation
 
-        # try:
-        fas = FragAnnotation.objects.filter(
-            molecule=mol, frag_mol_sample__in=self.fm_ids
-        )
-        if fas.count() > 0:
-            if fas.first().adduct() is not None:
-                return self.adducts_mass[fas.first().adduct()]
-        return self.fms_mols_mass[mol.id]
-        # except:
-        #     return 0
+        try:
+            fas = FragAnnotation.objects.filter(
+                molecule=mol, frag_mol_sample__in=self.fm_ids
+            )
+            if fas.count() > 0:
+                if fas.first().adduct() is not None:
+                    return self.adducts_mass[fas.first().adduct()]
+            return self.fms_mols_mass[mol.id]
+        except KeyError:
+            return 0
 
     def products(self, rp):
         return rp.products.filter(
@@ -96,7 +96,10 @@ class MetGraph:
         query = FragAnnotationCompare.objects.filter(
             molecule=molecule, project=self.project
         ).aggregate(Max("frag_mol_compare__cosine"))
-        return query["frag_mol_compare__cosine__max"]
+        cosine = query["frag_mol_compare__cosine__max"]
+        if cosine:
+            cosine = float(cosine)
+        return cosine
 
     def get_annotation_type(self, molecule):
         if molecule in self.project.molecules_init():

@@ -420,11 +420,15 @@ Link to project : {1}/#/projects/{2}""".format(
         mg = MetGraph(self)
         mg.gen_metexplore()
 
-    def metabolization_network(self):
-        from base.modules import MetGraph
+    def get_metabolization_network(self):
 
-        mg = MetGraph(self)
-        return mg.metabolization_network()
+        from base.models import MetabolizationGraph
+
+        try:
+            self.metabolization_network
+        except self.__class__.metabolization_network.RelatedObjectDoesNotExist:
+            MetabolizationGraph.objects.create(project=self)
+        return self.metabolization_network.get_data()
 
     def load_custom_frag_param_files(self, file_type, data):
         self.save_custom_frag_param_files(file_type, data)
@@ -455,4 +459,3 @@ Link to project : {1}/#/projects/{2}""".format(
 
     def _get_custom_frag_param_path(self, file_type):
         return Path(self.item_path()) / self.CUSTOM_FRAG_PARAMS_FILENAME[file_type]
-

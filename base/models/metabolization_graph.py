@@ -11,7 +11,7 @@ class MetabolizationGraph(Graph):
     project = models.OneToOneField(
         SampleAnnotationProject,
         on_delete=models.CASCADE,
-        related_name="metabolization_graph",
+        related_name="metabolization_network",
     )
 
     GRAPH_GENERATOR = MetGraph

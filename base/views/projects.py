@@ -178,5 +178,5 @@ class ProjectViewSet(ModelAuthViewSet):
     @action(detail=True, methods=["get"])
     def metabolization_network(self, request, pk=None):
         project = self.get_object()
-        data = project.metabolization_network()
+        data = project.get_metabolization_network()
         return JsonResponse(data, safe=False)
