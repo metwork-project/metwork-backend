@@ -3,20 +3,20 @@ from __future__ import unicode_literals
 from django.db import connection
 
 _PARAMETERS = (
-    'tanimoto_threshold',
-    'dice_threshold',
-    'do_chiral_sss',
-    'sss_fp_size',
-    'morgan_fp_size',
-    'featmorgan_fp_size',
-    'layered_fp_size',
-    'rdkit_fp_size',
-    'hashed_torsion_fp_size',
-    'hashed_atompair_fp_size',
+    "tanimoto_threshold",
+    "dice_threshold",
+    "do_chiral_sss",
+    "sss_fp_size",
+    "morgan_fp_size",
+    "featmorgan_fp_size",
+    "layered_fp_size",
+    "rdkit_fp_size",
+    "hashed_torsion_fp_size",
+    "hashed_atompair_fp_size",
 )
 
-class Config(object):
 
+class Config(object):
     def __getattr__(self, name):
         if not name in _PARAMETERS:
             raise AttributeError

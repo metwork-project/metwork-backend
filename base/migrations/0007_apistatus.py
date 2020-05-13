@@ -6,14 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0006_molecule_chemdoodle_json'),
+        ("base", "0006_molecule_chemdoodle_json"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='APIStatus',
+            name="APIStatus",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
             ],
         ),
     ]

@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0011_fragsample_cosine_matrix'),
+        ("fragmentation", "0011_fragsample_cosine_matrix"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fragannotationdb',
-            name='db_id',
-            field=models.CharField(default='', max_length=128),
+            model_name="fragannotationdb",
+            name="db_id",
+            field=models.CharField(default="", max_length=128),
         ),
         migrations.AlterField(
-            model_name='fragannotationdb',
-            name='db_source',
-            field=models.CharField(default='unkown', max_length=256),
+            model_name="fragannotationdb",
+            name="db_source",
+            field=models.CharField(default="unkown", max_length=256),
         ),
         migrations.AlterField(
-            model_name='fragannotationdb',
-            name='name',
-            field=models.CharField(default='', max_length=256),
+            model_name="fragannotationdb",
+            name="name",
+            field=models.CharField(default="", max_length=256),
         ),
     ]

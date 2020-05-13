@@ -8,17 +8,40 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0005_fragmol_parent_mass'),
+        ("fragmentation", "0005_fragmol_parent_mass"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FragMolSpectrum',
+            name="FragMolSpectrum",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('energy', models.SmallIntegerField(default=0)),
-                ('spectrum', django.contrib.postgres.fields.ArrayField(base_field=django.contrib.postgres.fields.ArrayField(base_field=models.FloatField(), size=None), size=None)),
-                ('frag_mol', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='fragmentation.FragMol')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("energy", models.SmallIntegerField(default=0)),
+                (
+                    "spectrum",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=django.contrib.postgres.fields.ArrayField(
+                            base_field=models.FloatField(), size=None
+                        ),
+                        size=None,
+                    ),
+                ),
+                (
+                    "frag_mol",
+                    models.ForeignKey(
+                        default=None,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="fragmentation.FragMol",
+                    ),
+                ),
             ],
         ),
     ]

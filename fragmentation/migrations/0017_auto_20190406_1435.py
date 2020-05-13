@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0016_fragsample_reaction_mass_max'),
+        ("fragmentation", "0016_fragsample_reaction_mass_max"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragmol',
-            name='adduct',
+            model_name="fragmol",
+            name="adduct",
             field=models.CharField(blank=True, default=None, max_length=16, null=True),
         ),
         migrations.AddField(
-            model_name='fragsample',
-            name='ion_charge',
-            field=models.CharField(default='positive', max_length=16),
+            model_name="fragsample",
+            name="ion_charge",
+            field=models.CharField(default="positive", max_length=16),
         ),
         migrations.AlterField(
-            model_name='fragcompareconf',
-            name='ppm_tolerance',
+            model_name="fragcompareconf",
+            name="ppm_tolerance",
             field=models.DecimalField(decimal_places=4, default=20, max_digits=6),
         ),
     ]

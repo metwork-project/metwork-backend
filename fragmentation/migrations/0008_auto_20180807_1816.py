@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0007_auto_20180807_1813'),
+        ("fragmentation", "0007_auto_20180807_1813"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fragmolattribute',
-            name='value',
-            field=models.CharField(default='', max_length=128),
+            model_name="fragmolattribute",
+            name="value",
+            field=models.CharField(default="", max_length=128),
         ),
     ]

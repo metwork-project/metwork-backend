@@ -7,3 +7,6 @@ from .sample_annotation_project import SampleAnnotationProject
 from .managers import UserManager
 from .default_conf import DefaultConf
 from .api_status import APIStatus
+from .graph import Graph
+from .molecular_graph import MolecularGraph
+from .metabolization_graph import MetabolizationGraph

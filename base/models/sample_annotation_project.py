@@ -340,6 +340,8 @@ class SampleAnnotationProject(Project):
         cache.delete("project_ms1_not_init_" + str(self.id))
         cache.delete("project_molecules_all_" + str(self.id))
 
+        self.frag_sample.get_molecular_network(force=True)
+
         # Send email to user
         message = """
 The run of the project {0} is finished.\n
@@ -418,11 +420,15 @@ Link to project : {1}/#/projects/{2}""".format(
         mg = MetGraph(self)
         mg.gen_metexplore()
 
-    def metabolization_network(self):
-        from base.modules import MetGraph
+    def get_metabolization_network(self):
 
-        mg = MetGraph(self)
-        return mg.metabolization_network()
+        from base.models import MetabolizationGraph
+
+        try:
+            self.metabolization_network
+        except self.__class__.metabolization_network.RelatedObjectDoesNotExist:
+            MetabolizationGraph.objects.create(project=self)
+        return self.metabolization_network.get_data()
 
     def load_custom_frag_param_files(self, file_type, data):
         self.save_custom_frag_param_files(file_type, data)

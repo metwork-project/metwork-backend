@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0009_auto_20180808_0851'),
+        ("fragmentation", "0009_auto_20180808_0851"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fragcompareconf',
-            name='cosine_min_matched_peaks',
+            model_name="fragcompareconf",
+            name="cosine_min_matched_peaks",
             field=models.PositiveSmallIntegerField(default=2),
         ),
     ]

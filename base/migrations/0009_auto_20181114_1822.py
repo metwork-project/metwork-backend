@@ -3,27 +3,29 @@
 from django.db import migrations
 from django.contrib.auth import get_user_model
 
+
 def create_guest(apps, schema_editor):
 
     user_guest = {
-        'username': 'Guest',
-        'email': 'metwork.dev@gmail.com',
-        'password': 'AYL6jGBm6R',
+        "username": "Guest",
+        "email": "metwork.dev@gmail.com",
+        "password": "AYL6jGBm6R",
     }
 
     User = get_user_model()
 
-    if not User.objects.filter(username = user_guest['username']).exists():
+    if not User.objects.filter(username=user_guest["username"]).exists():
         u = User.objects.create(
-            username = user_guest['username'],
-            email = user_guest['email'])
-        u.set_password(user_guest['password'])
+            username=user_guest["username"], email=user_guest["email"]
+        )
+        u.set_password(user_guest["password"])
         u.save()
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0008_merge_20181012_1234'),
+        ("base", "0008_merge_20181012_1234"),
     ]
 
     operations = [

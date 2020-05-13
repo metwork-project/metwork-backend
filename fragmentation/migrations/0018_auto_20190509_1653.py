@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0017_auto_20190406_1435'),
+        ("fragmentation", "0017_auto_20190406_1435"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fragcompareconf',
-            name='cosine_threshold',
+            model_name="fragcompareconf",
+            name="cosine_threshold",
             field=models.FloatField(default=0.18),
         ),
     ]

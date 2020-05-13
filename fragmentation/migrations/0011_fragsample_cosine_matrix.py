@@ -7,13 +7,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0010_auto_20180808_2200'),
+        ("fragmentation", "0010_auto_20180808_2200"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragsample',
-            name='cosine_matrix',
-            field=django.contrib.postgres.fields.ArrayField(base_field=django.contrib.postgres.fields.ArrayField(base_field=models.FloatField(), size=None), null=True, size=None),
+            model_name="fragsample",
+            name="cosine_matrix",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=django.contrib.postgres.fields.ArrayField(
+                    base_field=models.FloatField(), size=None
+                ),
+                null=True,
+                size=None,
+            ),
         ),
     ]

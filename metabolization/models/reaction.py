@@ -15,49 +15,28 @@ from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Count
 
-class Reaction(FileManagement, models.Model):
 
+class Reaction(FileManagement, models.Model):
     class JSONAPIMeta:
         resource_name = "reactions"
 
     REACTANTS_MAX = 2
 
-    name = models.CharField(
-            max_length=128,
-            default='new_reaction',
-            unique=True)
-    description = models.CharField(
-                    max_length=255,
-                    default='',
-                    null= True,
-                    blank=True)
-    tags = models.ManyToManyField(
-        Tag,
-        related_name="reaction_tags",
-        default=None)
+    name = models.CharField(max_length=128, default="new_reaction", unique=True)
+    description = models.CharField(max_length=255, default="", null=True, blank=True)
+    tags = models.ManyToManyField(Tag, related_name="reaction_tags", default=None)
     user = models.ForeignKey(
-                    settings.AUTH_USER_MODEL,
-                    on_delete=models.CASCADE,
-                    db_index = True)
-    reactants_number = models.SmallIntegerField(
-            default=0)
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True
+    )
+    reactants_number = models.SmallIntegerField(default=0)
     smarts = models.CharField(
-            max_length=1024,
-            default=None,
-            null= True,
-            blank=True) # smarts used by rdkit method
-    status_code = models.PositiveSmallIntegerField(
-                    default=0,
-                    db_index = True)
-    chemdoodle_json = JSONField(
-        default=None,
-        null= True,
-        blank=True)
+        max_length=1024, default=None, null=True, blank=True
+    )  # smarts used by rdkit method
+    status_code = models.PositiveSmallIntegerField(default=0, db_index=True)
+    chemdoodle_json = JSONField(default=None, null=True, blank=True)
     chemdoodle_json_error = models.CharField(
-        max_length=128,
-        default=None,
-        null= True,
-        blank=True)
+        max_length=128, default=None, null=True, blank=True
+    )
 
     public = True
 
@@ -79,9 +58,12 @@ class Reaction(FileManagement, models.Model):
             prev_status = Reaction.status.EDIT
         if self.status_code == Reaction.status.INIT:
             self.status_code = Reaction.status.EDIT
-        if self.status_code == Reaction.status.EDIT and prev_status != Reaction.status.VALID:
+        if (
+            self.status_code == Reaction.status.EDIT
+            and prev_status != Reaction.status.VALID
+        ):
             try:
-                cd  = ChemDoodle()
+                cd = ChemDoodle()
                 smarts = cd.json_to_react(self.chemdoodle_json)
                 self.smarts = smarts
                 react = RDKit.reaction_from_smarts(smarts)
@@ -90,11 +72,11 @@ class Reaction(FileManagement, models.Model):
                 if self.ready():
                     self.status_code = Reaction.status.VALID
                 else:
-                    self.chemdoodle_json_error = 'error with RDKit'
+                    self.chemdoodle_json_error = "error with RDKit"
             except ChemDoodleJSONError as error:
                 self.chemdoodle_json_error = error
             except:
-                self.chemdoodle_json_error = 'unexpected error'
+                self.chemdoodle_json_error = "unexpected error"
         self.reactants_number = self.get_reactants_number()
         super(Reaction, self).save(*args, **kwargs)
         return self
@@ -104,7 +86,7 @@ class Reaction(FileManagement, models.Model):
 
     def load_smarts(self, smarts):
         try:
-            cd  = ChemDoodle()
+            cd = ChemDoodle()
             react = RDKit.reaction_from_smarts(smarts)
             self.smarts = smarts
             self.chemdoodle_json = cd.react_to_json(react)
@@ -122,46 +104,40 @@ class Reaction(FileManagement, models.Model):
 
     @classmethod
     def activated(cls):
-        return cls.objects.filter(status_code = cls.status.ACTIVE)
+        return cls.objects.filter(status_code=cls.status.ACTIVE)
 
     @classmethod
     def max_delta(cls):
         max = 0
         for r in cls.activated():
             rd = r.mass_delta()
-            if  rd is not None and rd > max:
+            if rd is not None and rd > max:
                 max = rd
         return max
 
     @classmethod
     def create_from_smarts(cls, smarts, name, user, description=None):
-        smarts = RDKit.reaction_to_smarts(
-                    RDKit.reaction_from_smarts(smarts))
-        r = cls(
-            name = name,
-            user=user,
-            description=description,
-            smarts=smarts)
+        smarts = RDKit.reaction_to_smarts(RDKit.reaction_from_smarts(smarts))
+        r = cls(name=name, user=user, description=description, smarts=smarts)
         r.save()
         return r
 
     def has_no_project(self):
         from metabolization.models import ReactionsConf
-        return ReactionsConf.objects.filter(reactions__in = [self]).count() == 0
+
+        return ReactionsConf.objects.filter(reactions__in=[self]).count() == 0
 
     def image_path(self):
-        return '/'.join([
-            self.item_path(),
-            'image.svg'])
+        return "/".join([self.item_path(), "image.svg"])
 
     def ready(self):
         try:
-            cd  = ChemDoodle()
+            cd = ChemDoodle()
             self.chemdoodle_json = cd.react_to_json(
-                RDKit.reaction_from_smarts(
-                    self.smarts))
+                RDKit.reaction_from_smarts(self.smarts)
+            )
             rx = self.react_rdkit()
-            return rx.Validate() == (0,0)
+            return rx.Validate() == (0, 0)
         except:
             return False
 
@@ -180,10 +156,11 @@ class Reaction(FileManagement, models.Model):
         else:
             return 0
 
-    def run_reaction(self, reactants, method='rdkit'):
+    def run_reaction(self, reactants, method="rdkit"):
         if self.status_code < Reaction.status.ACTIVE:
             self.reactprocess_set.all().delete()
         from metabolization.models import ReactProcess
+
         rp = ReactProcess.objects.create()
         rp.reaction = self
         rp.reactants.set(reactants)
@@ -193,15 +170,18 @@ class Reaction(FileManagement, models.Model):
 
     def mass_delta(self):
         from metabolization.models import ReactProcess
-        rps = self.reactprocess_set.annotate(Count('products')).filter(products__count__gt=0)
+
+        rps = self.reactprocess_set.annotate(Count("products")).filter(
+            products__count__gt=0
+        )
         if len(rps) > 0:
             return rps.first().mass_delta()
         else:
             return None
 
     def update_name_tags(self):
-        tag_pattern = re.compile(r'\[([\w\s]*)\]')
-        name_pattern = re.compile(r'^([^\[\]]*\w)')
+        tag_pattern = re.compile(r"\[([\w\s]*)\]")
+        name_pattern = re.compile(r"^([^\[\]]*\w)")
 
         new_name = re.findall(name_pattern, self.name)[0]
         tags = re.findall(tag_pattern, self.name)
@@ -213,6 +193,6 @@ class Reaction(FileManagement, models.Model):
             else:
                 tag = Tag.objects.create(name=tag_name)
             self.tags.add(tag)
-        
+
         self.name = new_name
         self.save()

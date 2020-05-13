@@ -6,12 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metabolization', '0009_auto_20181009_1602'),
+        ("metabolization", "0009_auto_20181009_1602"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='reaction',
-            name='method_priority',
-        ),
+        migrations.RemoveField(model_name="reaction", name="method_priority",),
     ]

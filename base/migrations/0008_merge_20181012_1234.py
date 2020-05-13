@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0007_apistatus'),
-        ('base', '0007_array1dmodel_array2dmodel'),
+        ("base", "0007_apistatus"),
+        ("base", "0007_array1dmodel_array2dmodel"),
     ]
 
-    operations = [
-    ]
+    operations = []

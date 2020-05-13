@@ -6,35 +6,21 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0003_auto_20180625_1413'),
+        ("base", "0003_auto_20180625_1413"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='projectprocess',
-            name='molecule',
-        ),
-        migrations.RemoveField(
-            model_name='projectprocess',
-            name='parent_process',
-        ),
-        migrations.RemoveField(
-            model_name='projectprocess',
-            name='project',
+        migrations.RemoveField(model_name="projectprocess", name="molecule",),
+        migrations.RemoveField(model_name="projectprocess", name="parent_process",),
+        migrations.RemoveField(model_name="projectprocess", name="project",),
+        migrations.AlterModelOptions(
+            name="project", options={"base_manager_name": "objects"},
         ),
         migrations.AlterModelOptions(
-            name='project',
-            options={'base_manager_name': 'objects'},
-        ),
-        migrations.AlterModelOptions(
-            name='sampleannotationproject',
-            options={'base_manager_name': 'objects'},
+            name="sampleannotationproject", options={"base_manager_name": "objects"},
         ),
         migrations.RemoveField(
-            model_name='sampleannotationproject',
-            name='files_directory',
+            model_name="sampleannotationproject", name="files_directory",
         ),
-        migrations.DeleteModel(
-            name='ProjectProcess',
-        ),
+        migrations.DeleteModel(name="ProjectProcess",),
     ]

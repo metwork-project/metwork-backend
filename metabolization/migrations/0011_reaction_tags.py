@@ -6,14 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0011_tag'),
-        ('metabolization', '0010_remove_reaction_method_priority'),
+        ("base", "0011_tag"),
+        ("metabolization", "0010_remove_reaction_method_priority"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='reaction',
-            name='tags',
-            field=models.ManyToManyField(default=None, related_name='reaction_tags', to='base.Tag'),
+            model_name="reaction",
+            name="tags",
+            field=models.ManyToManyField(
+                default=None, related_name="reaction_tags", to="base.Tag"
+            ),
         ),
     ]

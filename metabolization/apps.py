@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 
 class MetabolizationConfig(AppConfig):
-    name = 'metabolization'
+    name = "metabolization"

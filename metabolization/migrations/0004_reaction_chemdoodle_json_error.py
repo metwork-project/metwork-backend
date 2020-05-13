@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metabolization', '0003_reaction_chemdoodle_json'),
+        ("metabolization", "0003_reaction_chemdoodle_json"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='reaction',
-            name='chemdoodle_json_error',
+            model_name="reaction",
+            name="chemdoodle_json_error",
             field=models.CharField(blank=True, default=None, max_length=128, null=True),
         ),
     ]
