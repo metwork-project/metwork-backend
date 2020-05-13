@@ -4,14 +4,13 @@ from django.contrib.postgres.operations import CreateExtension
 
 
 class RDKitExtension(CreateExtension):
-
     def __init__(self):
-        self.name = 'rdkit'
+        self.name = "rdkit"
 
     def database_forwards(self, app_label, schema_editor, from_state, to_state):
-        super(RDKitExtension, self).database_forwards(app_label, 
-                                                      schema_editor, 
-                                                      from_state, to_state)
+        super(RDKitExtension, self).database_forwards(
+            app_label, schema_editor, from_state, to_state
+        )
         # Ensure the RDKit extension is fully loaded, because a subsequent
         # data migration would use the same connection
         with schema_editor.connection.cursor() as c:
@@ -35,12 +34,15 @@ class GiSTIndex(Operation):
         field = model._meta.get_field(self.name)
         qn = schema_editor.quote_name
 
-        sql_add_gist_index = "CREATE INDEX %(index)s ON %(table)s USING GIST (%(column)s)"
+        sql_add_gist_index = (
+            "CREATE INDEX %(index)s ON %(table)s USING GIST (%(column)s)"
+        )
 
         index_name = (
-            self.index_name if self.index_name is not None
-            else '%s_%s_gist_idx' % (model._meta.db_table, field.column)
-            )
+            self.index_name
+            if self.index_name is not None
+            else "%s_%s_gist_idx" % (model._meta.db_table, field.column)
+        )
 
         sql = sql_add_gist_index % {
             "index": qn(index_name),
@@ -57,9 +59,10 @@ class GiSTIndex(Operation):
         sql_remove_gist_index = "DROP INDEX %(index)s"
 
         index_name = (
-            self.index_name if self.index_name is not None
-            else '%s_%s_gist_idx' % (model._meta.db_table, field.column)
-            )
+            self.index_name
+            if self.index_name is not None
+            else "%s_%s_gist_idx" % (model._meta.db_table, field.column)
+        )
 
         sql = sql_remove_gist_index % {
             "index": qn(index_name),
@@ -68,4 +71,3 @@ class GiSTIndex(Operation):
 
     def describe(self):
         return "Creates GiST index on %s.%s" % (self.model_name, self.name)
-   

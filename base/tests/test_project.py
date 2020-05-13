@@ -17,23 +17,21 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import force_authenticate
 from rest_framework.test import APIRequestFactory
 
-class ProjectRunModelTests(TransactionTestCase):
 
+class ProjectRunModelTests(TransactionTestCase):
     def test_public(self):
         user_public = get_user_model().objects.create(
-            username='pulbic',
-            email='public@test.com')
+            username="pulbic", email="public@test.com"
+        )
         user_private = get_user_model().objects.create(
-            username='private',
-            email='private@test.com')
+            username="private", email="private@test.com"
+        )
         project_public = SampleAnnotationProject.objects.create(
-            name='public',
-            user=user_private,
-            public=True)
+            name="public", user=user_private, public=True
+        )
         project_private = SampleAnnotationProject.objects.create(
-            name='private',
-            user=user_private,
-            public=False)
+            name="private", user=user_private, public=False
+        )
 
         TEST_PATTERN = [
             (project_private, user_private, 200),
@@ -48,7 +46,6 @@ class ProjectRunModelTests(TransactionTestCase):
 
     def get_project(self, project, user):
         factory = APIRequestFactory()
-        request = factory.get('/projects', format='json')
+        request = factory.get("/projects", format="json")
         force_authenticate(request, user=user)
-        return ProjectViewSet.as_view({'get': 'retrieve'})(request, pk=project.id)
-        
+        return ProjectViewSet.as_view({"get": "retrieve"})(request, pk=project.id)

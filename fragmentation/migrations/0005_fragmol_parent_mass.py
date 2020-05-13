@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0004_auto_20180801_1146'),
+        ("fragmentation", "0004_auto_20180801_1146"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragmol',
-            name='parent_mass',
+            model_name="fragmol",
+            name="parent_mass",
             field=models.FloatField(db_index=True, default=0),
         ),
     ]

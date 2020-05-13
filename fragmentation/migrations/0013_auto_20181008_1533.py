@@ -7,18 +7,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0012_auto_20180924_1602'),
+        ("fragmentation", "0012_auto_20180924_1602"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragsample',
-            name='mass_delta_double',
-            field=django.contrib.postgres.fields.ArrayField(base_field=django.contrib.postgres.fields.ArrayField(base_field=models.FloatField(), size=None), null=True, size=None),
+            model_name="fragsample",
+            name="mass_delta_double",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=django.contrib.postgres.fields.ArrayField(
+                    base_field=models.FloatField(), size=None
+                ),
+                null=True,
+                size=None,
+            ),
         ),
         migrations.AddField(
-            model_name='fragsample',
-            name='mass_delta_single',
-            field=django.contrib.postgres.fields.ArrayField(base_field=django.contrib.postgres.fields.ArrayField(base_field=models.FloatField(), size=None), null=True, size=None),
+            model_name="fragsample",
+            name="mass_delta_single",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=django.contrib.postgres.fields.ArrayField(
+                    base_field=models.FloatField(), size=None
+                ),
+                null=True,
+                size=None,
+            ),
         ),
     ]

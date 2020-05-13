@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0003_auto_20180730_1547'),
+        ("fragmentation", "0003_auto_20180730_1547"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fragannotationdb',
-            name='db_id',
-            field=models.CharField(default='', max_length=63),
+            model_name="fragannotationdb",
+            name="db_id",
+            field=models.CharField(default="", max_length=63),
         ),
         migrations.AlterField(
-            model_name='fragannotationdb',
-            name='db_source',
-            field=models.CharField(default='unkown', max_length=63),
+            model_name="fragannotationdb",
+            name="db_source",
+            field=models.CharField(default="unkown", max_length=63),
         ),
         migrations.AlterField(
-            model_name='fragannotationdb',
-            name='name',
-            field=models.CharField(default='', max_length=63),
+            model_name="fragannotationdb",
+            name="name",
+            field=models.CharField(default="", max_length=63),
         ),
     ]

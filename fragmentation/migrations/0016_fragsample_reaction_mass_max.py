@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0015_auto_20181009_0956'),
+        ("fragmentation", "0015_auto_20181009_0956"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragsample',
-            name='reaction_mass_max',
+            model_name="fragsample",
+            name="reaction_mass_max",
             field=models.FloatField(default=0),
         ),
     ]

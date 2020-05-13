@@ -7,13 +7,15 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metabolization', '0002_reaction_status_code'),
+        ("metabolization", "0002_reaction_status_code"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='reaction',
-            name='chemdoodle_json',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=None, null=True),
+            model_name="reaction",
+            name="chemdoodle_json",
+            field=django.contrib.postgres.fields.jsonb.JSONField(
+                blank=True, default=None, null=True
+            ),
         ),
     ]

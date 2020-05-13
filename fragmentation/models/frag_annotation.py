@@ -6,15 +6,13 @@ from polymorphic.models import PolymorphicModel
 from base.models import Molecule
 from fragmentation.models import FragMolSample, FragMolCompare
 
+
 class FragAnnotation(PolymorphicModel):
 
     frag_mol_sample = models.ForeignKey(
-            FragMolSample,
-            on_delete=models.CASCADE,
-            default=None)
-    molecule = models.ForeignKey(
-            Molecule,
-            on_delete=models.PROTECT)
+        FragMolSample, on_delete=models.CASCADE, default=None
+    )
+    molecule = models.ForeignKey(Molecule, on_delete=models.PROTECT)
 
     def ion_id(self):
         return self.frag_mol_sample.ion_id
@@ -37,20 +35,14 @@ class FragAnnotation(PolymorphicModel):
         except:
             return False
 
-class FragAnnotationDB(FragAnnotation):
 
+class FragAnnotationDB(FragAnnotation):
     class JSONAPIMeta:
         resource_name = "frag-annotations"
 
-    name = models.CharField(
-            max_length=256,
-            default='')
-    db_source = models.CharField(
-            max_length=256,
-            default='unkown')
-    db_id = models.CharField(
-            max_length=128,
-            default='')
+    name = models.CharField(max_length=256, default="")
+    db_source = models.CharField(max_length=256, default="unkown")
+    db_id = models.CharField(max_length=128, default="")
 
     def has_no_project(self):
         return self.sampleannotationproject_set.count() == 0
@@ -59,15 +51,12 @@ class FragAnnotationDB(FragAnnotation):
         if self.has_no_project():
             super(FragAnnotationDB, self).delete(*args, **kwargs)
 
+
 class FragAnnotationCompare(FragAnnotation):
 
     project = models.ForeignKey(
-            'base.Project',
-            on_delete=models.CASCADE,
-            db_index = True,
-            default=None)
+        "base.Project", on_delete=models.CASCADE, db_index=True, default=None
+    )
     frag_mol_compare = models.ForeignKey(
-            FragMolCompare,
-            on_delete=models.PROTECT,
-            default=None,
-            null=True)
+        FragMolCompare, on_delete=models.PROTECT, default=None, null=True
+    )

@@ -5,8 +5,8 @@ from fragmentation.modules import FragCompare
 from fragmentation.models import *
 from django.core.exceptions import FieldError
 
-class FragMolMolCompare(TransactionTestCase):
 
+class FragMolMolCompare(TransactionTestCase):
     def test_2_fragmols(self):
         fconf = FragCompareConf.objects.create()
         fcomp = FragCompare(fconf)
@@ -14,13 +14,13 @@ class FragMolMolCompare(TransactionTestCase):
         fm2 = FragMol.objects.create()
         fm3 = FragMol.objects.create()
         fmc = FragMolCompare.objects.create()
-        with self.assertRaises(FieldError): 
+        with self.assertRaises(FieldError):
             fmc.frag_mols.add(fm1)
-            fmc.save()   
+            fmc.save()
 
         try:
             fmc.frag_mols.add(fm2)
-            fmc.save()  
+            fmc.save()
         except:
             self.fail("fmc.save() fail")
 
@@ -28,9 +28,8 @@ class FragMolMolCompare(TransactionTestCase):
             fcomp.compare_frag_mols([fm1, fm2])
         except:
             self.fail("fcomp.compare_frag_mols([fm, fm]) fail")
-       
-        with self.assertRaises(FieldError): 
-            fcomp.compare_frag_mols([fm1])
-        with self.assertRaises(FieldError): 
-            fcomp.compare_frag_mols([fm1, fm2, fm3])
 
+        with self.assertRaises(FieldError):
+            fcomp.compare_frag_mols([fm1])
+        with self.assertRaises(FieldError):
+            fcomp.compare_frag_mols([fm1, fm2, fm3])

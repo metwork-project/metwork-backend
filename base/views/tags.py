@@ -5,10 +5,12 @@ from rest_framework import serializers
 from base.models import Tag
 from base.views.model_auth import ModelAuthViewSet
 
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('name',)
+        fields = ("name",)
+
 
 class TagViewSet(ModelAuthViewSet):
     serializer_class = TagSerializer

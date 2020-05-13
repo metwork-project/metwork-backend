@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 
 class FragmentationConfig(AppConfig):
-    name = 'fragmentation'
+    name = "fragmentation"

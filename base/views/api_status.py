@@ -7,14 +7,17 @@ from base.views.model_auth import ModelAuthViewSet
 from base.models import APIStatus
 from rest_framework import viewsets
 
+
 class APIStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = APIStatus
         fields = (
-            'available',
-            'molecules_count',
-            'achieved_projects_count',
-            'running_projects_count')
+            "available",
+            "molecules_count",
+            "achieved_projects_count",
+            "running_projects_count",
+        )
+
 
 class APIStatusViewSet(viewsets.ModelViewSet):
     serializer_class = APIStatusSerializer

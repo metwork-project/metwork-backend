@@ -6,43 +6,43 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0008_auto_20180807_1816'),
+        ("fragmentation", "0008_auto_20180807_1816"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragcompareconf',
-            name='cosine_min_matched_peaks',
+            model_name="fragcompareconf",
+            name="cosine_min_matched_peaks",
             field=models.PositiveSmallIntegerField(default=6),
         ),
         migrations.AddField(
-            model_name='fragcompareconf',
-            name='cosine_mz_tolerance',
+            model_name="fragcompareconf",
+            name="cosine_mz_tolerance",
             field=models.FloatField(default=0.02),
         ),
         migrations.AddField(
-            model_name='fragcompareconf',
-            name='filter_matched_peaks_window',
+            model_name="fragcompareconf",
+            name="filter_matched_peaks_window",
             field=models.FloatField(default=0.0),
         ),
         migrations.AddField(
-            model_name='fragcompareconf',
-            name='filter_min_intensity',
+            model_name="fragcompareconf",
+            name="filter_min_intensity",
             field=models.FloatField(default=0.0),
         ),
         migrations.AddField(
-            model_name='fragcompareconf',
-            name='filter_min_matched_peaks_search',
+            model_name="fragcompareconf",
+            name="filter_min_matched_peaks_search",
             field=models.PositiveSmallIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='fragcompareconf',
-            name='filter_parent_filter_tolerance',
+            model_name="fragcompareconf",
+            name="filter_parent_filter_tolerance",
             field=models.FloatField(default=0.0),
         ),
         migrations.AlterField(
-            model_name='fragcompareconf',
-            name='cosine_threshold',
+            model_name="fragcompareconf",
+            name="cosine_threshold",
             field=models.FloatField(default=0.2),
         ),
     ]

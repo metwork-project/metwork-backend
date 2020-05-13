@@ -7,22 +7,52 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0006_molecule_chemdoodle_json'),
+        ("base", "0006_molecule_chemdoodle_json"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Array1DModel',
+            name="Array1DModel",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('value', django.contrib.postgres.fields.ArrayField(base_field=models.FloatField(), null=True, size=None)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "value",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.FloatField(), null=True, size=None
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Array2DModel',
+            name="Array2DModel",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('value', django.contrib.postgres.fields.ArrayField(base_field=django.contrib.postgres.fields.ArrayField(base_field=models.FloatField(), size=None), null=True, size=None)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "value",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=django.contrib.postgres.fields.ArrayField(
+                            base_field=models.FloatField(), size=None
+                        ),
+                        null=True,
+                        size=None,
+                    ),
+                ),
             ],
         ),
     ]

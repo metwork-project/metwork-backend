@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metabolization', '0004_reaction_chemdoodle_json_error'),
+        ("metabolization", "0004_reaction_chemdoodle_json_error"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='reactprocess',
-            name='method',
-            field=models.CharField(default='rdkit', max_length=32),
+            model_name="reactprocess",
+            name="method",
+            field=models.CharField(default="rdkit", max_length=32),
         ),
     ]

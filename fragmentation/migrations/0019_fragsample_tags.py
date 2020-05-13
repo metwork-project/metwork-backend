@@ -6,14 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0011_tag'),
-        ('fragmentation', '0018_auto_20190509_1653'),
+        ("base", "0011_tag"),
+        ("fragmentation", "0018_auto_20190509_1653"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragsample',
-            name='tags',
-            field=models.ManyToManyField(default=None, related_name='fragsample_tags', to='base.Tag'),
+            model_name="fragsample",
+            name="tags",
+            field=models.ManyToManyField(
+                default=None, related_name="fragsample_tags", to="base.Tag"
+            ),
         ),
     ]

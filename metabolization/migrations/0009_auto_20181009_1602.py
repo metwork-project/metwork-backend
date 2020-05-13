@@ -6,20 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metabolization', '0008_auto_20181005_0917'),
+        ("metabolization", "0008_auto_20181005_0917"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='reactprocess',
-            name='achieved',
-        ),
-        migrations.RemoveField(
-            model_name='reactprocess',
-            name='method',
-        ),
-        migrations.RemoveField(
-            model_name='reactprocess',
-            name='method_hash',
-        ),
+        migrations.RemoveField(model_name="reactprocess", name="achieved",),
+        migrations.RemoveField(model_name="reactprocess", name="method",),
+        migrations.RemoveField(model_name="reactprocess", name="method_hash",),
     ]

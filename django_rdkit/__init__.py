@@ -1,1 +1,1 @@
-default_app_config = 'django_rdkit.apps.DjangoRDKitConfig'
+default_app_config = "django_rdkit.apps.DjangoRDKitConfig"

@@ -6,20 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0019_fragsample_tags'),
+        ("fragmentation", "0019_fragsample_tags"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='fragsample',
-            name='mass_delta_double',
-        ),
-        migrations.RemoveField(
-            model_name='fragsample',
-            name='mass_delta_single',
-        ),
-        migrations.RemoveField(
-            model_name='fragsample',
-            name='reaction_mass_max',
-        ),
+        migrations.RemoveField(model_name="fragsample", name="mass_delta_double",),
+        migrations.RemoveField(model_name="fragsample", name="mass_delta_single",),
+        migrations.RemoveField(model_name="fragsample", name="reaction_mass_max",),
     ]

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0006_fragmolspectrum'),
+        ("fragmentation", "0006_fragmolspectrum"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fragmolattribute',
-            name='value',
-            field=models.CharField(default='', max_length=64),
+            model_name="fragmolattribute",
+            name="value",
+            field=models.CharField(default="", max_length=64),
         ),
     ]

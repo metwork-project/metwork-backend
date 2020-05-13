@@ -21,9 +21,10 @@ if __name__ == "__main__":
         raise
 
     first = not "METWORK_DEV_RUNNING" in os.environ
-    if sys.argv[1] == 'runserver' and first:
+    if sys.argv[1] == "runserver" and first:
         os.environ["METWORK_DEV_RUNNING"] = "True"
-        print ("""
+        print(
+            """
     __ _       __           __  
    /  |/  /__  / /| |     / /___  _____/ /__
   / /|_/ / _ \/ __/ | /| / / __ \/ ___/ //_/
@@ -32,7 +33,8 @@ if __name__ == "__main__":
 
 **********      Dev Server    ************
 
-        """)
+        """
+        )
     execute_from_command_line(sys.argv)
     if "METWORK_DEV_RUNNING" in os.environ:
         os.environ.pop("METWORK_DEV_RUNNING")

@@ -217,4 +217,3 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             assert target_file_path.read_text() == data
             new_conf_path = getattr(project.frag_sim_conf, file_type + "_path")
             assert Path(new_conf_path) == target_file_path
-

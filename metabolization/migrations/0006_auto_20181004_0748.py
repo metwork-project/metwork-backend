@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('metabolization', '0005_auto_20181003_0712'),
+        ("metabolization", "0005_auto_20181003_0712"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='reaction',
-            name='file_hash',
+            model_name="reaction",
+            name="file_hash",
             field=models.CharField(blank=True, default=None, max_length=32, null=True),
         ),
     ]

@@ -7,8 +7,8 @@ from base.models import Molecule, SampleAnnotationProject
 from metabolization.models import Reaction
 from fragmentation.models import FragSample
 
-class ReactionSelectionTests(TransactionTestCase):
 
+class ReactionSelectionTests(TransactionTestCase):
     def test_tag_selection(self):
-       #To be Done
-       return self.assertTrue(True)
+        # To be Done
+        return self.assertTrue(True)
