@@ -95,6 +95,7 @@ class ProjectViewSet(ModelAuthViewSet):
         data = JSONParser().parse(request)
         file_type = data["file_format"]
         project.delete_custom_frag_param_files(file_type)
+        project.refresh_from_db()
         return Response(ProjectSerializer(project).data)
 
     # To delete ???

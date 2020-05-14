@@ -141,15 +141,16 @@ class SampleAnnotationProject(Project):
         ).exclude(id__in=selected_ids)
 
     def update_frag_sample(self, fs):
-        # Assigned a FragSample to the project
         self.frag_annotations_init.clear()
         self.frag_sample = fs
-        # By default, all annotation of FragSample are selected for the project
-        conf_charge_params = FragSimConf.params_for_ion_charge(fs.ion_charge)
+        conf_charge_params = self._frag_sim_conf_default_path()
         self.update_conf_params("frag_sim_conf", **conf_charge_params)
         self.add_all_annotations()
         self.save()
         return self
+
+    def _frag_sim_conf_default_path(self):
+        return FragSimConf.params_for_ion_charge(self.frag_sample.ion_charge)
 
     def add_all_annotations(self):
         for fa in FragAnnotationDB.objects.filter(
@@ -445,6 +446,11 @@ Link to project : {1}/#/projects/{2}""".format(
         file_path = self._get_custom_frag_param_path(file_type)
         if file_path.exists:
             file_path.unlink()
+        conf_charge_params = self._frag_sim_conf_default_path()
+        path_label = file_type + "_path"
+        self.update_conf_params(
+            "frag_sim_conf", **{path_label: conf_charge_params[path_label]}
+        )
 
     def list_custom_frag_param_files(self):
         try:
