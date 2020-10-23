@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: "yannbeauxis/metwork:backend_V2"
+    # env_file:
+    #   - ../build/env/common.env
+    volumes:
+      - ../build/env:/srv/metwork/conf
+      - ../build/scripts:/opt/metwork-scripts
+      - ../../metwork-backend:/opt/metwork-backend
+    stdin_open: true
+    tty: true
