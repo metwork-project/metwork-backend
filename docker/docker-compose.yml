@@ -2,7 +2,7 @@ version: '2'
 
 services:
 
-  backend:
+  database:
     build:
       context: ./
       dockerfile: Dockerfile
@@ -10,8 +10,13 @@ services:
     # env_file:
     #   - ../build/env/common.env
     volumes:
-      - ../build/env:/srv/metwork/conf
-      - ../build/scripts:/opt/metwork-scripts
-      - ../../metwork-backend:/opt/metwork-backend
+      - /home/yann/Data/MetWork/database:/srv/metwork/database
+      # - ../build/env:/srv/metwork/conf
+      # - ../build/scripts:/opt/metwork-scripts
+      # - ../../metwork-backend:/opt/metwork-backend
     stdin_open: true
     tty: true
+    user: metwork
+    ports: 
+      - 5432:5432
+    command: /opt/conda/envs/metwork/bin/postgres -D /srv/metwork/database -c log_connections=yes -c log_destination='stderr' -h 0.0.0.0 # -d 5

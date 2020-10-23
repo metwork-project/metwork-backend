@@ -60,3 +60,4 @@ RUN wget -q https://metwork.pharmacie.parisdescartes.fr/vendor/cfm_id.tar.gz -O 
 RUN mkdir /var/log/metwork/
 
 EXPOSE 80
+EXPOSE 5432
