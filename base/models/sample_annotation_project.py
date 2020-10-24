@@ -150,7 +150,11 @@ class SampleAnnotationProject(Project):
         return self
 
     def _frag_sim_conf_default_path(self):
-        return FragSimConf.params_for_ion_charge(self.frag_sample.ion_charge)
+        if self.frag_sample:
+            ion_charge = self.frag_sample.ion_charge
+        else:
+            ion_charge = "positive"
+        return FragSimConf.params_for_ion_charge(ion_charge)
 
     def add_all_annotations(self):
         for fa in FragAnnotationDB.objects.filter(

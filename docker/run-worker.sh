@@ -1,6 +1,6 @@
 #! bash
 METWORK_VERSION=$(cat /opt/metwork-backend/VERSION)
-
+echo "METWORK VERSION $METWORK_VERSION"
 # ENV_PATH=/srv/metwork/conf/dev.env
 
 # DJANGO_SETTINGS_MODULE=$(cat $ENV_PATH | grep DJANGO_SETTINGS_MODULE)

@@ -197,7 +197,6 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             target_file_path, data = self.custom_frag_param_file_path(
                 project, file_type
             )
-
             project.save_custom_frag_param_files(file_type, data)
             assert target_file_path.exists()
             project.delete_custom_frag_param_files(file_type)

@@ -27,10 +27,10 @@ class Graph(PolymorphicModel):
         return self.data
 
     def gen_data(self):
-        logger.info("Generate graph data : Begin")
+        logger.debug("Generate graph data : Begin")
         self.data = self.GRAPH_GENERATOR(**self.generator_params()).gen_graph()
         self.save()
-        logger.info("Generate graph data : Done")
+        logger.debug("Generate graph data : Done")
 
     def generator_params(self):
         return {}
