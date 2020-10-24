@@ -1,4 +1,4 @@
 django-celery-results==1.0.1
 django-cors-headers==2.4.0
-django-polymorphic==2.0.2
+django-polymorphic==2.1.2
 djangorestframework-jsonapi==2.5.0

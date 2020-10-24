@@ -10,11 +10,14 @@ from fragmentation.modules import FragSim
 from django.contrib.auth import get_user_model
 from metabolization.modules import ReactionTestManagement
 from django.core.cache import cache
+from django.test import tag
 
 
 class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
+    @tag("integration")
     def test_batch(self):
         print("\n###### Begin project run tests ######")
+
         for p in self.params:
             print("\n###### {0} ######".format(p["name"]))
             self.eval_annotation_project(**p)

@@ -9,4 +9,4 @@ echo "METWORK VERSION $METWORK_VERSION"
 # METWORK_CONFIG=$(cat $ENV_PATH | grep METWORK_CONFIG)
 # export $METWORK_CONFIG
 
-/opt/conda/envs/metwork/bin/celery worker -A metwork_backend -Q $1.$METWORK_VERSION -l INFO
+/opt/conda/envs/metwork/bin/celery worker -A metwork_backend -Q web.$METWORK_VERSION,run.$METWORK_VERSION -l INFO
