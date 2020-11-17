@@ -17,9 +17,12 @@ def import_reactions(file_path=FILE_PATH, email=None):
     with open(file_path, "r") as fr:
         lines = r = fr.readlines()
         for line in lines:
-            r_raw = line.replace("\n", "").split(SEPARATOR)
-            r = Reaction(name=r_raw[0], user=user)
-            r.save()
-            r.load_smarts(r_raw[1])
-            r.status_code = Reaction.status.ACTIVE
-            r.save()
+            try:
+                r_raw = line.replace("\n", "").split(SEPARATOR)
+                r = Reaction(name=r_raw[0], user=user)
+                r.save()
+                r.load_smarts(r_raw[1])
+                r.status_code = Reaction.status.ACTIVE
+                r.save()
+            except:
+                print("error importing {}".format(r_raw[0]))

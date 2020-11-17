@@ -178,7 +178,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                 return str(float(m.group(1)) * 10 ** int(m.group(2)))
 
         ion = re.sub(pat, conv_E, ion)
-        peaks = re.findall(r"([\d]+\.+[\d]+)[\t\s]([\d]+\.+[\d]+)", ion, re.U)
+        peaks = re.findall(r"([\d]+\.+[\deE]+)[\t\s]([\d]+\.+[\deE]+)", ion, re.U)
         has_pepmass = "PEPMASS" in [v[0] for v in params]
         has_id = "SCANS" in [v[0] for v in params]
         has_peaks = len(peaks) > 1

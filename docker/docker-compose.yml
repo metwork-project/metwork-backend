@@ -4,40 +4,18 @@ services:
 
   database:
     build:
-      context: ./
+      context: ./docker-postgres-rdkit
       dockerfile: Dockerfile
-    image: "yannbeauxis/metwork:backend_V2"
+    image: "yannbeauxis/metwork:db"
     container_name: "metwork_db"
-    # env_file:
-    #   - ../build/env/common.env
+    environment: 
+      - PGDATA=/srv/metwork/database
     volumes:
       - /home/yann/Data/MetWork/dataset/database:/srv/metwork/database
     user: metwork
     ports: 
       - 5432:5432
-    command: /opt/conda/envs/metwork/bin/postgres -D /srv/metwork/database -c log_connections=yes -c log_destination='stderr' -h 0.0.0.0 # -d 5
-
-  # worker:
-  #   build:
-  #     context: ./
-  #     dockerfile: Dockerfile
-  #   image: "yannbeauxis/metwork:backend_V2"
-  #   container_name: "metwork_worker"
-  #   environment: 
-  #     - METWORK_BACKEND_PATH=/opt/metwork-backend
-  #     - METWORK_EDIT_FILES=True
-  #     - METWORK_CONFIG=/srv/metwork/conf/common.env,/srv/metwork/conf/docker.env
-  #     - METWORK_CONFIG_PATH=/srv/metwork/conf/metwork.ini
-  #   volumes:
-  #     - /home/yann/Data/MetWork/dataset/files:/srv/metwork/files
-  #     - ./run-worker.sh:/opt/metwork-scripts/run-worker.sh
-  #     - /home/yann/Dev/MetWork/metwork-backend/common.env:/srv/metwork/conf/common.env
-  #     - /home/yann/Dev/MetWork/metwork-backend/docker/docker.env:/srv/metwork/conf/docker.env
-  #     - ../:/opt/metwork-backend
-  #     - ../metwork.ini:/srv/metwork/conf/metwork.ini
-  #   working_dir: /opt/metwork-backend
-  #   user: metwork
-  #   command: bash /opt/metwork-scripts/run-worker.sh
+    command: postgres -D /srv/metwork/database -c log_connections=yes -c log_destination='stderr' -h 0.0.0.0 # -d 5
 
   broker:
     image: "rabbitmq:3-management"
