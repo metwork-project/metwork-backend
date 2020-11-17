@@ -1,0 +1,6 @@
+[submodule "docker/docker-postgres-rdkit.git"]
+	path = docker/docker-postgres-rdkit.git
+	url = git@github.com:metwork-project/docker-postgres-rdkit.git
+[submodule "docker/docker-postgres-rdkit"]
+	path = docker/docker-postgres-rdkit
+	url = git@github.com:metwork-project/docker-postgres-rdkit.git

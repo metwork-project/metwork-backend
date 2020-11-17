@@ -2,38 +2,78 @@
 
 This code corespond to the backend part of [MetWork](https://metwork.pharmacie.parisdescartes.fr/) web platform, written in Python with Django framework.
 
-## Python environment
+## Install development environment
 
-It's recommended to use python dedicated environment with tool such as [miniconda](https://conda.io/miniconda.html). Python version tested is 3.6.4.
+### Conda
 
-## Dependencies
+Conda is required to run MetWork. If you not ahave already Conda installed, it is recommended to use [miniconda](https://conda.io/miniconda.html).
+Python version tested is 3.6.
 
-Python libraries used are specify in conda-requirements.txt for those to be installed by conda and pip-requirements.txt for those to be installed by pip. The [django_rdkit](https://django-rdkit.readthedocs.io/en/latest/) app is also used.
+You must create a dedicated conda env for metwork :
+
+```
+conda create -n metwork python=3.6
+conda active metwork
+```
+
+### Dependencies
+
+From repository root folder :
+
+```
+conda activate metwork
+bash install/python-dependencies.sh 
+bash install/cfm_id.sh 
+```
+
+### Docker images
+
+You must install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/). 
+
+Then from `docker` folder :
+
+```
+docker-compose pull
+```
+
+### Init db
+
+from root folder :
+
+```
+cd docker
+docker-compose up database -d
+cd ..
+bash set-env.sh && ./manage.py migrate
+cd docker
+docker-compose stop database
+```
 
 
-[CFM-ID](http://cfmid.wishartlab.com/) is used and a [compiled version](https://metwork.pharmacie.parisdescartes.fr/vendor/cfm_id.tar.gz) as to be extract and copy to the path of the METWORK_CFM_ID_PATH environment variable.
+## Run dev environment
 
-## Environment variables
+1. Docker instances
 
-The following environment variables have to be set :
+Then from `docker` folder :
 
-- METWORK_BACKEND_PATH=/opt/metwork-backend
-- METWORK_DB_PASSWORD=METWORK_DB_PASSWORD
-- METWORK_BROKER_PASSWORD=METWORK_BROKER_PASSWORD
-- METWORK_SECRET_KEY=METWORK_SECRET_KEY
-- METWORK_ALLOWED_HOSTS=0.0.0.0
-- METWORK_DATA_FILES_PATH=/srv/metwork/files
-- METWORK_CFM_ID_PATH=/opt/cfm_id/
+```
+docker-compose up 
+```
 
-## Services required
+2. Worker
 
-This app need to run :
+From repository root folder.
 
-- A postgreSQL database with the [RDKit cartridge](http://www.rdkit.org/docs/Cartridge.html)
-- A Memcached service
-- A Rabbitmq service
-- Celery workers connected to the queues of the CELERY_QUEUES django settings
+```
+conda activate metwork
+bash run-worker.sh
+```
 
-# Run test
+3. API
 
-`bash run-tests.sh`
+From repository root folder.
+
+```
+conda activate metwork
+bash run-api.sh
+```
