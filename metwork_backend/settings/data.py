@@ -12,7 +12,7 @@ DATA_FILES_PATH = get_env("METWORK_DATA_FILES_PATH")
 if "METWORK_EDIT_FILES" in os.environ:
     EDIT_FILES = os.environ["METWORK_EDIT_FILES"] == "True"
 else:
-    EDIT_FILES = False
+    EDIT_FILES = True
 
 DATABASES = {
     "default": {
