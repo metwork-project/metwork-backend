@@ -2,7 +2,7 @@
 
 This code corespond to the backend part of [MetWork](https://metwork.pharmacie.parisdescartes.fr/) web platform, written in Python with Django framework.
 
-## Install development environment
+## Install development environment
 
 ### Conda
 
@@ -26,7 +26,7 @@ bash install/python-dependencies.sh
 bash install/cfm_id.sh 
 ```
 
-### Docker images
+### Docker images
 
 You must install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/). 
 
@@ -36,7 +36,7 @@ Then from `docker` folder :
 docker-compose pull
 ```
 
-### Init db
+### Init db
 
 from root folder :
 
@@ -50,7 +50,7 @@ docker-compose stop database
 ```
 
 
-## Run dev environment
+## Run dev environment
 
 1. Docker instances
 
