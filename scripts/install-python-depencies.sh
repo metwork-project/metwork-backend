@@ -2,10 +2,5 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT_DIR="$( cd $SCRIPT_DIR/.. >/dev/null 2>&1 && pwd )"
 
 . $SCRIPT_DIR/set-env.sh
-. $SCRIPT_DIR/run-docker.sh
-. $SCRIPT_DIR/run-worker.sh detached
-
-./manage.py runserver
-
-. $SCRIPT_DIR/run-worker.sh stop
-. $SCRIPT_DIR/run-docker.sh stop
+conda install -c r -c rdkit -c conda-forge -c bioconda --yes --file $ROOT_DIR/conda-requirements.txt
+pip install -r $ROOT_DIR/pip-requirements.txt

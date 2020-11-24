@@ -2,78 +2,75 @@
 
 This code corespond to the backend part of [MetWork](https://metwork.pharmacie.parisdescartes.fr/) web platform, written in Python with Django framework.
 
-## Install development environment
-
-### Conda
+## Conda
 
 Conda is required to run MetWork. If you not ahave already Conda installed, it is recommended to use [miniconda](https://conda.io/miniconda.html).
 Python version tested is 3.6.
 
-You must create a dedicated conda env for metwork :
+## Automation scripts
+
+Install conda env and all depedencies :
 
 ```
-conda create -n metwork python=3.6
-conda active metwork
+. scripts/install-all.sh 
 ```
 
-### Dependencies
-
-From repository root folder :
+Run development environment :
 
 ```
-conda activate metwork
-bash install/python-dependencies.sh 
-bash install/cfm_id.sh 
+. scripts/run-dev.sh 
 ```
 
-### Docker images
-
-You must install [docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/). 
-
-Then from `docker` folder :
+Run all tests
 
 ```
-docker-compose pull
+. scripts/run-tests.sh 
 ```
 
-### Init db
+## Development environement deatil
 
-from root folder :
+### Python scripts
 
-```
-cd docker
-docker-compose up database -d
-cd ..
-bash set-env.sh && ./manage.py migrate
-cd docker
-docker-compose stop database
-```
+The python backend is based on [Django Framework](https://www.djangoproject.com/).The python scripts run via an conda virtual environement (venv). Install the python libraires with  `scripts\install-python-depencies.sh` command.
 
+To run properly, some environment variables have to be set. The easiest way is ti run `. scripts/set-env.sh`. Take a look inside this script to ee how to modifivy environment variables values.
 
-## Run dev environment
-
-1. Docker instances
-
-Then from `docker` folder :
+Once venv installed and activated with all dependencies set, run the following :
 
 ```
-docker-compose up 
+./manage.py [cmd]
 ```
 
-2. Worker
+Refer to Django documentaiton for `[cmd]` values. For example, run `./manage.py runserver` to run the dev server.
 
-From repository root folder.
+### Celery worker
 
-```
-conda activate metwork
-bash run-worker.sh
-```
+Additional to web server, you must run celery worker to run properly. The easiest way is :
 
-3. API
-
-From repository root folder.
+In a new shell if you want to see worker details :
 
 ```
-conda activate metwork
-bash run-api.sh
+. scripts/run-worker.sh 
 ```
+
+Or in detached mode
+
+```
+. scripts/run-worker.sh detached
+```
+
+If you want a worker to run tests (pointing to test database) :
+
+```
+. scripts/run-worker.sh test
+```
+
+### Docker services
+
+Additional services are provided by docker instances :
+
+- Postgres database with RDKIT extension
+- Cache
+- AMQP Broker
+
+You can run all the services in detached mode with `. scripts/run-docker.sh test` or see inside `docker` folder for further information.

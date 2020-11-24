@@ -1,0 +1,38 @@
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT_DIR="$( cd $SCRIPT_DIR/.. >/dev/null 2>&1 && pwd )"
+
+
+echo "######                       ########"
+echo "######   Conda virtual env   ########"
+echo "######                       ########"
+
+if [ -z $METWORK_ENV ]
+then
+    METWORK_ENV=metwork
+fi
+
+if conda env list | grep -qw $METWORK_ENV
+then
+    echo "Conda $METWORK_ENV env already exist"
+else
+    echo "Creating $METWORK_ENV conda env"
+    conda create -y -n $METWORK_ENV python=3.6
+fi
+
+echo "######                       ########"
+echo "######  Python dependencies  ########"
+echo "######                       ########"
+
+. $SCRIPT_DIR/install-python-depencies.sh
+
+echo "######                       ########"
+echo "######        Init DB        ########"
+echo "######                       ########"
+
+. $SCRIPT_DIR/init-db.sh
+
+echo "######                       ########"
+echo "######        CFM-ID         ########"
+echo "######                       ########"
+
+. $SCRIPT_DIR/install-cfm_id.sh

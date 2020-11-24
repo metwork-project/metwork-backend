@@ -12,7 +12,7 @@ def export_reactions(file_path=FILE_PATH):
             fw.write(line)
 
 
-def import_reactions(file_path=FILE_PATH, email=None):
+def import_reactions(file_path=FILE_PATH, email="metwork.dev@gmail.com"):
     user = User.objects.get(email=email)
     with open(file_path, "r") as fr:
         lines = r = fr.readlines()
