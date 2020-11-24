@@ -234,6 +234,11 @@ class SampleAnnotationProject(Project):
             self.frag_annotations_init.remove(fa)
         return self
 
+    def change_reactions(self, reaction_ids, reaction=None, to_remove=False):
+
+        self.reactions.set(Reaction.objects.filter(id__in=reaction_ids))
+        self.save()
+
     def run(self):
         from base.tasks import start_run
 

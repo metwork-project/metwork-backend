@@ -57,7 +57,7 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
                     if project_id != "":
                         queryset = SampleAnnotationProject.objects.get(
                             id=project_id
-                        ).reactions()
+                        ).reactions.all()
                     else:
                         queryset = Reaction.objects.none()
                 else:
