@@ -41,10 +41,10 @@ def run_reactions_molecule(molecule_id, project_id, depth_total, depth_last_matc
         run_reaction_molecule.s(
             [molecule_id], r.id, project_id, depth_total, depth_last_match
         )
-        for r in p.reactions_conf.reactions.all()
+        for r in p.reactions.all()
     )
 
-    p.add_process(p.reactions_conf.reactions.count())
+    p.add_process(p.reactions.count())
     grp_tsk()
 
     p.close_process()

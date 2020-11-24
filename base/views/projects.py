@@ -30,8 +30,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             "REACTIONS_LIMIT",
             "DEPTH_LIMIT",
             "annotation_init_ids",
-            "depth_total",
-            "depth_last_match",
             "molecules_matching_count",
             "molecules_all_count",
             "frag_compare_conf_id",

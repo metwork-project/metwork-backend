@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from pathlib import Path
 from django.contrib.auth import get_user_model
 from base.models import Project, SampleAnnotationProject
-from metabolization.models import Reaction, ReactionsConf
+from metabolization.models import Reaction
 from metabolization.modules import ReactionTestManagement
 from fragmentation.models import FragSample, FragSimConf
 
@@ -37,7 +37,6 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
     def test_default_conf(self):
         p = self.create_project()
         for app_name, conf_class_name, p_conf_name in [
-            ("metabolization", "ReactionsConf", "reactions_conf"),
             ("fragmentation", "FragSimConf", "frag_sim_conf"),
             ("fragmentation", "FragCompareConf", "frag_compare_conf"),
         ]:
@@ -48,16 +47,9 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             # self.assertNotEqual( rc_filter.count(), 0)
             assert getattr(p, p_conf_name).id != 0
         self.assertEqual(
-            set([r.id for r in p.reactions_conf.reactions.all()]),
+            set([r.id for r in p.reactions.all()]),
             set([r.id for r in Reaction.objects.all()]),
         )
-
-    def test_keep_custom_conf_while_save(self):
-        p = self.create_project()
-        rc = ReactionsConf.objects.create()
-        p.reactions_conf = rc
-        p.save()
-        assert p.reactions_conf == rc
 
     def test_change_params(self):
         p = self.create_project()
@@ -101,12 +93,9 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         p.save()
         self.assertEqual(p.molecules.count(), 1)
         self.assertEqual(p.status_code, Project.status.INIT)
-        rc = ReactionsConf.objects.create()
-        self.assertEqual(rc.reactions.count(), 0)
-        p.reactions_conf = rc
-        p.save()
+        self.assertEqual(p.reactions.count(), 0)
         self.assertEqual(p.status_code, 0)
-        rc.reactions.add(Reaction.objects.first())
+        p.reactions.add(Reaction.objects.first())
         p.save()
         self.assertEqual(p.status_code, Project.status.READY)
         p.run()
@@ -132,9 +121,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         p.update_frag_sample(fs)
         fs.add_annotation(1, "CCC")
         p.update_frag_sample(fs)
-        rc = ReactionsConf.objects.create()
-        p.reactions_conf = rc
-        rc.reactions.add(Reaction.objects.first())
+        p.reactions.add(Reaction.objects.first())
         p.save()
         pc = p.clone_project()
         self.assertNotEqual(pc, p)
@@ -144,7 +131,6 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             "description",
             "depth_total",
             "depth_last_match",
-            "reactions_conf",
             "frag_sim_conf",
             "frag_compare_conf",
             "frag_sample",
