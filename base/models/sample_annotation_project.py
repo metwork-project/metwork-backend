@@ -23,9 +23,7 @@ from fragmentation.models import (
 
 class SampleAnnotationProject(Project):
 
-    reactions = models.ManyToManyField(
-        Reaction
-    )
+    reactions = models.ManyToManyField(Reaction)
     # DEPRECATED : reactions_conf is obsolete but keep for old projects
     reactions_conf = models.ForeignKey(
         ReactionsConf, on_delete=models.PROTECT, default=None, null=True
@@ -108,11 +106,9 @@ class SampleAnnotationProject(Project):
         for f in fields:
             clone.__setattr__(f, self.__getattribute__(f))
         clone.save()
+        source = self.get_reactions_source()
         reaction_ids = [
-            r.id
-            for r in self.reactions.exclude(
-                status_code=Reaction.status.OBSOLETE
-            )
+            r.id for r in source.reactions.exclude(status_code=Reaction.status.OBSOLETE)
         ]
         clone.change_reactions(reaction_ids)
         for fai in self.frag_annotations_init.all():
@@ -128,11 +124,14 @@ class SampleAnnotationProject(Project):
         )
 
     def reaction_ids(self):
-        if self.reactions_conf is not None:
-            source = self.reactions_conf
-        else:
-            source = self
+        source = self.get_reactions_source()
         return [r.id for r in source.reactions.all()]
+
+    def get_reactions_source(self):
+        if self.reactions_conf is not None:
+            return self.reactions_conf
+        else:
+            return self
 
     def frag_annotations_init_not_selected(self):
         selected_ids = [fs.id for fs in self.frag_annotations_init.all()]
@@ -170,10 +169,7 @@ class SampleAnnotationProject(Project):
             for fm in self.frag_annotations_init.all():
                 self.molecules.add(fm.molecule)
         has_molecules = self.molecules.count() > 0
-        has_confs = (
-            self.frag_sim_conf != None
-            and self.frag_compare_conf != None
-        )
+        has_confs = self.frag_sim_conf != None and self.frag_compare_conf != None
         if has_confs:
             has_reactions = self.reactions.count() > 0
         if has_frag_sample and has_molecules and has_confs and has_reactions:

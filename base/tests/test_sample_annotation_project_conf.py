@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from pathlib import Path
 from django.contrib.auth import get_user_model
 from base.models import Project, SampleAnnotationProject
-from metabolization.models import Reaction
+from metabolization.models import Reaction, ReactionsConf
 from metabolization.modules import ReactionTestManagement
 from fragmentation.models import FragSample, FragSimConf
 
@@ -111,21 +111,23 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         p.save()
         self.assertEqual(p.status_code, Project.status.DONE)
 
-    def clone_project(self):
+    def test_clone_project(self):
         # Reaction.reactions_update()
         initial_name = "origin name"
         clone_suffix = " COPY"
         p = self.create_project(name=initial_name)
-        self.import_file(reaction_name="methylation", user=self.user)
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
         fs = self.create_frag_sample()
         p.update_frag_sample(fs)
         fs.add_annotation(1, "CCC")
         p.update_frag_sample(fs)
         p.reactions.add(Reaction.objects.first())
         p.save()
+        assert len(p.reaction_ids()) == 1
+        assert p.reactions.count() == 1
         pc = p.clone_project()
-        self.assertNotEqual(pc, p)
-        self.assertEqual(pc.name, p.name + clone_suffix)
+        assert pc != p
+        assert pc.name == p.name + clone_suffix
         fields = [
             "user",
             "description",
@@ -137,12 +139,14 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         ]
         self.assertEqual(pc.user, p.user)
         for f in fields:
-            self.assertEqual(getattr(pc, f), getattr(p, f))
+            assert getattr(pc, f) == getattr(p, f)
 
         def fais(project):
             return {fai.id for fai in project.frag_annotations_init.all()}
 
-        self.assertEqual(fais(pc), fais(p))
+        assert fais(pc) == fais(p)
+
+        assert p.reaction_ids() == pc.reaction_ids()
 
     def custom_frag_param_file_path(self, project, file_type):
 
@@ -202,3 +206,21 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             assert target_file_path.read_text() == data
             new_conf_path = getattr(project.frag_sim_conf, file_type + "_path")
             assert Path(new_conf_path) == target_file_path
+
+    def test_reaction_conf_compatiblity(self):
+
+        project = self.create_project()
+        assert project.reactions_conf is None, project.reactions_conf
+
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
+        rc = ReactionsConf.objects.create()
+        rc.reactions.add(Reaction.objects.first())
+        project.reactions_conf = rc
+        project.save()
+        assert project.reactions_conf is not None
+        reaction_ids = project.reaction_ids()
+        assert len(reaction_ids) == 1
+
+        clone = project.clone_project()
+        assert clone.reactions_conf is None
+        assert clone.reaction_ids() == reaction_ids

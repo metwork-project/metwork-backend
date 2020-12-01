@@ -47,7 +47,8 @@ class Project(FileManagement, PolymorphicModel):
 
     def load_default_conf(self):
         for f in self._meta.local_fields:
-            if f.name.endswith("_conf"):
+            f_name = f.name
+            if f_name.endswith("_conf") and f_name != "reactions_conf":
                 model = f.related_model
                 conf = model()
                 query = model.objects.all()
