@@ -11,9 +11,10 @@ from fragmentation.models import (
     FragMolSample,
     FragSample,
 )
+from base.modules import BaseTestManagement
 
 
-class FragAnnotationModelTests(TransactionTestCase):
+class FragAnnotationModelTests(BaseTestManagement):
     def test_import_file_annotation(self):
         user = get_user_model().objects.create()
         # project = Project.objects.create(user = user)

@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from fragmentation.models import FragSample
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from base.modules import BaseTestManagement
 
 
 class FragSampleTestUtils:
@@ -30,7 +31,7 @@ class FragSampleTestUtils:
             return fs
 
 
-class FragSampleModelTests(TransactionTestCase, FragSampleTestUtils):
+class FragSampleModelTests(BaseTestManagement, FragSampleTestUtils):
     def test_import_sample(self):
         exp_res = Path(self.sample_file_path).read_text()
         fs = self.create_frag_sample()

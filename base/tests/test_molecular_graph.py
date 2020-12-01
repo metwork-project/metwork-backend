@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 from fragmentation.tests.test_frag_sample import FragSampleTestUtils
 from base.tests.test_graph import GraphTestUtils
 from base.models import MolecularGraph
+from base.modules import BaseTestManagement
 
 
 class MolecularGraphTestUtils(GraphTestUtils, FragSampleTestUtils):
@@ -21,7 +22,7 @@ class MolecularGraphTestUtils(GraphTestUtils, FragSampleTestUtils):
         return frag_sample.molecular_network
 
 
-class MolecularGraphTests(TransactionTestCase, MolecularGraphTestUtils):
+class MolecularGraphTests(BaseTestManagement, MolecularGraphTestUtils):
     def test_error_if_create_without_frag_sample(self):
 
         with self.assertRaises(IntegrityError):

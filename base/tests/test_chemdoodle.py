@@ -2,14 +2,14 @@
 from __future__ import unicode_literals
 from django.test import TransactionTestCase
 from base.models import Molecule
-from base.modules import ChemDoodle, ChemDoodleJSONError
+from base.modules import ChemDoodle, ChemDoodleJSONError, TestManagement
 from metabolization.models import Reaction
 import json
 from rdkit import Chem
 from django.contrib.auth import get_user_model
 
 
-class ChemDoodleTests(TransactionTestCase):
+class ChemDoodleTests(TestManagement):
     def test_json_to_mol(self):
         smiles = "C/C(F)=C/[C@@](C)(N)c1ccc(O)cc1"
         json_path = "base/tests/files/chemdoodle_mol_1.json"
