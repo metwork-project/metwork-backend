@@ -16,9 +16,10 @@ from base.views import ProjectViewSet
 from django.contrib.auth import get_user_model
 from rest_framework.test import force_authenticate
 from rest_framework.test import APIRequestFactory
+from base.modules import BaseTestManagement
 
 
-class ProjectRunModelTests(TransactionTestCase):
+class ProjectRunModelTests(BaseTestManagement):
     def test_public(self):
         user_public = get_user_model().objects.create(
             username="pulbic", email="public@test.com"

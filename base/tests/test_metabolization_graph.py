@@ -1,12 +1,12 @@
 # coding=utf-8
 from __future__ import unicode_literals
-
 from django.test import TransactionTestCase, Client
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
 from fragmentation.tests.test_frag_sample import FragSampleTestUtils
 from base.tests.test_graph import GraphTestUtils
 from base.models import MetabolizationGraph, SampleAnnotationProject
+from base.modules import BaseTestManagement
 
 
 class MetabolizationGraphTestUtils(GraphTestUtils, FragSampleTestUtils):
@@ -34,7 +34,7 @@ class MetabolizationGraphTestUtils(GraphTestUtils, FragSampleTestUtils):
         self.user = get_user_model().objects.create(email=user_email)
 
 
-class MetabolizationGraphTests(TransactionTestCase, MetabolizationGraphTestUtils):
+class MetabolizationGraphTests(BaseTestManagement, MetabolizationGraphTestUtils):
     def test_error_if_create_without_frag_sample(self):
 
         with self.assertRaises(IntegrityError):
