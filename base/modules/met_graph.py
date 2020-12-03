@@ -39,10 +39,11 @@ class MetGraph:
         self.fm_ids = [
             fms.id for fms in self.project.frag_sample.fragmolsample_set.all()
         ]
-        self.fm_sims = {
+        fm_sims = {
             fac.frag_mol_compare.frag_mols.exclude(id=fac.frag_mol_sample.id).first()
             for fac in self.project.fragannotationcompare_set.all()
         }
+        self.fm_sims = fm_sims - {None}
         self.fms_mols_mass = {
             fms.molecule.id: self.adducts_mass[fms.adduct] for fms in self.fm_sims
         }
@@ -84,7 +85,7 @@ class MetGraph:
         return " | ".join(
             [
                 "{0} : {1}".format(
-                    fac.frag_mol_sample.ion_id, fac.frag_mol_compare.cosine
+                    fac.frag_mol_sample.ion_id, float(fac.frag_mol_compare.cosine)
                 )
                 for fac in query.all()
             ]
