@@ -125,7 +125,11 @@ class SampleAnnotationProject(Project):
 
     def reaction_ids(self):
         source = self.get_reactions_source()
-        return [r.id for r in source.reactions.all()]
+        return [r.id for r in self.all_reactions()]
+
+    def all_reactions(self):
+        source = self.get_reactions_source()
+        return source.reactions.all()
 
     def get_reactions_source(self):
         if self.reactions_conf is not None:
