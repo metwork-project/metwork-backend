@@ -22,11 +22,12 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
             print("\n###### {0} ######".format(p["name"]))
             self.eval_annotation_project(**p)
 
+    @tag("integration")
     def test_manual_stop(self):
         """Test if project is stopped manually before and of all run"""
 
         def run_test():
-            self.eval_specific_annotation_project(name="depth_1", interrupt=0.5)
+            self.eval_specific_annotation_project(name="depth_1", interrupt=1)
 
         self.assertRaises(Exception, run_test)
 
@@ -88,9 +89,7 @@ class SampleAnnotationProjectRunModelTests(ReactionTestManagement):
         with open(anno_file_path, "rb") as f_annot:
             fs.import_annotation_file(f_annot)
 
-        p = SampleAnnotationProject.objects.create(
-            user=u,
-        )
+        p = SampleAnnotationProject.objects.create(user=u,)
         for r in reactions:
             p.reactions.add(r)
         p.save()

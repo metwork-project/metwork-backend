@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from pathlib import Path
 from django.contrib.auth import get_user_model
+from django.test import tag
 from base.models import Project, SampleAnnotationProject
 from metabolization.models import Reaction, ReactionsConf
 from metabolization.modules import ReactionTestManagement
@@ -78,38 +79,38 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
                 == FragSimConf.CONF_PATH_BY_CHARGE[ion_charge]
             )
 
+    @tag("integration")
     def test_status_ready(self):
         initial_name = "initial name"
         # self.import_file(reaction_name = "methylation", user = u)
-        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])
         p = self.create_project(name=initial_name)
-        self.assertEqual(p.status_code, Project.status.INIT)
+        assert p.status_code == Project.status.INIT
         fs = self.create_frag_sample()
         p.update_frag_sample(fs)
         p.save()
-        self.assertEqual(p.status_code, Project.status.INIT)
+        assert p.status_code == Project.status.INIT
         fs.add_annotation(1, "CCC")
         p.update_frag_sample(fs)
         p.save()
-        self.assertEqual(p.molecules.count(), 1)
-        self.assertEqual(p.status_code, Project.status.INIT)
-        self.assertEqual(p.reactions.count(), 0)
-        self.assertEqual(p.status_code, 0)
+        assert p.molecules.count() == 1
+        assert p.reactions.count() == 1
+        assert p.status_code == Project.status.READY
         p.reactions.add(Reaction.objects.first())
         p.save()
-        self.assertEqual(p.status_code, Project.status.READY)
+        assert p.status_code == Project.status.READY
         p.run()
         self.assertTrue(p.status_code > Project.status.READY)
         other_name = "other"
         p.name = initial_name + " modified"
         p.save()
-        self.assertEqual(p.name, initial_name)
+        assert p.name == initial_name
         p.status_code = Project.status.DONE
         p.save()
-        self.assertEqual(p.status_code, Project.status.DONE)
+        assert p.status_code == Project.status.DONE
         p.status_code = Project.status.READY
         p.save()
-        self.assertEqual(p.status_code, Project.status.DONE)
+        assert p.status_code == Project.status.DONE
 
     def test_clone_project(self):
         # Reaction.reactions_update()
@@ -137,7 +138,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             "frag_compare_conf",
             "frag_sample",
         ]
-        self.assertEqual(pc.user, p.user)
+        assert pc.user == p.user
         for f in fields:
             assert getattr(pc, f) == getattr(p, f)
 
@@ -212,7 +213,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         project = self.create_project()
         assert project.reactions_conf is None, project.reactions_conf
 
-        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])
         rc = ReactionsConf.objects.create()
         rc.reactions.add(Reaction.objects.first())
         project.reactions_conf = rc
@@ -224,3 +225,21 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         clone = project.clone_project()
         assert clone.reactions_conf is None
         assert clone.reaction_ids() == reaction_ids
+
+    def test_create_with_all_reactions(self):
+
+        project = self.create_project("no reactions")
+        assert project.reactions.count() == 0
+
+        reacts = [
+            ("methylation", "[N,O:1]>>[*:1]-[#6]"),
+            (
+                "diels_alder",
+                "[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1",
+            ),
+        ]
+        self.create_reacts(reacts)
+
+        project = self.create_project("with reactions")
+        assert project.reactions.count() == len(reacts)
+

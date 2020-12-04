@@ -60,6 +60,8 @@ class SampleAnnotationProject(Project):
         if not had_pk:
             super(SampleAnnotationProject, self).save(*args, **kwargs)
             self.load_default_conf()
+            self.add_all("reactions")
+            self.save()
         else:
             prev_status = SampleAnnotationProject.objects.get(id=self.id).status_code
             if max(self.status_code, prev_status) < Project.status.QUEUE:
@@ -124,7 +126,6 @@ class SampleAnnotationProject(Project):
         )
 
     def reaction_ids(self):
-        source = self.get_reactions_source()
         return [r.id for r in self.all_reactions()]
 
     def all_reactions(self):

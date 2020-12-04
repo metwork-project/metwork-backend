@@ -22,4 +22,4 @@ mkdir $METWORK_DATA_FILES_PATH
 
 . $SCRIPT_DIR/run-worker.sh stop
 
-. $SCRIPT_DIR/run-docker.sh stop
+# . $SCRIPT_DIR/run-docker.sh stop
