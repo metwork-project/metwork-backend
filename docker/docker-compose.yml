@@ -35,6 +35,7 @@ services:
   docker_hoster:
     # To be able to access to docker containers names in dns resolution.
     image: dvdarias/docker-hoster
+    container_name: "metwork_docker_hoster"
     restart: always
     volumes:
     - /var/run/docker.sock:/tmp/docker.sock

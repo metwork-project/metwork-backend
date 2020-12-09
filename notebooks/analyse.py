@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from base.models import SampleAnnotationProject
 from fragmentation.models import FragSample
-
+from metabolization.models import Reaction
 
 def write_json(filename, data):
     import json
@@ -18,8 +18,8 @@ write_json("projects", list(SampleAnnotationProject.objects.all().values()))
 data = [
     {
         "id": p.id,
-        "frag_sample_id": p.frag_sample_id,
         "matching_count": p.molecules_matching_count(),
+        "reactions_count": p.all_reactions().count(),
     }
     for p in SampleAnnotationProject.objects.all()
 ]
@@ -34,6 +34,7 @@ data = [
 ]
 write_json("fragsamples_info", data)
 
+write_json("reactions", list(Reaction.objects.all().values()))
 
 User = get_user_model()
 write_json("users", list(User.objects.all().values()))
