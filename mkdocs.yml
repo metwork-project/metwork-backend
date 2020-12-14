@@ -1,0 +1,16 @@
+site_name: MetWork Documentation
+
+theme:
+    name: "material"
+    # highlightjs: true
+    # hljs_languages:
+    #     - yaml
+
+markdown_extensions:
+    - pymdownx.highlight
+    - pymdownx.inlinehilite
+    - pymdownx.superfences
+    - pymdownx.snippets:
+        base_path: "docs"
+        check_paths: true
+    - pymdownx.keys
