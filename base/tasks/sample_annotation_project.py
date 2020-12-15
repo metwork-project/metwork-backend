@@ -1,11 +1,17 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task, group, chain
-from base.models import SampleAnnotationProject, Molecule
-from base.modules.cache_management import model_from_cache
 from django.core.cache import cache
 from django.conf import settings
 import numpy as np
+from base.models import SampleAnnotationProject, Molecule
+from base.modules.cache_management import model_from_cache
+from base.tasks.project import log_project
 from fragmentation.utils import AdductManager
+
+
+def log_to_file(project_id, data):
+    queue = settings.CELERY_LOG_QUEUE
+    log_project.s(project_id, data).apply_async(queue=queue)
 
 
 @shared_task
@@ -31,7 +37,6 @@ def start_run(project_id):
 @shared_task
 def run_reactions_molecule(molecule_id, project_id, depth_total, depth_last_match):
 
-    m = model_from_cache(Molecule, molecule_id)
     p = SampleAnnotationProject.objects.get(id=project_id)
     if p.is_stopped():
         p.close_process()
@@ -62,27 +67,41 @@ def run_reaction_molecule(
     if p.is_stopped():
         p.close_process()
         return "project stopped"
-    r = model_from_cache(Reaction, reaction_id)
+    reaction = model_from_cache(Reaction, reaction_id)
+
+    log_message = {
+        "task": "run_reaction_molecule",
+        "opts": {
+            "reaction_id": reaction_id,
+            "smarts": reaction.smarts,
+            "reaction_name": reaction.name,
+        },
+    }
 
     reactants_count = len(reactants_id)
     reactants_uniq_count = len(set(reactants_id))
 
-    if reactants_count == r.reactants_number:
+    if reactants_count == reaction.reactants_number:
         reactants = Molecule.objects.filter(id__in=reactants_id)
+        log_message["opts"].update(
+            {"reactants": {r.id: r.smiles() for r in reactants.all()}}
+        )
 
         rp_search = ReactProcess.objects.annotate(
             reactants_count=Count("reactants")
-        ).filter(reaction=r, reactants_count=reactants_uniq_count)
+        ).filter(reaction=reaction, reactants_count=reactants_uniq_count)
         for m in reactants:
             rp_search = rp_search.filter(reactants__id=m.id)
 
         if rp_search.count() > 0:
+            log_message.update({"message": "reaction already processed"})
             rp = rp_search.first()
             rp.wait_run_end()
         else:
-            rp = ReactProcess.objects.create(reaction=r)
+            rp = ReactProcess.objects.create(reaction=reaction)
             for m_id in reactants_id:
                 rp.reactants.add(Molecule.objects.get(id=m_id))
+                # reactants_smiles =
             rp.save()
             rp.run_reaction().refresh_from_db()
         try:
@@ -90,6 +109,11 @@ def run_reaction_molecule(
             p.save()
         except:
             pass
+
+        log_message["opts"].update(
+            {"products": {r.id: r.smiles() for r in rp.products.all()}}
+        )
+        log_to_file(project_id, log_message)
 
         mols_ids = [m.id for m in rp.products.all()]
 
@@ -102,11 +126,15 @@ def run_reaction_molecule(
         grp_tsk()
 
     # if missing 2nd reactant, react with each molecule that has already match
-    elif reactants_count == 1 and r.reactants_number == 2:
+    elif reactants_count == 1 and reaction.reactants_number == 2:
         mols_ids = [m.id for m in p.molecules_init_and_matching()]
         grp_tsk = group(
             run_reaction_molecule.s(
-                [reactants_id[0], m_id], r.id, project_id, depth_total, depth_last_match
+                [reactants_id[0], m_id],
+                reaction.id,
+                project_id,
+                depth_total,
+                depth_last_match,
             )
             for m_id in mols_ids
         )
@@ -130,10 +158,10 @@ def load_molecule(molecule_id, project_id, depth_total, depth_last_match):
 
     if not molecule_id in molecules_ids:
         molecules_ids.append(molecule_id)
-        m = model_from_cache(Molecule, molecule_id)
+        molecule = model_from_cache(Molecule, molecule_id)
 
         try:
-            p.molecules.add(m)
+            p.molecules.add(molecule)
             p.save()
             added = True
             cache.set("project_molecules_all_" + str(p.id), molecules_ids, None)
@@ -155,24 +183,25 @@ def load_molecule(molecule_id, project_id, depth_total, depth_last_match):
 def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
     from fragmentation.models import FragMolSample, FragAnnotationDB
 
-    m = model_from_cache(Molecule, molecule_id)
+    molecule = model_from_cache(Molecule, molecule_id)
     p = SampleAnnotationProject.objects.get(id=project_id)
     if p.is_stopped():
         p.close_process()
         return "project stopped"
 
-    # check if sample exist with the same mass
+    log_message = {
+        "task": "evaluate_molecule",
+        "opts": {"molecule_id": molecule_id, "smiles": molecule.smiles(),},
+    }
 
-    project_frag_sample = cache.get_or_set(
-        "project_frag_sample_" + str(p.id), p.frag_sample
-    )
+    # check if sample exist with the same mass
 
     fm_search_ids = []
     ms1 = cache.get("project_ms1_not_init_" + str(project_id))
     am = AdductManager(ion_charge=p.frag_sample.ion_charge)
     adducts_mass = np.array(am.adducts.mass).reshape((1, -1))
 
-    mass_exact = m.mass_exact()  # + settings.PROTON_MASS
+    mass_exact = molecule.mass_exact()  # + settings.PROTON_MASS
 
     diff_mass = abs(ms1[1].reshape((-1, 1)) - mass_exact - adducts_mass)
     mass_tol = mass_exact * float(p.frag_compare_conf.ppm_tolerance) * 10 ** -6
@@ -182,11 +211,22 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
         (ms1[0][pos_idx], am.adducts.index[adduct_idx])
         for pos_idx, adduct_idx in zip(test[0], test[1])
     ]
+
     adducts = [am.adducts.index[adduct_idx] for adduct_idx in set(test[1])]
+
+    log_message["opts"].update({"fm_search_ids": fm_search_ids, "adducts": adducts})
+    log_to_file(project_id, log_message)
 
     p.add_process()
     tsk = evaluate_molecule_2.apply_async(
-        args=[m.id, fm_search_ids, adducts, project_id, depth_total, depth_last_match],
+        args=[
+            molecule.id,
+            fm_search_ids,
+            adducts,
+            project_id,
+            depth_total,
+            depth_last_match,
+        ],
         queue=settings.CELERY_RUN_QUEUE,
     )
 
@@ -201,11 +241,21 @@ def evaluate_molecule_2(
     from fragmentation.models import FragMolSample, FragAnnotationCompare
     from fragmentation.modules import FragSim, FragCompare
 
-    m = model_from_cache(Molecule, molecule_id)
+    molecule = model_from_cache(Molecule, molecule_id)
     p = SampleAnnotationProject.objects.get(id=project_id)
     if p.is_stopped():
         p.close_process()
         return "project stopped"
+
+    log_message = {
+        "task": "evaluate_molecule_2",
+        "opts": {
+            "molecule_id": molecule_id,
+            "smiles": molecule.smiles(),
+            "fm_search_ids": fm_search_ids,
+            "adducts": adducts,
+        },
+    }
 
     # If mass match, frag molecule and check if frag match
 
@@ -218,7 +268,7 @@ def evaluate_molecule_2(
         fmsim = {}
         for adduct in adducts:
             fmsim[adduct] = fsim.frag_molecule(
-                m, adduct, ion_charge=p.frag_sample.ion_charge
+                molecule, adduct, ion_charge=p.frag_sample.ion_charge
             )
 
         ### Compare with each sample of same mass
@@ -226,17 +276,20 @@ def evaluate_molecule_2(
         for fmsample_id, adduct in fm_search_ids:
             fmsample = FragMolSample.objects.get(id=fmsample_id)
             fac_search = FragAnnotationCompare.objects.filter(
-                project=p, frag_mol_sample=fmsample, molecule=m
+                project=p, frag_mol_sample=fmsample, molecule=molecule
             )
             if fac_search.count() == 0:
                 fac = FragAnnotationCompare.objects.create(
-                    project=p, frag_mol_sample=fmsample, molecule=m
+                    project=p, frag_mol_sample=fmsample, molecule=molecule
                 )
                 fmcomp = fcomp.compare_frag_mols([fmsim[adduct], fmsample])
                 fac.frag_mol_compare = fmcomp
                 fac.save()
                 match = fmcomp.match
 
+        log_message["opts"].update({"match": str(match), "cosine": fmcomp.cosine})
+
+    log_to_file(project_id, log_message)
     # Metabolize molecule under conditions
 
     if ((depth_total + 1) < p.depth_total) and (

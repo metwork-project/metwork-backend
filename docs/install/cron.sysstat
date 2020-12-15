@@ -16,7 +16,7 @@ ENABLED=false
 
 /usr/lib/sysstat/sa2 -A 
 
-LOCAL_REPORT_PATH=/var/log/sysstat/report/$HOSTNAME.json 
+LOCAL_REPORT_PATH=/var/log/sysstat/report/$(/bin/hostname).json 
 
 /usr/bin/sadf -j /var/log/sysstat/sa$(date +%d -d yesterday) -- -urd >> $LOCAL_REPORT_PATH
 

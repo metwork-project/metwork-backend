@@ -160,7 +160,7 @@ class Project(FileManagement, PolymorphicModel):
         return self
 
     def log_to_file(self, data):
-        log_path = Path(self.item_path(), "log.json")
+        log_path = Path(self.item_path(), "log.jsonl")
         line = json.dumps(data) + os.linesep
         with open(log_path, mode="a") as log_file:
             log_file.writelines(line)
