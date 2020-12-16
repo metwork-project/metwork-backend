@@ -247,12 +247,19 @@ def evaluate_molecule_2(
         p.close_process()
         return "project stopped"
 
+    fmsamples = [
+        (FragMolSample.objects.get(id=fmsample_id), adduct)
+        for fmsample_id, adduct in fm_search_ids
+    ]
+    ion_ids = [(str(fms.ion_id), adduct) for fms, adduct in fmsamples]
+
     log_message = {
         "task": "evaluate_molecule_2",
         "opts": {
             "molecule_id": molecule_id,
             "smiles": molecule.smiles(),
             "fm_search_ids": fm_search_ids,
+            "ion_ids": ion_ids,
             "adducts": adducts,
         },
     }
