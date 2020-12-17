@@ -64,6 +64,6 @@ class ProjectRunModelTests(BaseTestManagement):
         ]
         for data in datas:
             project.log_to_file(data)
-        dest_path = Path(project.item_path(), "log.json")
+        dest_path = Path(project.item_path(), "log.jsonl")
         exp_text = "\n".join([json.dumps(data) for data in datas]) + "\n"
         assert dest_path.read_text() == exp_text
