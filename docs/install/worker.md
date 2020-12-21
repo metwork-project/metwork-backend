@@ -46,7 +46,6 @@ From metwork-main :
 
 ```
 ssh-copy-id 192.168.0.1{WORKER_NUMBER}
-
 ```
 
 ## Monitoring
