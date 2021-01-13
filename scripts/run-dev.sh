@@ -3,7 +3,7 @@ ROOT_DIR="$( cd $SCRIPT_DIR/.. >/dev/null 2>&1 && pwd )"
 
 . $SCRIPT_DIR/set-env.sh
 . $SCRIPT_DIR/run-docker.sh
-. $SCRIPT_DIR/run-worker.sh detached
+# . $SCRIPT_DIR/run-worker.sh detached
 
 ./manage.py runserver
 

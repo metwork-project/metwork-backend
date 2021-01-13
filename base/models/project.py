@@ -4,14 +4,17 @@
 # as SampleAnnotationsProject are based on this class
 
 from __future__ import unicode_literals
+import os
 import time
+import json
+from pathlib import Path
 from django.db import models
 from django.apps import apps
+from django.core.cache import cache
 from polymorphic.models import PolymorphicModel
-from base.modules import FileManagement
 from django.conf import settings
 from base.models import Molecule
-from django.core.cache import cache
+from base.modules import FileManagement
 
 
 class Project(FileManagement, PolymorphicModel):
@@ -47,7 +50,8 @@ class Project(FileManagement, PolymorphicModel):
 
     def load_default_conf(self):
         for f in self._meta.local_fields:
-            if f.name.endswith("_conf"):
+            f_name = f.name
+            if f_name.endswith("_conf") and f_name != "reactions_conf":
                 model = f.related_model
                 conf = model()
                 query = model.objects.all()
@@ -154,6 +158,12 @@ class Project(FileManagement, PolymorphicModel):
             else:
                 self.refresh_from_db()
         return self
+
+    def log_to_file(self, data):
+        log_path = Path(self.item_path(), "log.jsonl")
+        line = json.dumps(data) + os.linesep
+        with open(log_path, mode="a") as log_file:
+            log_file.writelines(line)
 
     @classmethod
     def achieved_projects(cls):

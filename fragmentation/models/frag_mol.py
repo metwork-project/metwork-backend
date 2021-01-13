@@ -15,7 +15,7 @@ class FragMol(PolymorphicModel):
     class JSONAPIMeta:
         resource_name = "fragmol"
 
-    # mass field is obsolete (prefered to paren_mass FloatField)
+    # mass field is obsolete (prefered to parent_mass FloatField)
     mass = models.DecimalField(
         max_digits=16, decimal_places=10, default=0, db_index=True
     )

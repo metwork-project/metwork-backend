@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.conf import settings
 from django.db import models
 from base.models import Project, Molecule
-from metabolization.models import Reaction, ReactionsConf, ReactProcess
+from metabolization.models import Reaction, ReactProcess, ReactionsConf
 from fragmentation.models import (
     FragSample,
     FragSimConf,
@@ -23,6 +23,8 @@ from fragmentation.models import (
 
 class SampleAnnotationProject(Project):
 
+    reactions = models.ManyToManyField(Reaction)
+    # DEPRECATED : reactions_conf is obsolete but keep for old projects
     reactions_conf = models.ForeignKey(
         ReactionsConf, on_delete=models.PROTECT, default=None, null=True
     )
@@ -36,7 +38,7 @@ class SampleAnnotationProject(Project):
     frag_compare_conf = models.ForeignKey(
         FragCompareConf, on_delete=models.PROTECT, default=None, null=True
     )
-    depth_total = models.IntegerField(default=0)
+    depth_total = models.IntegerField(default=1)
     depth_last_match = models.IntegerField(default=0)
     react_processes = models.ManyToManyField(ReactProcess)
 
@@ -58,6 +60,8 @@ class SampleAnnotationProject(Project):
         if not had_pk:
             super(SampleAnnotationProject, self).save(*args, **kwargs)
             self.load_default_conf()
+            self.add_all("reactions")
+            self.save()
         else:
             prev_status = SampleAnnotationProject.objects.get(id=self.id).status_code
             if max(self.status_code, prev_status) < Project.status.QUEUE:
@@ -86,7 +90,6 @@ class SampleAnnotationProject(Project):
             "description",
             "depth_total",
             "depth_last_match",
-            "reactions_conf",
             "frag_sim_conf",
             "frag_compare_conf",
             "frag_sample",
@@ -105,21 +108,15 @@ class SampleAnnotationProject(Project):
         for f in fields:
             clone.__setattr__(f, self.__getattribute__(f))
         clone.save()
+        source = self.get_reactions_source()
         reaction_ids = [
-            r.id
-            for r in self.reactions_conf.reactions.exclude(
-                status_code=Reaction.status.OBSOLETE
-            )
+            r.id for r in source.reactions.exclude(status_code=Reaction.status.OBSOLETE)
         ]
         clone.change_reactions(reaction_ids)
         for fai in self.frag_annotations_init.all():
             clone.frag_annotations_init.add(fai)
         clone.save()
         return clone
-
-    def reactions(self):
-        if self.reactions_conf != None:
-            return self.reactions_conf.reactions.all()
 
     def reactions_not_selected(self):
         return (
@@ -129,10 +126,17 @@ class SampleAnnotationProject(Project):
         )
 
     def reaction_ids(self):
-        if self.reactions_conf != None:
-            return [r.id for r in self.reactions_conf.reactions.all()]
+        return [r.id for r in self.all_reactions()]
+
+    def all_reactions(self):
+        source = self.get_reactions_source()
+        return source.reactions.all()
+
+    def get_reactions_source(self):
+        if self.reactions_conf is not None:
+            return self.reactions_conf
         else:
-            return []
+            return self
 
     def frag_annotations_init_not_selected(self):
         selected_ids = [fs.id for fs in self.frag_annotations_init.all()]
@@ -170,13 +174,9 @@ class SampleAnnotationProject(Project):
             for fm in self.frag_annotations_init.all():
                 self.molecules.add(fm.molecule)
         has_molecules = self.molecules.count() > 0
-        has_confs = (
-            self.reactions_conf != None
-            and self.frag_sim_conf != None
-            and self.frag_compare_conf != None
-        )
+        has_confs = self.frag_sim_conf != None and self.frag_compare_conf != None
         if has_confs:
-            has_reactions = self.reactions_conf.reactions.count() > 0
+            has_reactions = self.reactions.count() > 0
         if has_frag_sample and has_molecules and has_confs and has_reactions:
             self.status_code = 1
         else:
@@ -184,8 +184,7 @@ class SampleAnnotationProject(Project):
         return self
 
     def annotation_init_ids(self):
-        if self.reactions_conf != None:
-            return [fa.id for fa in self.frag_annotations_init.all()]
+        return [fa.id for fa in self.frag_annotations_init.all()]
 
     def remove_reactions(self):
         self.change_reactions([])
@@ -237,46 +236,8 @@ class SampleAnnotationProject(Project):
         return self
 
     def change_reactions(self, reaction_ids, reaction=None, to_remove=False):
-        from django.db.models import Count
 
-        # Manage which ReactionConf to applied to project
-        reactions = Reaction.objects.filter(id__in=reaction_ids)
-        # Look for existing conf that match the critteria
-        rcs = (
-            ReactionsConf.objects.annotate(Count("reactions"))
-            .filter(
-                reactions__count=len(reaction_ids),
-                method_priority=self.reactions_conf.method_priority,
-            )
-            .distinct()
-        )
-        for r in reactions:
-            rcs = rcs.filter(reactions__in=[r])
-        prev_rc = self.reactions_conf
-        # Does previous conf is not associated with other project ?
-        prev_rc_uniq = self.reactions_conf.sampleannotationproject_set.count() == 1
-        # Does new conf to applies already exist ?
-        new_rc_exist = rcs.count() > 0
-        if new_rc_exist:
-            rc = rcs.first()
-            self.reactions_conf = rc
-            self.save()
-            if prev_rc_uniq and prev_rc != rc:
-                prev_rc.delete()
-        elif reaction is not None and prev_rc_uniq:
-            if to_remove:
-                self.reactions_conf.reactions.remove(reaction)
-            else:
-                self.reactions_conf.reactions.add(reaction)
-            self.reactions_conf.save()
-        else:
-            rc = ReactionsConf.objects.create(
-                method_priority=self.reactions_conf.method_priority
-            )
-            for r in reactions:
-                rc.reactions.add(r)
-            rc.save()
-            self.reactions_conf = rc
+        self.reactions.set(Reaction.objects.filter(id__in=reaction_ids))
         self.save()
 
     def run(self):

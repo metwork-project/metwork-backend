@@ -67,9 +67,9 @@ class ReactionModelTests(ReactionTestManagement):
 
     def test_reset_react_process(self):
         # reset react process if not ACTIVE
-        r = self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]-[#6]")])[
-            "methylation"
-        ]
+        r = self.create_reacts(
+            [("methylation", "[N,O:1]>>[*:1]-[#6]-[#6]")], activate=False
+        )["methylation"]
         co = Molecule.load_from_smiles("CO")
         cco = Molecule.load_from_smiles("CCO")
         self.assertEqual(r.reactprocess_set.count(), 0)

@@ -63,3 +63,9 @@ metwork_backend/settings/static
 all_molecules.csv
 
 .vscode
+
+notebooks/*.json
+
+reactions_export.tsv
+
+.ipynb_checkpoints

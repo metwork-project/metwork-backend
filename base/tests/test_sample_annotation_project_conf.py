@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from pathlib import Path
 from django.contrib.auth import get_user_model
+from django.test import tag
 from base.models import Project, SampleAnnotationProject
 from metabolization.models import Reaction, ReactionsConf
 from metabolization.modules import ReactionTestManagement
@@ -37,7 +38,6 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
     def test_default_conf(self):
         p = self.create_project()
         for app_name, conf_class_name, p_conf_name in [
-            ("metabolization", "ReactionsConf", "reactions_conf"),
             ("fragmentation", "FragSimConf", "frag_sim_conf"),
             ("fragmentation", "FragCompareConf", "frag_compare_conf"),
         ]:
@@ -48,16 +48,9 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             # self.assertNotEqual( rc_filter.count(), 0)
             assert getattr(p, p_conf_name).id != 0
         self.assertEqual(
-            set([r.id for r in p.reactions_conf.reactions.all()]),
+            set([r.id for r in p.reactions.all()]),
             set([r.id for r in Reaction.objects.all()]),
         )
-
-    def test_keep_custom_conf_while_save(self):
-        p = self.create_project()
-        rc = ReactionsConf.objects.create()
-        p.reactions_conf = rc
-        p.save()
-        assert p.reactions_conf == rc
 
     def test_change_params(self):
         p = self.create_project()
@@ -86,77 +79,75 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
                 == FragSimConf.CONF_PATH_BY_CHARGE[ion_charge]
             )
 
+    @tag("integration")
     def test_status_ready(self):
         initial_name = "initial name"
         # self.import_file(reaction_name = "methylation", user = u)
-        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])
         p = self.create_project(name=initial_name)
-        self.assertEqual(p.status_code, Project.status.INIT)
+        assert p.status_code == Project.status.INIT
         fs = self.create_frag_sample()
         p.update_frag_sample(fs)
         p.save()
-        self.assertEqual(p.status_code, Project.status.INIT)
+        assert p.status_code == Project.status.INIT
         fs.add_annotation(1, "CCC")
         p.update_frag_sample(fs)
         p.save()
-        self.assertEqual(p.molecules.count(), 1)
-        self.assertEqual(p.status_code, Project.status.INIT)
-        rc = ReactionsConf.objects.create()
-        self.assertEqual(rc.reactions.count(), 0)
-        p.reactions_conf = rc
+        assert p.molecules.count() == 1
+        assert p.reactions.count() == 1
+        assert p.status_code == Project.status.READY
+        p.reactions.add(Reaction.objects.first())
         p.save()
-        self.assertEqual(p.status_code, 0)
-        rc.reactions.add(Reaction.objects.first())
-        p.save()
-        self.assertEqual(p.status_code, Project.status.READY)
+        assert p.status_code == Project.status.READY
         p.run()
         self.assertTrue(p.status_code > Project.status.READY)
         other_name = "other"
         p.name = initial_name + " modified"
         p.save()
-        self.assertEqual(p.name, initial_name)
+        assert p.name == initial_name
         p.status_code = Project.status.DONE
         p.save()
-        self.assertEqual(p.status_code, Project.status.DONE)
+        assert p.status_code == Project.status.DONE
         p.status_code = Project.status.READY
         p.save()
-        self.assertEqual(p.status_code, Project.status.DONE)
+        assert p.status_code == Project.status.DONE
 
-    def clone_project(self):
+    def test_clone_project(self):
         # Reaction.reactions_update()
         initial_name = "origin name"
         clone_suffix = " COPY"
         p = self.create_project(name=initial_name)
-        self.import_file(reaction_name="methylation", user=self.user)
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
         fs = self.create_frag_sample()
         p.update_frag_sample(fs)
         fs.add_annotation(1, "CCC")
         p.update_frag_sample(fs)
-        rc = ReactionsConf.objects.create()
-        p.reactions_conf = rc
-        rc.reactions.add(Reaction.objects.first())
+        p.reactions.add(Reaction.objects.first())
         p.save()
+        assert len(p.reaction_ids()) == 1
+        assert p.reactions.count() == 1
         pc = p.clone_project()
-        self.assertNotEqual(pc, p)
-        self.assertEqual(pc.name, p.name + clone_suffix)
+        assert pc != p
+        assert pc.name == p.name + clone_suffix
         fields = [
             "user",
             "description",
             "depth_total",
             "depth_last_match",
-            "reactions_conf",
             "frag_sim_conf",
             "frag_compare_conf",
             "frag_sample",
         ]
-        self.assertEqual(pc.user, p.user)
+        assert pc.user == p.user
         for f in fields:
-            self.assertEqual(getattr(pc, f), getattr(p, f))
+            assert getattr(pc, f) == getattr(p, f)
 
         def fais(project):
             return {fai.id for fai in project.frag_annotations_init.all()}
 
-        self.assertEqual(fais(pc), fais(p))
+        assert fais(pc) == fais(p)
+
+        assert p.reaction_ids() == pc.reaction_ids()
 
     def custom_frag_param_file_path(self, project, file_type):
 
@@ -216,3 +207,39 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
             assert target_file_path.read_text() == data
             new_conf_path = getattr(project.frag_sim_conf, file_type + "_path")
             assert Path(new_conf_path) == target_file_path
+
+    def test_reaction_conf_compatiblity(self):
+
+        project = self.create_project()
+        assert project.reactions_conf is None, project.reactions_conf
+
+        self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])
+        rc = ReactionsConf.objects.create()
+        rc.reactions.add(Reaction.objects.first())
+        project.reactions_conf = rc
+        project.save()
+        assert project.reactions_conf is not None
+        reaction_ids = project.reaction_ids()
+        assert len(reaction_ids) == 1
+
+        clone = project.clone_project()
+        assert clone.reactions_conf is None
+        assert clone.reaction_ids() == reaction_ids
+
+    def test_create_with_all_reactions(self):
+
+        project = self.create_project("no reactions")
+        assert project.reactions.count() == 0
+
+        reacts = [
+            ("methylation", "[N,O:1]>>[*:1]-[#6]"),
+            (
+                "diels_alder",
+                "[#6:1]=,:[#6:2]-[#6:3]=,:[#6:4].[#6:5]=,:[#6:6]>>[#6:1]1-[#6:2]=,:[#6:3]-[#6:4]-[#6:6]-[#6:5]-1",
+            ),
+        ]
+        self.create_reacts(reacts)
+
+        project = self.create_project("with reactions")
+        assert project.reactions.count() == len(reacts)
+

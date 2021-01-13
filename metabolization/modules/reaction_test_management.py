@@ -6,10 +6,14 @@ from metabolization.models import Reaction, ReactProcess
 
 
 class ReactionTestManagement(TestManagement):
-    def create_reacts(self, reacts, email="create@react.com"):
+    def create_reacts(self, reacts, email="create@react.com", activate=True):
         user = self.get_user(email)
-        rd = {}
+        result = {}
+        kwargs = {"user": user}
+        if activate:
+            kwargs["status_code"] = Reaction.status.ACTIVE
         for name, smarts in reacts:
-            r = Reaction.objects.create(user=user, name=name, smarts=smarts)
-            rd[name] = r
-        return rd
+            kwargs.update({"name": name, "smarts": smarts})
+            react = Reaction.objects.create(**kwargs)
+            result[name] = react
+        return result

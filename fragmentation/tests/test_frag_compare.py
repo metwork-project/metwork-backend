@@ -8,9 +8,10 @@ from fragmentation.models import FragSample, FragCompareConf, FragSimConf
 from fragmentation.modules import FragCompare, FragSim
 from django.contrib.auth import get_user_model
 from fragmentation.tests.test_frag_common import FragCommonTests
+from base.modules import BaseTestManagement
 
 
-class FragCompareModelTests(TransactionTestCase):
+class FragCompareModelTests(BaseTestManagement):
 
     TEST_FILES_PATH = "fragmentation/tests/files/"
 
