@@ -67,3 +67,5 @@ all_molecules.csv
 notebooks/*.json
 
 reactions_export.tsv
+
+.ipynb_checkpoints
