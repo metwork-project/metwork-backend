@@ -1,11 +1,36 @@
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT_DIR="$( cd $SCRIPT_DIR/.. >/dev/null 2>&1 && pwd )"
+#!/bin/bash
+. "$( dirname "$0" )/set-env.sh"
 
-. $SCRIPT_DIR/set-env.sh
-. $SCRIPT_DIR/run-docker.sh
-# . $SCRIPT_DIR/run-worker.sh detached
+while [ "$1" != "" ]; do
+    case $1 in
+        --no-worker) NO_WORKER=1;;
+        --no-docker) NO_DOCKER=1;;
+    esac
+    shift
+done
 
-./manage.py runserver
+SCRIPT_DIR="$METWORK_BACKEND_PATH/scripts"
 
-. $SCRIPT_DIR/run-worker.sh stop
-. $SCRIPT_DIR/run-docker.sh stop
+if [ -z $NO_DOCKER ]
+then
+    $SCRIPT_DIR/run-docker.sh --detached
+fi
+
+if [ -z $NO_WORKER ]
+then
+    $SCRIPT_DIR/run-worker.sh --detached
+    $SCRIPT_DIR/run-worker.sh --log --detached
+fi
+
+$METWORK_BACKEND_PATH/manage.py runserver
+
+if [ -z $NO_WORKER ]
+then
+    $SCRIPT_DIR/run-worker.sh --stop
+    $SCRIPT_DIR/run-worker.sh --log --stop
+fi
+
+if [ -z $NO_DOCKER ]
+then
+    $SCRIPT_DIR/run-docker.sh --stop
+fi

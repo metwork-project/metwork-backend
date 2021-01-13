@@ -12,19 +12,19 @@ Python version tested is 3.6.
 Install conda env and all depedencies :
 
 ```
-. scripts/install-all.sh 
+./scripts/install-all.sh 
 ```
 
 Run development environment :
 
 ```
-. scripts/run-dev.sh 
+./scripts/run-dev.sh 
 ```
 
 Run all tests
 
 ```
-. scripts/run-tests.sh 
+./scripts/run-tests.sh 
 ```
 
 ## Development environement deatil
@@ -50,19 +50,19 @@ Additional to web server, you must run celery worker to run properly. The easies
 In a new shell if you want to see worker details :
 
 ```
-. scripts/run-worker.sh 
+./scripts/run-worker.sh 
 ```
 
 Or in detached mode
 
 ```
-. scripts/run-worker.sh detached
+./scripts/run-worker.sh detached
 ```
 
 If you want a worker to run tests (pointing to test database) :
 
 ```
-. scripts/run-worker.sh test
+./scripts/run-worker.sh test
 ```
 
 ### Docker services

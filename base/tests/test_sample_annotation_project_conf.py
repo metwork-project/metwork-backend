@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+import time
 from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.test import tag
@@ -110,7 +110,8 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         assert p.status_code == Project.status.DONE
         p.status_code = Project.status.READY
         p.save()
-        assert p.status_code == Project.status.DONE
+        time.sleep(1)
+        assert p.status_code == Project.status.DONE, p.status_code
 
     def test_clone_project(self):
         # Reaction.reactions_update()
