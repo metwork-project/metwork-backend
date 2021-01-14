@@ -132,8 +132,6 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         fields = [
             "user",
             "description",
-            "depth_total",
-            "depth_last_match",
             "frag_sim_conf",
             "frag_compare_conf",
             "frag_sample",
@@ -141,6 +139,9 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         assert pc.user == p.user
         for f in fields:
             assert getattr(pc, f) == getattr(p, f)
+
+        assert pc.depth_total == 1
+        assert pc.depth_last_match == 0
 
         def fais(project):
             return {fai.id for fai in project.frag_annotations_init.all()}

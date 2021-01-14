@@ -88,8 +88,6 @@ class SampleAnnotationProject(Project):
     def clone_project(self):
         fields = [
             "description",
-            "depth_total",
-            "depth_last_match",
             "frag_sim_conf",
             "frag_compare_conf",
             "frag_sample",
