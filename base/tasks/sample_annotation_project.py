@@ -1,4 +1,6 @@
 from __future__ import absolute_import, unicode_literals
+import socket
+from datetime import datetime
 from celery import Task, shared_task, group, chain
 from django.core.cache import cache
 from django.conf import settings
@@ -13,7 +15,13 @@ log_queue = settings.CELERY_LOG_QUEUE
 
 class MetWorkTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        data = dict(exc=str(exc), task_id=task_id, args=args, kwargs=kwargs)
+        data = {
+            "exc": str(exc),
+            "task_id": task_id,
+            "args": args,
+            "kwargs": kwargs,
+            **get_base_log_data(),
+        }
         project_id = kwargs.get("project_id")
         if project_id:
             project = SampleAnnotationProject.objects.get(id=project_id)
@@ -26,7 +34,12 @@ metwork_task = shared_task(base=MetWorkTask)
 
 
 def log_to_file(project_id, data):
+    data = {**data, **get_base_log_data()}
     log_project.s(project_id, data).apply_async(queue=log_queue)
+
+
+def get_base_log_data():
+    return {"time": datetime.now(), "hostname": socket.gethostname()}
 
 
 @metwork_task
