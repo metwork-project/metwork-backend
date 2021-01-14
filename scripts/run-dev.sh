@@ -5,6 +5,7 @@ while [ "$1" != "" ]; do
     case $1 in
         --no-worker) NO_WORKER=1;;
         --no-docker) NO_DOCKER=1;;
+        *) echo "Option $1 not recognized"; exit 1;;
     esac
     shift
 done

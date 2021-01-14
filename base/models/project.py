@@ -141,6 +141,9 @@ class Project(FileManagement, PolymorphicModel):
     def finish_run(self):
         self.status_code = Project.status.DONE
         self.save()
+        key = self.process_count_key()
+        if cache.get(key):
+            cache.delete(key)
 
     def is_stopped(self):
         return self.status_code == Project.status.DONE

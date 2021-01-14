@@ -7,6 +7,7 @@ while [ "$1" != "" ]; do
         --detached) DETACHED=1;;
         --test) TEST=1;;
         --stop) STOP=1;;
+        *) echo "Option $1 not recognized"; exit 1;;
     esac
     shift
 done

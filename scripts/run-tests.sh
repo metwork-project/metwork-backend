@@ -13,6 +13,7 @@ while [ "$1" != "" ]; do
         --no-worker) NO_WORKER=1;;
         --no-docker) NO_DOCKER=1;;
         --recreate-docker) RECREATE_DOCKER="--recreate";;
+        *) echo "Option $1 not recognized"; exit 1;;
     esac
     shift
 done
@@ -28,10 +29,11 @@ then
 fi
 
 source $ENV_DIR/test.env 
-rm -R $METWORK_DATA_FILES_PATH
-mkdir $METWORK_DATA_FILES_PATH
 
 for params in "${TEST_LIST[@]}"; do
+
+    rm -R $METWORK_DATA_FILES_PATH
+    mkdir $METWORK_DATA_FILES_PATH
 
     if [ -z $NO_WORKER ]
     then
@@ -48,3 +50,8 @@ for params in "${TEST_LIST[@]}"; do
     fi
 
 done
+
+if [ $METWORK_TEST_SOUND ]
+then
+    paplay $METWORK_TEST_SOUND
+fi

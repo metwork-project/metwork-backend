@@ -105,12 +105,11 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         p.name = initial_name + " modified"
         p.save()
         assert p.name == initial_name
-        p.status_code = Project.status.DONE
+        p.finish_run()
         p.save()
         assert p.status_code == Project.status.DONE
         p.status_code = Project.status.READY
         p.save()
-        time.sleep(1)
         assert p.status_code == Project.status.DONE, p.status_code
 
     def test_clone_project(self):

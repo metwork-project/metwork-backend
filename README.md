@@ -33,7 +33,7 @@ Run all tests
 
 The python backend is based on [Django Framework](https://www.djangoproject.com/).The python scripts run via an conda virtual environement (venv). Install the python libraires with  `scripts\install-python-depencies.sh` command.
 
-To run properly, some environment variables have to be set. The easiest way is ti run `. scripts/set-env.sh`. Take a look inside this script to ee how to modifivy environment variables values.
+To run properly, some environment variables have to be set. The easiest way is ti run `. scripts/set-env.sh`. Take a look inside this script to see how to modify environment variables values.
 
 Once venv installed and activated with all dependencies set, run the following :
 
