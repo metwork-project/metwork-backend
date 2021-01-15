@@ -30,10 +30,10 @@ echo "######                       ########"
 . $SCRIPT_DIR/install-python-depencies.sh
 
 echo "######                       ########"
-echo "######        Init DB        ########"
+echo "######     Init Dataset      ########"
 echo "######                       ########"
 
-. $SCRIPT_DIR/init-db.sh
+. $SCRIPT_DIR/init-dataset.sh
 
 echo "######                       ########"
 echo "######        CFM-ID         ########"

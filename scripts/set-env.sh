@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DIR="$( cd $DIR/.. >/dev/null 2>&1 && pwd )"
 ENV_DIR=$DIR/envs
 

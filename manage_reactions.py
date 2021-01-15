@@ -24,5 +24,5 @@ def import_reactions(file_path=FILE_PATH, email="metwork.dev@gmail.com"):
                 r.load_smarts(r_raw[1])
                 r.status_code = Reaction.status.ACTIVE
                 r.save()
-            except:
-                print("error importing {}".format(r_raw[0]))
+            except Exception as ex:
+                print("error importing {}".format(r_raw[0]), ex)
