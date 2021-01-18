@@ -103,11 +103,19 @@ class MetGraph:
         return cosine
 
     def get_annotation_type(self, molecule):
+        from fragmentation.models import FragAnnotationDB
+
         if molecule in self.project.molecules_init():
-            return "init"
+            return {"annotationType": "init"}
         if molecule.id in self.public_mols_id:
-            return "public"
-        return "proposal"
+            return {"annotationType": "public"}
+        annotation_filter = FragAnnotationDB.objects.filter(
+            frag_mol_sample__frag_sample_id=self.project.frag_sample.id
+        ).filter(molecule_id=molecule.id)
+        if annotation_filter.count() > 0:
+            annotation = annotation_filter.first()
+            return {"annotationType": "annotated", "annotationId": annotation.ion_id()}
+        return {"annotationType": "proposal"}
 
     def get_public_projects(self, molecule):
         """return list of public projects including this molecule"""
@@ -144,7 +152,7 @@ class MetGraph:
                     # 'name':  str(round( m.mass_exact(), 3 )),
                     "parent_mass": str(round(self.mols_mass[m.id], 3)),
                     "nodeType": "molecule",
-                    "annotationType": self.get_annotation_type(m),
+                    **self.get_annotation_type(m),
                     "public_projects": self.get_public_projects(m),
                     "smiles": m.smiles(),
                     "molJSON": m.chemdoodle_json,
