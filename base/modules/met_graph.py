@@ -54,7 +54,11 @@ class MetGraph:
             val[1].id: val[0] + len(self.rps) for val in enumerate(self.mols)
         }
         self.public_mols_id = {
-            fad.molecule.id for fad in FragAnnotationDB.objects.all() if fad.is_public()
+            fad.molecule.id
+            for fad in FragAnnotationDB.objects.filter(
+                ~Q(frag_mol_sample__frag_sample=self.project.frag_sample)
+            )
+            if fad.is_public()
         }
 
     def get_adduct_mass(self, mol):
@@ -119,7 +123,11 @@ class MetGraph:
 
     def get_public_projects(self, molecule):
         """return list of public projects including this molecule"""
-        return [p.id for p in molecule.project_set.filter(public=True)]
+        return [
+            {"id": p.id, "name": p.name}
+            for p in molecule.project_set.filter(public=True)
+            if p.id != self.project.id
+        ]
 
     def gen_graph(self):
         def node_id(node_type, element):
