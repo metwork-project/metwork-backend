@@ -7,6 +7,7 @@ from django.db.utils import IntegrityError
 from base.models import Graph
 from base.models.graph import GraphGenerator
 from django.test import Client
+from django.conf import settings
 
 # from django.test.utils import setup_test_environment
 
@@ -42,11 +43,18 @@ class GraphTests(TransactionTestCase, GraphTestUtils):
 
         graph.gen_data()
 
-        assert graph.data == self.DEFAULT_DATA
+        assert graph.data == {
+            "version": settings.APP_VERSION,
+            "data": self.DEFAULT_DATA,
+        }
 
     def test_get_data(self):
 
-        for data_in, data_out in ((None, self.DEFAULT_DATA), (["foo"], ["foo"])):
+        for data_in, data_out in (
+            (None, self.DEFAULT_DATA),
+            ({"version": settings.APP_VERSION, "data": ["foo"],}, ["foo"]),
+            ({"version": "0.0.1", "data": ["bar"],}, self.DEFAULT_DATA),
+        ):
 
             graph = self.create_graph(data=data_in)
 
