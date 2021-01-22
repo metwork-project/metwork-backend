@@ -5,6 +5,7 @@ import json
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from base.modules import TagViewMethods
 from fragmentation.models import FragSample
+from fragmentation.utils import AnnotationStatus
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -66,7 +67,11 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
         db_source = req_data["db_source"]
         db_id = req_data["db_id"]
         fa = fs.add_annotation(
-            ion_id=ion_id, smiles=smiles, db_source=db_source, db_id=db_id
+            ion_id=ion_id,
+            smiles=smiles,
+            db_source=db_source,
+            db_id=db_id,
+            status=AnnotationStatus.PUTATIVE,
         )
         return Response({"status": "ok"})
 

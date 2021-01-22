@@ -13,7 +13,7 @@ from libmetgem.cosine import compute_distance_matrix
 from libmetgem.mgf import filter_data
 from base.models import Molecule, Array2DModel, Tag
 from base.modules import FileManagement
-from fragmentation.utils.adducts import AdductManager
+from fragmentation.utils import AdductManager, AnnotationStatus
 
 
 class FragSample(FileManagement, models.Model, AdductManager):
@@ -73,7 +73,9 @@ class FragSample(FileManagement, models.Model, AdductManager):
             frag_mol_sample__frag_sample=self
         ).count()
 
-    def add_annotation(self, ion_id, smiles, db_source="", db_id=""):
+    def add_annotation(
+        self, ion_id, smiles, db_source="", db_id="", status=AnnotationStatus.UNDEFINED
+    ):
         # ===> Add ion_name !
         from fragmentation.models import FragAnnotationDB
 
@@ -83,6 +85,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
             molecule=Molecule.load_from_smiles(smiles),
             db_source=db_source,
             db_id=db_id,
+            status=status,
         )
 
     @classmethod
@@ -305,6 +308,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                                 name=name,
                                 db_source=db_source,
                                 db_id=db_id,
+                                status=AnnotationStatus.VALIDATED,
                             )
 
             except Exception as err:

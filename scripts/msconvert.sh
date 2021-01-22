@@ -1,0 +1,1 @@
+docker run -it --rm -v $1:/data/ chambm/pwiz-skyline-i-agree-to-the-vendor-licenses wine msconvert --mzXML --32 --mz32 --filter "peakPicking true [1,2]" /data/$2

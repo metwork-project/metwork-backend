@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+
 from django.db import models
 from polymorphic.models import PolymorphicModel
 from base.models import Molecule
 from fragmentation.models import FragMolSample, FragMolCompare
+from fragmentation.utils import AnnotationStatus
 
 
 class FragAnnotation(PolymorphicModel):
@@ -43,6 +45,7 @@ class FragAnnotationDB(FragAnnotation):
     name = models.CharField(max_length=256, default="")
     db_source = models.CharField(max_length=256, default="unkown")
     db_id = models.CharField(max_length=128, default="")
+    status = models.IntegerField(default=AnnotationStatus.UNDEFINED)
 
     def has_no_project(self):
         return self.sampleannotationproject_set.count() == 0

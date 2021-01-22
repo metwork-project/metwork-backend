@@ -4,7 +4,7 @@ from django.db.models import Count
 import os, json
 from django.db.models import Q
 from django.db.models import Max
-from fragmentation.utils import AdductManager
+from fragmentation.utils import AdductManager, AnnotationStatus
 
 
 class MetGraph:
@@ -106,20 +106,27 @@ class MetGraph:
             cosine = float(cosine)
         return cosine
 
-    def get_annotation_type(self, molecule):
+    def get_annotation_info(self, molecule):
         from fragmentation.models import FragAnnotationDB
 
+        info = {}
+
         if molecule in self.project.molecules_init():
-            return {"annotationType": "init"}
+            info["isSeed"] = True
         if molecule.id in self.public_mols_id:
-            return {"annotationType": "public"}
+            info["hasPublic"] = True
         annotation_filter = FragAnnotationDB.objects.filter(
             frag_mol_sample__frag_sample_id=self.project.frag_sample.id
         ).filter(molecule_id=molecule.id)
         if annotation_filter.count() > 0:
             annotation = annotation_filter.first()
-            return {"annotationType": "annotated", "annotationId": annotation.ion_id()}
-        return {"annotationType": "proposal"}
+            status_dict = {
+                AnnotationStatus.VALIDATED: "validated",
+                AnnotationStatus.PUTATIVE: "putative",
+            }
+            info["annotationStatus"] = status_dict.get(annotation.status, "undefined")
+            info["annotationId"] = annotation.ion_id()
+        return info
 
     def get_public_projects(self, molecule):
         """return list of public projects including this molecule"""
@@ -160,7 +167,7 @@ class MetGraph:
                     # 'name':  str(round( m.mass_exact(), 3 )),
                     "parent_mass": str(round(self.mols_mass[m.id], 3)),
                     "nodeType": "molecule",
-                    **self.get_annotation_type(m),
+                    **self.get_annotation_info(m),
                     "public_projects": self.get_public_projects(m),
                     "smiles": m.smiles(),
                     "molJSON": m.chemdoodle_json,
