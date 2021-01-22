@@ -85,7 +85,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
             molecule=Molecule.load_from_smiles(smiles),
             db_source=db_source,
             db_id=db_id,
-            status=status,
+            status_id=status,
         )
 
     @classmethod
@@ -308,7 +308,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                                 name=name,
                                 db_source=db_source,
                                 db_id=db_id,
-                                status=AnnotationStatus.VALIDATED,
+                                status_id=AnnotationStatus.VALIDATED,
                             )
 
             except Exception as err:

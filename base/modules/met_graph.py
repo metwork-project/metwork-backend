@@ -120,12 +120,10 @@ class MetGraph:
         ).filter(molecule_id=molecule.id)
         if annotation_filter.count() > 0:
             annotation = annotation_filter.first()
-            status_dict = {
-                AnnotationStatus.VALIDATED: "validated",
-                AnnotationStatus.PUTATIVE: "putative",
-            }
-            info["annotationStatus"] = status_dict.get(annotation.status, "undefined")
+            info["annotationStatusId"] = annotation.status_id
             info["annotationId"] = annotation.ion_id()
+        else:
+            info["annotationStatusId"] = AnnotationStatus.EXPLORED
         return info
 
     def get_public_projects(self, molecule):

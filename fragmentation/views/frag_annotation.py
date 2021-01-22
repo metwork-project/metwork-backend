@@ -13,6 +13,8 @@ class FragAnnotationSerializer(serializers.ModelSerializer):
         model = FragAnnotationDB
         fields = (
             "ion_id",
+            "status_id",
+            "mz",
             "name",
             "smiles",
             "db_source",

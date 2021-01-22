@@ -87,9 +87,9 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
             return Response({"error": "unkown error while upploading file"})
 
     @action(detail=True, methods=["get"])
-    def molecular_network(self, request, pk=None):
+    def molecular_network(self, request, pk=None, force=False):
         frag_sample = self.get_object()
-        data = frag_sample.get_molecular_network()
+        data = frag_sample.get_molecular_network(force=True)
         return JsonResponse(data, safe=False)
 
     @action(detail=True, methods=["get"])

@@ -19,6 +19,9 @@ class FragAnnotation(PolymorphicModel):
     def ion_id(self):
         return self.frag_mol_sample.ion_id
 
+    def mz(self):
+        return self.frag_mol_sample.parent_mass
+
     def user(self):
         return self.frag_mol_sample.frag_sample.user
 
@@ -45,7 +48,7 @@ class FragAnnotationDB(FragAnnotation):
     name = models.CharField(max_length=256, default="")
     db_source = models.CharField(max_length=256, default="unkown")
     db_id = models.CharField(max_length=128, default="")
-    status = models.IntegerField(default=AnnotationStatus.UNDEFINED)
+    status_id = models.IntegerField(default=AnnotationStatus.UNDEFINED)
 
     def has_no_project(self):
         return self.sampleannotationproject_set.count() == 0
