@@ -14,7 +14,7 @@ services:
       - PGDATA=/srv/metwork/database
     volumes:
       - ./initdb-metwork.sh:/docker-entrypoint-initdb.d/initdb-metwork.sh
-      - /home/yann/Data/MetWork/dev_dataset/database:/srv/metwork/database
+      - ${METWORK_DATA_PATH}/database:/srv/metwork/database
     # user: metwork
     ports: 
       - 5432:5432
