@@ -20,7 +20,7 @@ cd $ROOT_DIR
 METWORK_VERSION=$(cat $ROOT_DIR/VERSION)
 
 
-CONFIG="METWORK_CONFIG=$ENV_DIR/common.env,$ENV_DIR/local.env"
+CONFIG="METWORK_CONFIG=$ROOT_DIR/.env,$ENV_DIR/common.env,$ENV_DIR/local.env"
 CMD="celery worker -A metwork_backend -Q "
 
 if [ $LOG ]

@@ -69,3 +69,5 @@ notebooks/*.json
 reactions_export.tsv
 
 .ipynb_checkpoints
+
+.env

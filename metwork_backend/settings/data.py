@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from .utils import get_env, PROJECT_ROOT
 
 # Static files (CSS, JavaScript, Images)
@@ -7,7 +8,9 @@ from .utils import get_env, PROJECT_ROOT
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
 
-DATA_FILES_PATH = get_env("METWORK_DATA_FILES_PATH")
+DATA_FILES_PATH = str(
+    Path(get_env("METWORK_DATA_PATH"), get_env("METWORK_DATA_FILES_FOLDER"))
+)
 
 if "METWORK_EDIT_FILES" in os.environ:
     EDIT_FILES = os.environ["METWORK_EDIT_FILES"] == "True"
