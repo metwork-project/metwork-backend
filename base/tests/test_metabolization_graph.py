@@ -63,7 +63,7 @@ class MetabolizationGraphTests(BaseTestManagement, MetabolizationGraphTestUtils)
 
         project = graph.project
 
-        project.frag_sample.add_annotation(
+        project.frag_sample.add_annotation_from_smiles(
             ion_id=1, smiles="CCC", db_source="None", db_id="1"
         )
         # project.run()

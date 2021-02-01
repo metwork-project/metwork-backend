@@ -90,7 +90,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         p.update_frag_sample(fs)
         p.save()
         assert p.status_code == Project.status.INIT
-        fs.add_annotation(1, "CCC")
+        fs.add_annotation_from_smiles(1, "CCCO")
         p.update_frag_sample(fs)
         p.save()
         assert p.molecules.count() == 1
@@ -120,7 +120,7 @@ class SampleAnnotationProjectConfModelTests(ReactionTestManagement):
         self.create_reacts([("methylation", "[N,O:1]>>[*:1]-[#6]")])["methylation"]
         fs = self.create_frag_sample()
         p.update_frag_sample(fs)
-        fs.add_annotation(1, "CCC")
+        fs.add_annotation_from_smiles(1, "CCC")
         p.update_frag_sample(fs)
         p.reactions.add(Reaction.objects.first())
         p.save()

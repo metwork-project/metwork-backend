@@ -73,21 +73,6 @@ class FragSample(FileManagement, models.Model, AdductManager):
             frag_mol_sample__frag_sample=self
         ).count()
 
-    def add_annotation(
-        self, ion_id, smiles, db_source="", db_id="", status=AnnotationStatus.UNDEFINED
-    ):
-        # ===> Add ion_name !
-        from fragmentation.models import FragAnnotationDB
-
-        fms = self.fragmolsample_set.get(ion_id=int(ion_id))
-        return FragAnnotationDB.objects.create(
-            frag_mol_sample=fms,
-            molecule=Molecule.load_from_smiles(smiles),
-            db_source=db_source,
-            db_id=db_id,
-            status_id=status,
-        )
-
     @classmethod
     def import_sample(
         cls,
@@ -268,7 +253,6 @@ class FragSample(FileManagement, models.Model, AdductManager):
     def import_annotation_file(self, file_object, file_format="default"):
         from fragmentation.models import FragMolSample, FragAnnotationDB
 
-        am = AdductManager(ion_charge=self.ion_charge)
         fls = [l.decode("utf-8") for l in file_object.readlines()]
         errors = {}
         col_titles = fls[0].split("\t")
@@ -291,30 +275,74 @@ class FragSample(FileManagement, models.Model, AdductManager):
                     db_id = data[col_titles.index("CAS_Number")]
 
                 if int(ion_id) > 0:
-                    m = Molecule.load_from_smiles(smiles)
+
+                    molecule = Molecule.load_from_smiles(smiles)
                     fms = self.fragmolsample_set.get(ion_id=ion_id)
-
-                    adduct = am.get_adduct(m, fms)
-
-                    if adduct is not None:
-                        if fms.adduct != adduct:
-                            fms.adduct = adduct
-                            fms.save()
-
-                        if fms.adduct == adduct:
-                            fa = FragAnnotationDB.objects.create(
-                                frag_mol_sample=fms,
-                                molecule=m,
-                                name=name,
-                                db_source=db_source,
-                                db_id=db_id,
-                                status_id=AnnotationStatus.VALIDATED,
-                            )
+                    self.add_annotation(
+                        frag_mol_sample=fms,
+                        molecule=molecule,
+                        name=name,
+                        db_source=db_source,
+                        db_id=db_id,
+                        status_id=AnnotationStatus.VALIDATED,
+                    )
 
             except Exception as err:
                 # print(err)
                 errors[i] = {"err": str(err), "smiles": smiles}
         return {"success": "Annotations successfully imported", "errors": errors}
+
+    def add_annotation_from_smiles(
+        self,
+        ion_id,
+        smiles,
+        name="",
+        db_source="",
+        db_id="",
+        status_id=AnnotationStatus.UNDEFINED,
+    ):
+
+        molecule = Molecule.load_from_smiles(smiles)
+        fms = self.fragmolsample_set.get(ion_id=int(ion_id))
+
+        self.add_annotation(
+            frag_mol_sample=fms,
+            molecule=molecule,
+            name=name,
+            db_source=db_source,
+            db_id=db_id,
+            status_id=status_id,
+        )
+
+    def add_annotation(
+        self,
+        frag_mol_sample,
+        molecule,
+        name="",
+        db_source="",
+        db_id="",
+        status_id=AnnotationStatus.UNDEFINED,
+    ):
+        from fragmentation.models import FragAnnotationDB
+
+        fms = frag_mol_sample
+        am = AdductManager(ion_charge=self.ion_charge)
+        adduct = am.get_adduct(molecule, fms)
+
+        if adduct is not None:
+            if fms.adduct != adduct:
+                fms.adduct = adduct
+                fms.save()
+
+            if fms.adduct == adduct:
+                FragAnnotationDB.objects.create(
+                    frag_mol_sample=fms,
+                    molecule=molecule,
+                    name=name,
+                    db_source=db_source,
+                    db_id=db_id,
+                    status_id=status_id,
+                )
 
     def gen_mgf(self, energy=2, decimal=6):
         from fragmentation.models import FragMolSample

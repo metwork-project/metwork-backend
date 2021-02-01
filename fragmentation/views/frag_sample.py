@@ -62,17 +62,11 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
     def add_annotation(self, request, pk=None):
         fs = self.get_object()
         req_data = request.data
-        ion_id = req_data["ion_id"]
-        smiles = req_data["smiles"]
-        db_source = req_data["db_source"]
-        db_id = req_data["db_id"]
-        fa = fs.add_annotation(
-            ion_id=ion_id,
-            smiles=smiles,
-            db_source=db_source,
-            db_id=db_id,
-            status=AnnotationStatus.PUTATIVE,
-        )
+        data = {
+            key: req_data[key]
+            for key in ("ion_id", "smiles", "name", "status_id", "db_source", "db_id")
+        }
+        fs.add_annotation_from_smiles(**data)
         return Response({"status": "ok"})
 
     @action(detail=True, methods=["post"])
