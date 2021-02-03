@@ -13,7 +13,8 @@ while [ "$1" != "" ]; do
         --no-worker) NO_WORKER=1;;
         --no-docker) NO_DOCKER=1;;
         --recreate-docker) RECREATE_DOCKER="--recreate";;
-        *) echo "Option $1 not recognized"; exit 1;;
+        *) TEST_LIST=("$1")
+        # *) echo "Option $1 not recognized"; exit 1;;
     esac
     shift
 done
