@@ -98,12 +98,20 @@ class MetGraph:
     def get_best_cosine(self, molecule):
         from fragmentation.models import FragAnnotationCompare
 
-        query = FragAnnotationCompare.objects.filter(
-            molecule=molecule, project=self.project
-        ).aggregate(Max("frag_mol_compare__cosine"))
-        cosine = query["frag_mol_compare__cosine__max"]
-        if cosine:
-            cosine = float(cosine)
+        query_base = FragAnnotationCompare.objects.filter(molecule=molecule)
+
+        query_project = query_base.filter(project=self.project)
+        project_ids = [
+            project.id
+            for project in self.project.frag_sample.sampleannotationproject_set.all()
+        ]
+        query_frag_sample = query_base.filter(project__id__in=project_ids)
+
+        for query in (query_project, query_frag_sample):
+            query = query.aggregate(Max("frag_mol_compare__cosine"))
+            cosine = query["frag_mol_compare__cosine__max"]
+            if cosine:
+                return float(cosine)
         return cosine
 
     def get_annotation_info(self, molecule):
@@ -122,8 +130,12 @@ class MetGraph:
             annotation = annotation_filter.first()
             info["annotationStatusId"] = annotation.status_id
             info["annotationId"] = annotation.ion_id()
+            parent_mass = annotation.frag_mol_sample.parent_mass
         else:
+            parent_mass = self.mols_mass[molecule.id]
             info["annotationStatusId"] = AnnotationStatus.EXPLORED
+        info["parent_mass"] = "{:.3f}".format(parent_mass)
+        info["name"] = info["parent_mass"]
         return info
 
     def get_public_projects(self, molecule):
@@ -161,9 +173,9 @@ class MetGraph:
                 "group": "nodes",
                 "data": {
                     "id": node_id("mol", m),
-                    "name": str(round(self.mols_mass[m.id], 3)),
+                    # "name": str(round(self.mols_mass[m.id], 3)),
                     # 'name':  str(round( m.mass_exact(), 3 )),
-                    "parent_mass": str(round(self.mols_mass[m.id], 3)),
+                    # "parent_mass": str(round(self.mols_mass[m.id], 3)),
                     "nodeType": "molecule",
                     **self.get_annotation_info(m),
                     "public_projects": self.get_public_projects(m),

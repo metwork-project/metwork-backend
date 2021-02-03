@@ -83,7 +83,7 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
     @action(detail=True, methods=["get"])
     def molecular_network(self, request, pk=None, force=False):
         frag_sample = self.get_object()
-        data = frag_sample.get_molecular_network(force=True)
+        data = frag_sample.get_molecular_network(force=force)
         return JsonResponse(data, safe=False)
 
     @action(detail=True, methods=["get"])

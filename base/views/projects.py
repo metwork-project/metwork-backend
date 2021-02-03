@@ -179,5 +179,5 @@ class ProjectViewSet(ModelAuthViewSet):
         force = request.query_params.get("force", "False")
         force = force.lower() == "true"
         project = self.get_object()
-        data = project.get_metabolization_network(force=True)
+        data = project.get_metabolization_network(force=force)
         return JsonResponse(data, safe=False)
