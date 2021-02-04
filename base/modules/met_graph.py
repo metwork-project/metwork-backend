@@ -133,7 +133,7 @@ class MetGraph:
             parent_mass = annotation.frag_mol_sample.parent_mass
         else:
             parent_mass = self.mols_mass[molecule.id]
-            info["annotationStatusId"] = AnnotationStatus.EXPLORED
+            info["annotationStatusId"] = AnnotationStatus.UNRATED
         info["parent_mass"] = "{:.3f}".format(parent_mass)
         info["name"] = info["parent_mass"]
         return info

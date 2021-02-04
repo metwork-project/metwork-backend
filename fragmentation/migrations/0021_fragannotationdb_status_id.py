@@ -4,16 +4,29 @@ from django.db import migrations, models
 import fragmentation.utils.annotation_status
 
 
+def forwards(apps, schema_editor):
+    # We get the model from the versioned app registry;
+    # if we directly import it, it'll be the wrong version
+    FragAnnotationDB = apps.get_model("fragmentation", "FragAnnotationDB")
+    db_alias = schema_editor.connection.alias
+    FragAnnotationDB.objects.using(db_alias).update(
+        status_id=fragmentation.utils.annotation_status.AnnotationStatus.VALIDATED
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fragmentation', '0020_auto_20190727_0753'),
+        ("fragmentation", "0020_auto_20190727_0753"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='fragannotationdb',
-            name='status_id',
-            field=models.IntegerField(default=fragmentation.utils.annotation_status.AnnotationStatus(0)),
+            model_name="fragannotationdb",
+            name="status_id",
+            field=models.IntegerField(
+                default=fragmentation.utils.annotation_status.AnnotationStatus.UNDEFINED
+            ),
         ),
+        migrations.RunPython(forwards),
     ]

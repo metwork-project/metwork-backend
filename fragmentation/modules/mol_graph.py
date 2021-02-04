@@ -14,7 +14,7 @@ class MolGraph:
         query = FragAnnotationDB.objects.filter(
             frag_mol_sample__frag_sample_id=self.frag_sample.id
         ).filter(frag_mol_sample__id=ion.id)
-        for status in ("VALIDATED", "PUTATIVE", "EXPLORED"):
+        for status in ("VALIDATED", "PUTATIVE", "UNRATED"):
             if query.filter(status_id=AnnotationStatus[status]).count() > 0:
                 return AnnotationStatus[status].value
         return AnnotationStatus.UNDEFINED
