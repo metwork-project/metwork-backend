@@ -4,6 +4,7 @@ from django.db import models
 
 from base.models import Graph, SampleAnnotationProject
 from base.modules import MetGraph
+from base.tasks import get_metabolization_network
 
 
 class MetabolizationGraph(Graph):
@@ -15,6 +16,10 @@ class MetabolizationGraph(Graph):
     )
 
     GRAPH_GENERATOR = MetGraph
+    TASK_GENERATOR = get_metabolization_network
 
     def generator_params(self):
         return {"project": self.project}
+
+    def task_args(self):
+        return [self.project.id]

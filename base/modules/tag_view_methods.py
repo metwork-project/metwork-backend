@@ -34,7 +34,6 @@ class TagViewMethods(viewsets.ModelViewSet):
         if tag_find.count() == 1:
             tag = tag_find.first()
             target.tags.remove(tag)
-            print(dir(tag))
             if (tag.reaction_tags.count() + tag.fragsample_tags.count()) == 0:
                 tag.delete()
         return JsonResponse({"success": tag_name})

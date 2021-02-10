@@ -229,14 +229,14 @@ class FragSample(FileManagement, models.Model, AdductManager):
             # raise ex
         return self
 
-    def get_molecular_network(self, force=False):
+    def get_molecular_network(self, task=False, force=False):
         from base.models import MolecularGraph
 
         try:
             self.molecular_network
         except FragSample.molecular_network.RelatedObjectDoesNotExist:
             MolecularGraph.objects.create(frag_sample=self)
-        return self.molecular_network.get_data(force=force)
+        return self.molecular_network.get_data(force=force, task=task)
 
     def wait_import_done(self, timeout=360):
         begin = time.time()
