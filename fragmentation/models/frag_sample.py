@@ -344,7 +344,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                     status_id=status_id,
                 )
 
-    def gen_mgf(self, energy=2, decimal=6):
+    def gen_mgf(self, energy=None, decimal=6):
         from fragmentation.models import FragMolSample
 
         res = "\n".join(
