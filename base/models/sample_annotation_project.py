@@ -384,7 +384,7 @@ Link to project : {1}/#/projects/{2}""".format(
         mg = MetGraph(self)
         mg.gen_metexplore()
 
-    def get_metabolization_network(self, force=False):
+    def get_metabolization_network(self, force=False, task=False):
 
         from base.models import MetabolizationGraph
 
@@ -392,7 +392,7 @@ Link to project : {1}/#/projects/{2}""".format(
             self.metabolization_network
         except self.__class__.metabolization_network.RelatedObjectDoesNotExist:
             MetabolizationGraph.objects.create(project=self)
-        return self.metabolization_network.get_data(force=force)
+        return self.metabolization_network.get_data(force=force, task=task)
 
     def load_custom_frag_param_files(self, file_type, data):
         self.save_custom_frag_param_files(file_type, data)

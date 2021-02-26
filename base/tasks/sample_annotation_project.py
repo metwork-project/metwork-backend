@@ -356,3 +356,10 @@ def evaluate_molecule_2(
 
     project.close_process()
     return 0
+
+
+@shared_task
+def get_metabolization_network(project_id):
+    project = SampleAnnotationProject.objects.get(id=project_id)
+    project.get_metabolization_network(task=False, force=True)
+    return project_id

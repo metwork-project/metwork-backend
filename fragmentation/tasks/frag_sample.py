@@ -28,8 +28,8 @@ def gen_cosine_matrix(frag_sample_id):
 @shared_task
 def get_molecular_network(frag_sample_id):
     fs = FragSample.objects.get(id=frag_sample_id)
-    fs.get_molecular_network()
-    return fs.id
+    fs.get_molecular_network(task=False, force=True)
+    return frag_sample_id
 
 
 @shared_task

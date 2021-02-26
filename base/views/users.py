@@ -104,13 +104,9 @@ def password_reset(request):
     except ValueError:
         return JsonResponse({"error": "Unable to parse request body"}, status=400)
 
-    print("payload", payload)
-
     form = ResetPasswordForm(payload)
 
     if form.is_valid():
-        print("form", form.cleaned_data)
-        print("email", form.cleaned_data["email"])
         user = get_user_model().objects.get(email=form.cleaned_data["email"])
 
         temp_pwd = get_user_model().objects.make_random_password(length=10)

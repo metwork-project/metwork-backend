@@ -89,5 +89,4 @@ class ChemDoodleTests(TestManagement):
         )
 
         json_res = cd.react_to_json(r.react_rdkit())
-        # print(json.dumps(json_res))
         self.assertEqual(cd.json_to_react(json_res), smarts)
