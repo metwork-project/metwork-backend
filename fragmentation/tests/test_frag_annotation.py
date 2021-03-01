@@ -15,81 +15,114 @@ from base.modules import BaseTestManagement
 
 
 class FragAnnotationModelTests(BaseTestManagement):
+    TEST_DATA = {
+        "default": {
+            "file_format": "default",
+            "sample_file_path": "fragmentation/tests/files/test_import_annotation.mgf",
+            "annotation_file_path": "fragmentation/tests/files/para_annotation.csv",
+            "expected_res": [
+                (
+                    "1",
+                    "1",
+                    "CN=C1N=C2C=CC3=C(NC(N(C)C)=N3)C(C)=C2N1",
+                    "DNP",
+                    "DOL18-M M+H",
+                ),
+                (
+                    "2",
+                    "2",
+                    "N=C(N)NCC/C=C1/N=C(O)N(/C=C/c2ccc(O)cc2)C1=O",
+                    "DNP",
+                    "PWJ39-P M+H",
+                ),
+                (
+                    "17",
+                    "17",
+                    "N=C(N)NCCCC1N=C(O)N(/C=C/c2ccc(O)cc2)C1=O",
+                    "DNP",
+                    "NGQ85-F M+H",
+                ),
+            ],
+        },
+        "GNPS": {
+            "file_format": "GNPS",
+            "sample_file_path": "fragmentation/tests/files/test_import_annotation.mgf",
+            "annotation_file_path": "fragmentation/tests/files/import_GNPS.tsv",
+            "expected_res": [
+                (
+                    "1",
+                    "5-HYDROXY-L-TRYPTOPHAN",
+                    "CN=C1NC2=C(C)C3=C(C=CC2=N1)N=C(N3)N(C)C",
+                    "GNPS : Commercial standard, Prasad",
+                    "895096",
+                ),
+                (
+                    "36",
+                    "Oroidin - CASMI2016 Category 1 - Challenge 2",
+                    "C1=C(NC(=C1Br)Br)C(=O)NCC=CC2=CN=C(N2)N",
+                    "GNPS : Other, CASMI",
+                    "34649-22-4",
+                ),
+            ],
+        },
+    }
+
     def test_import_file_annotation(self):
         user = get_user_model().objects.create()
-        # project = Project.objects.create(user = user)
-        data = [
-            {
-                "file_format": "default",
-                "sample_file_path": "fragmentation/tests/files/test_import_annotation.mgf",
-                "annotation_file_path": "fragmentation/tests/files/para_annotation.csv",
-                "expected_res": [
-                    (
-                        1,
-                        "CN=C1NC2=C(C)C3=C(C=CC2=N1)N=C(N3)N(C)C",
-                        "DNP",
-                        "DOL18-M M+H",
-                    ),
-                    (
-                        2,
-                        "[H]\C(CCNC(N)=N)=C1/N=C(O)N(\C([H])=C(/[H])C2=CC=C(O)C=C2)C1=O",
-                        "DNP",
-                        "PWJ39-P M+H",
-                    ),
-                    (
-                        17,
-                        "[H]\C(=C(\[H])C1=CC=C(O)C=C1)N1C(O)=NC(CCCNC(N)=N)C1=O",
-                        "DNP",
-                        "NGQ85-F M+H",
-                    ),
-                ],
-            },
-            {
-                "file_format": "GNPS",
-                "sample_file_path": "fragmentation/tests/files/test_import_annotation.mgf",
-                "annotation_file_path": "fragmentation/tests/files/import_GNPS.tsv",
-                "expected_res": [
-                    (
-                        1,
-                        "CN=C1NC2=C(C)C3=C(C=CC2=N1)N=C(N3)N(C)C",
-                        "GNPS : Commercial standard, Prasad",
-                        "895096",
-                    ),
-                    (
-                        36,
-                        "C1=C(NC(=C1Br)Br)C(=O)NCC=CC2=CN=C(N2)N",
-                        "GNPS : Other, CASMI",
-                        "34649-22-4",
-                    ),
-                ],
-            },
-        ]
 
-        for d in data:
+        for d in self.TEST_DATA.values():
             d["user"] = user
             self.eval_import_file_annotation(**d)
 
-    def eval_import_file_annotation(
-        self, file_format, sample_file_path, annotation_file_path, expected_res, user
+    def test_gen_annotations_file(self):
+        data = self.TEST_DATA["default"].copy()
+        expected_res = data.pop("expected_res")
+        user = get_user_model().objects.create()
+        frag_sample = self.import_annotation_file(**data, user=user)
+        data = frag_sample.gen_annotations()
+        assert data == expected_res
+        file_path = frag_sample.gen_annotations_file()
+        expected_res = (
+            "\n".join([",".join(str(val) for val in row) for row in expected_res])
+            + "\n"
+        )
+        assert file_path.read_text() == expected_res
+
+    def import_annotation_file(
+        self, file_format, sample_file_path, annotation_file_path, user
     ):
 
-        # sample_file_path = 'fragmentation/tests/files/test_import_annotation.mgf'
         with open(sample_file_path, "rb") as fss:
-            fs = FragSample.import_sample(fss, user, "name", "file_name")
-            fs.wait_import_done()
+            frag_sample = FragSample.import_sample(fss, user, "name", "file_name")
+            frag_sample.wait_import_done()
 
-        # annotation_file_path = 'fragmentation/tests/files/para_annotation.csv'
         with open(annotation_file_path, "rb") as fa:
-            # fs.import_annotation_file(fa)
-            fs.import_annotation_file(fa, file_format)
+            frag_sample.import_annotation_file(fa, file_format)
+
+        return frag_sample
+
+    def eval_import_file_annotation(
+        self, file_format, sample_file_path, annotation_file_path, expected_res, user,
+    ):
+
+        frag_sample = self.import_annotation_file(
+            file_format, sample_file_path, annotation_file_path, user
+        )
 
         for er in expected_res:
-            m = Molecule.find_from_smiles(er[1])
+            m = Molecule.find_from_smiles(er[2])
             self.assertTrue(m)
-            fms_search = FragMolSample.objects.filter(frag_sample=fs, ion_id=er[0])
+            fms_search = FragMolSample.objects.filter(
+                frag_sample=frag_sample, ion_id=int(er[0])
+            )
             self.assertEqual(fms_search.count(), 1)
             fms = fms_search.first()
             fa_search = FragAnnotationDB.objects.filter(
-                molecule=m, frag_mol_sample=fms, db_source=er[2], db_id=er[3],
+                molecule=m,
+                frag_mol_sample=fms,
+                name=er[1],
+                db_source=er[3],
+                db_id=er[4],
             )
             self.assertEqual(fa_search.count(), 1, fa_search.count())
+

@@ -4,6 +4,8 @@ import os
 from decimal import *
 import time
 import re
+import csv
+from pathlib import Path
 import numpy as np
 from celery import group, chain
 from django.db import models, IntegrityError
@@ -253,30 +255,39 @@ class FragSample(FileManagement, models.Model, AdductManager):
     def import_annotation_file(self, file_object, file_format="default"):
         from fragmentation.models import FragMolSample, FragAnnotationDB
 
-        fls = [l.decode("utf-8") for l in file_object.readlines()]
+        delimiter_by_format = {"default": ",", "GNPS": "\t"}
+        quotechar_by_format = {"default": '"', "GNPS": None}
+        data = [row.decode() for row in file_object.readlines()]
+        data = list(
+            csv.reader(
+                data,
+                delimiter=delimiter_by_format[file_format],
+                quotechar=quotechar_by_format[file_format],
+            )
+        )
         errors = {}
-        col_titles = fls[0].split("\t")
-        for i, fl in enumerate(fls[1:]):
+        print(data)
+        col_titles = data[0]
+        for idx, line in enumerate(data[1:]):
             try:
                 if file_format == "default":
-                    ion_id, name, smiles, db_source, db_id = fl.split("\n")[0].split(
-                        ","
-                    )
+                    ion_id, name, smiles, db_source, db_id = line
+                    print(ion_id, name, smiles, db_source, db_id)
                 elif file_format == "GNPS":
-                    data = fl.split("\t")
-                    ion_id = data[col_titles.index("#Scan#")]
-                    name = data[col_titles.index("Compound_Name")]
-                    smiles = data[col_titles.index("Smiles")]
+                    ion_id = line[col_titles.index("#Scan#")]
+                    name = line[col_titles.index("Compound_Name")]
+                    smiles = line[col_titles.index("Smiles")]
 
                     db_source = "GNPS : {0}, {1}".format(
-                        data[col_titles.index("Compound_Source")],
-                        data[col_titles.index("Data_Collector")],
+                        line[col_titles.index("Compound_Source")],
+                        line[col_titles.index("Data_Collector")],
                     )
-                    db_id = data[col_titles.index("CAS_Number")]
+                    db_id = line[col_titles.index("CAS_Number")]
 
                 if int(ion_id) > 0:
 
                     molecule = Molecule.load_from_smiles(smiles)
+                    print("molecule", molecule)
                     fms = self.fragmolsample_set.get(ion_id=ion_id)
                     self.add_annotation(
                         frag_mol_sample=fms,
@@ -289,7 +300,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
 
             except Exception as err:
                 # print(err)
-                errors[i] = {"err": str(err), "smiles": smiles}
+                errors[idx] = {"err": str(err), "idx": idx}
         return {"success": "Annotations successfully imported", "errors": errors}
 
     def add_annotation_from_smiles(
@@ -323,11 +334,14 @@ class FragSample(FileManagement, models.Model, AdductManager):
         db_id="",
         status_id=AnnotationStatus.UNDEFINED,
     ):
+        print("add_annotation")
         from fragmentation.models import FragAnnotationDB
 
         fms = frag_mol_sample
         am = AdductManager(ion_charge=self.ion_charge)
         adduct = am.get_adduct(molecule, fms)
+
+        print("adduct", adduct)
 
         if adduct is not None:
             if fms.adduct != adduct:
@@ -364,3 +378,29 @@ class FragSample(FileManagement, models.Model, AdductManager):
             data = self.gen_mgf()
             with open(file_path, "w") as fw:
                 fw.writelines(data)
+
+    def gen_annotations(self):
+        from fragmentation.models import FragAnnotationDB
+
+        return [
+            (
+                str(annot.ion_id()),
+                annot.name,
+                annot.smiles(),
+                annot.db_source,
+                annot.db_id,
+            )
+            for fms in self.fragmolsample_set.all()
+            for annot in FragAnnotationDB.objects.filter(frag_mol_sample=fms)
+        ]
+
+    def gen_annotations_file(self):
+        self.gen_item()
+        file_path = Path(self.item_path(), "annotations.csv")
+        data = self.gen_annotations()
+        with file_path.open("w") as file:
+            csvWriter = csv.writer(file)
+            csvWriter.writerows(data)
+
+        # file_path.write_text(data)
+        return file_path
