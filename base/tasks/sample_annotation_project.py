@@ -81,7 +81,11 @@ def run_reactions_molecule(molecule_id, project_id, depth_total, depth_last_matc
 
     grp_tsk = group(
         run_reaction_molecule.s(
-            [molecule_id], r.id, project_id, depth_total, depth_last_match
+            reactants_id=[molecule_id],
+            reaction_id=r.id,
+            project_id=project_id,
+            depth_total=depth_total,
+            depth_last_match=depth_last_match,
         )
         for r in project.reactions.all()
     )
@@ -155,7 +159,12 @@ def run_reaction_molecule(
         mols_ids = [m.id for m in rp.products.all()]
 
         grp_tsk = group(
-            load_molecule.s(m_id, project_id, depth_total, depth_last_match)
+            load_molecule.s(
+                m_id,
+                project_id=project_id,
+                depth_total=depth_total,
+                depth_last_match=depth_last_match,
+            )
             for m_id in mols_ids
         )
 
@@ -167,11 +176,11 @@ def run_reaction_molecule(
         mols_ids = [m.id for m in project.molecules_init_and_matching()]
         grp_tsk = group(
             run_reaction_molecule.s(
-                [reactants_id[0], m_id],
-                reaction.id,
-                project_id,
-                depth_total,
-                depth_last_match,
+                reactants_id=[reactants_id[0], m_id],
+                reaction_id=reaction.id,
+                project_id=project_id,
+                depth_total=depth_total,
+                depth_last_match=depth_last_match,
             )
             for m_id in mols_ids
         )
@@ -208,7 +217,12 @@ def load_molecule(molecule_id, project_id, depth_total, depth_last_match):
         if added:
             project.add_process()
             tsk = evaluate_molecule.apply_async(
-                args=[molecule_id, project_id, depth_total, depth_last_match],
+                kwargs={
+                    "molecule_id": molecule_id,
+                    "project_id": project_id,
+                    "depth_total": depth_total,
+                    "depth_last_match": depth_last_match,
+                },
                 queue=settings.CELERY_RUN_QUEUE,
             )
 
@@ -256,14 +270,14 @@ def evaluate_molecule(molecule_id, project_id, depth_total, depth_last_match):
 
     project.add_process()
     tsk = evaluate_molecule_2.apply_async(
-        args=[
-            molecule.id,
-            fm_search_ids,
-            adducts,
-            project_id,
-            depth_total,
-            depth_last_match,
-        ],
+        kwargs={
+            "molecule_id": molecule.id,
+            "fm_search_ids": fm_search_ids,
+            "adducts": adducts,
+            "project_id": project_id,
+            "depth_total": depth_total,
+            "depth_last_match": depth_last_match,
+        },
         queue=settings.CELERY_RUN_QUEUE,
     )
 
