@@ -266,13 +266,11 @@ class FragSample(FileManagement, models.Model, AdductManager):
             )
         )
         errors = {}
-        print(data)
         col_titles = data[0]
         for idx, line in enumerate(data[1:]):
             try:
                 if file_format == "default":
                     ion_id, name, smiles, db_source, db_id = line
-                    print(ion_id, name, smiles, db_source, db_id)
                 elif file_format == "GNPS":
                     ion_id = line[col_titles.index("#Scan#")]
                     name = line[col_titles.index("Compound_Name")]
@@ -287,7 +285,6 @@ class FragSample(FileManagement, models.Model, AdductManager):
                 if int(ion_id) > 0:
 
                     molecule = Molecule.load_from_smiles(smiles)
-                    print("molecule", molecule)
                     fms = self.fragmolsample_set.get(ion_id=ion_id)
                     self.add_annotation(
                         frag_mol_sample=fms,
@@ -334,14 +331,11 @@ class FragSample(FileManagement, models.Model, AdductManager):
         db_id="",
         status_id=AnnotationStatus.UNDEFINED,
     ):
-        print("add_annotation")
         from fragmentation.models import FragAnnotationDB
 
         fms = frag_mol_sample
         am = AdductManager(ion_charge=self.ion_charge)
         adduct = am.get_adduct(molecule, fms)
-
-        print("adduct", adduct)
 
         if adduct is not None:
             if fms.adduct != adduct:

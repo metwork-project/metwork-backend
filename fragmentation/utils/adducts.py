@@ -33,7 +33,6 @@ class AdductManager:
     def get_adduct(self, mol, frag_mol):
         """Get adduct of ion"""
         delta = frag_mol.parent_mass - mol.mass_exact()
-        print("delta", delta)
         adducts = self.adducts
         try:
             return adducts.index[abs(adducts["mass"] - delta) <= self.MASS_TOLERANCE][0]
