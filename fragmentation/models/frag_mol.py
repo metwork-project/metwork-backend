@@ -32,19 +32,21 @@ class FragMol(PolymorphicModel):
         res += "SCANS={0}".format(self.scan_id())
         return res
 
-    def gen_mgf(self, energy=2, decimal=6):
+    def gen_mgf(self, energy=None, decimal=6):
         getcontext().prec = decimal + 10
         DECIMALS = Decimal(10) ** (-1 * (decimal))
         res = "BEGIN IONS\n"
         res += self.gen_info(decimal)
         res += "\n"
-        spectrum_set = self.fragmolspectrum_set.filter(energy=energy)
-        if spectrum_set.count() > 0:
+        spectrum_query = self.fragmolspectrum_set
+        if energy:
+            spectrum_query = spectrum_query.filter(energy=energy)         
+        if spectrum_query.count() > 0:
             res += (
                 "\n".join(
                     [
                         " ".join([str(Decimal(v).quantize(DECIMALS)) for v in peak])
-                        for peak in spectrum_set.first().spectrum
+                        for peak in spectrum_query.first().spectrum
                     ]
                 )
                 + "\n"
