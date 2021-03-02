@@ -1,0 +1,4 @@
+nodeId,name,smiles,source,sourceId,level
+1,1,CN=C1N=C2C=CC3=C(NC(N(C)C)=N3)C(C)=C2N1,DNP,DOL18-M M+H,1
+2,2,N=C(N)NCC/C=C1/N=C(O)N(/C=C/c2ccc(O)cc2)C1=O,DNP,PWJ39-P M+H,2
+17,17,N=C(N)NCCCC1N=C(O)N(/C=C/c2ccc(O)cc2)C1=O,DNP,NGQ85-F M+H,3

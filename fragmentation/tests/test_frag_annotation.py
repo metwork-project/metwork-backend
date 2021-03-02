@@ -11,15 +11,18 @@ from fragmentation.models import (
     FragMolSample,
     FragSample,
 )
+
+from fragmentation.utils import LEVEL_STATUS_MAPPING
+
 from base.modules import BaseTestManagement
 
 
 class FragAnnotationModelTests(BaseTestManagement):
     TEST_DATA = {
-        "default": {
-            "file_format": "default",
+        "level": {
+            "file_format": "level",
             "sample_file_path": "fragmentation/tests/files/test_import_annotation.mgf",
-            "annotation_file_path": "fragmentation/tests/files/para_annotation.csv",
+            "annotation_file_path": "fragmentation/tests/files/para_annotation_level.csv",
             "expected_res": [
                 (
                     "1",
@@ -43,6 +46,7 @@ class FragAnnotationModelTests(BaseTestManagement):
                     "NGQ85-F M+H",
                 ),
             ],
+            "level": (30, 20, 10),
         },
         "GNPS": {
             "file_format": "GNPS",
@@ -70,26 +74,44 @@ class FragAnnotationModelTests(BaseTestManagement):
     def test_import_file_annotation(self):
         user = get_user_model().objects.create()
 
-        for d in self.TEST_DATA.values():
+        data = self.TEST_DATA.copy()
+        data["default"] = data["level"]
+        data["default"].pop("level")
+        data["default"]["file_format"] = "default"
+        data["default"][
+            "annotation_file_path"
+        ] = "fragmentation/tests/files/para_annotation.csv"
+
+        for d in data.values():
             d["user"] = user
             self.eval_import_file_annotation(**d)
 
     def test_gen_annotations_file(self):
-        data = self.TEST_DATA["default"].copy()
+        data = self.TEST_DATA["level"].copy()
+        level = data.pop("level")
         expected_res = data.pop("expected_res")
+        expected_res = [
+            tuple((*res, LEVEL_STATUS_MAPPING[level[idx]]))
+            for idx, res in enumerate(expected_res)
+        ]
         user = get_user_model().objects.create()
         frag_sample = self.import_annotation_file(**data, user=user)
         data = frag_sample.gen_annotations()
         assert data == expected_res
         file_path = frag_sample.gen_annotations_file()
         expected_res = (
-            "\n".join([",".join(str(val) for val in row) for row in expected_res])
+            "\n".join(
+                [
+                    ",".join([str(val) for val in row])
+                    for idx, row in enumerate(expected_res)
+                ]
+            )
             + "\n"
         )
         assert file_path.read_text() == expected_res
 
     def import_annotation_file(
-        self, file_format, sample_file_path, annotation_file_path, user
+        self, file_format, sample_file_path, annotation_file_path, user,
     ):
 
         with open(sample_file_path, "rb") as fss:
@@ -102,14 +124,20 @@ class FragAnnotationModelTests(BaseTestManagement):
         return frag_sample
 
     def eval_import_file_annotation(
-        self, file_format, sample_file_path, annotation_file_path, expected_res, user,
+        self,
+        file_format,
+        sample_file_path,
+        annotation_file_path,
+        expected_res,
+        user,
+        level=None,
     ):
 
         frag_sample = self.import_annotation_file(
             file_format, sample_file_path, annotation_file_path, user
         )
 
-        for er in expected_res:
+        for idx, er in enumerate(expected_res):
             m = Molecule.find_from_smiles(er[2])
             self.assertTrue(m)
             fms_search = FragMolSample.objects.filter(
@@ -125,4 +153,6 @@ class FragAnnotationModelTests(BaseTestManagement):
                 db_id=er[4],
             )
             self.assertEqual(fa_search.count(), 1, fa_search.count())
+            if level:
+                assert fa_search.first().status_id == level[idx]
 

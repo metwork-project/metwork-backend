@@ -15,7 +15,12 @@ from libmetgem.cosine import compute_distance_matrix
 from libmetgem.mgf import filter_data
 from base.models import Molecule, Array2DModel, Tag
 from base.modules import FileManagement
-from fragmentation.utils import AdductManager, AnnotationStatus
+from fragmentation.utils import (
+    AdductManager,
+    AnnotationStatus,
+    STATUS_LEVEL_MAPPING,
+    LEVEL_STATUS_MAPPING,
+)
 
 
 class FragSample(FileManagement, models.Model, AdductManager):
@@ -255,22 +260,28 @@ class FragSample(FileManagement, models.Model, AdductManager):
     def import_annotation_file(self, file_object, file_format="default"):
         from fragmentation.models import FragMolSample, FragAnnotationDB
 
-        delimiter_by_format = {"default": ",", "GNPS": "\t"}
-        quotechar_by_format = {"default": '"', "GNPS": None}
+        delimiter_by_format = {"GNPS": "\t"}
+        quotechar_by_format = {"GNPS": None}
         data = [row.decode() for row in file_object.readlines()]
         data = list(
             csv.reader(
                 data,
-                delimiter=delimiter_by_format[file_format],
-                quotechar=quotechar_by_format[file_format],
+                delimiter=delimiter_by_format.get(file_format, ","),
+                quotechar=quotechar_by_format.get(file_format, '"'),
             )
         )
         errors = {}
         col_titles = data[0]
         for idx, line in enumerate(data[1:]):
             try:
+                status_id = AnnotationStatus.VALIDATED
                 if file_format == "default":
                     ion_id, name, smiles, db_source, db_id = line
+                if file_format == "level":
+                    ion_id, name, smiles, db_source, db_id, level = line
+                    status_id = STATUS_LEVEL_MAPPING.get(
+                        int(level), AnnotationStatus.UNRATED
+                    )
                 elif file_format == "GNPS":
                     ion_id = line[col_titles.index("#Scan#")]
                     name = line[col_titles.index("Compound_Name")]
@@ -292,7 +303,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                         name=name,
                         db_source=db_source,
                         db_id=db_id,
-                        status_id=AnnotationStatus.VALIDATED,
+                        status_id=status_id,
                     )
 
             except Exception as err:
@@ -383,6 +394,7 @@ class FragSample(FileManagement, models.Model, AdductManager):
                 annot.smiles(),
                 annot.db_source,
                 annot.db_id,
+                LEVEL_STATUS_MAPPING.get(annot.status_id, 4),
             )
             for fms in self.fragmolsample_set.all()
             for annot in FragAnnotationDB.objects.filter(frag_mol_sample=fms)
