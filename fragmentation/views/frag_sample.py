@@ -87,12 +87,15 @@ class FragSampleViewSet(ModelAuthViewSet, TagViewMethods):
         return JsonResponse(data, safe=False)
 
     @action(detail=True, methods=["get"])
-    def download_mgf(self, request, pk=None):
+    def download_file(self, request, pk=None):
         fs = self.get_object()
-
-        # Generate .mgf file from database if not exist
-        fs.gen_mgf_file()
-
-        fileAddress = os.path.join(fs.item_path(), fs.file_name)
-        json_data = json.dumps({"data": open(fileAddress, "r").read()})
+        file_type = request.query_params["file"]
+        if file_type == "mgf":
+            fs.gen_mgf_file()
+            file_name = fs.file_name
+        elif file_type == "annotations":
+            fs.gen_annotations_file()
+            file_name = "annotations.csv"
+        file_path = os.path.join(fs.item_path(), file_name)
+        json_data = json.dumps({"data": open(file_path, "r").read()})
         return JsonResponse(json_data, safe=False)
