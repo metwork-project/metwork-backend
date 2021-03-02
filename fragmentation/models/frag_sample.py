@@ -403,7 +403,9 @@ class FragSample(FileManagement, models.Model, AdductManager):
     def gen_annotations_file(self):
         self.gen_item()
         file_path = Path(self.item_path(), "annotations.csv")
-        data = self.gen_annotations()
+        data = [
+            ["IonId", "name", "smiles", "source", "sourceId", "level",]
+        ] + self.gen_annotations()
         with file_path.open("w") as file:
             csvWriter = csv.writer(file)
             csvWriter.writerows(data)

@@ -100,7 +100,8 @@ class FragAnnotationModelTests(BaseTestManagement):
         assert data == expected_res
         file_path = frag_sample.gen_annotations_file()
         expected_res = (
-            "\n".join(
+            "IonId,name,smiles,source,sourceId,level\n"
+            + "\n".join(
                 [
                     ",".join([str(val) for val in row])
                     for idx, row in enumerate(expected_res)
