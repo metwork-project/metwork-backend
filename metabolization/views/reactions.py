@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
+from collections import defaultdict
 from metabolization.models import Reaction
 from rest_framework import serializers
 from rest_framework.decorators import action
@@ -66,9 +67,15 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
                             id=project_id
                         ).reactions_not_selected()
         else:
-            get_filter = self.request.query_params.get("filter", None)
-            if get_filter == "not_obsolete":
-                queryset = queryset.filter(status_code__lt=Reaction.status.OBSOLETE)
+            params = defaultdict(dict)
+            filter_status = []
+            for key, value in self.request.query_params.lists():
+                if key == "filter[status][]":
+                    filter_status = [int(v) for v in value]
+                else:
+                    params[key] = value
+            if filter_status:
+                queryset = queryset.filter(status_code__in=filter_status)
         return queryset.order_by("name")
 
     def create(self, request, *args, **kwargs):
