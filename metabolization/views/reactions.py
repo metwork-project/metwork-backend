@@ -76,6 +76,14 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
                     text = value[0]
                     if text:
                         queryset = queryset.filter(Q(name__icontains=text) | Q(tags__name__icontains=text))
+                elif key == "filter[my]":
+                    my = value[0].lower() == 'true'
+                    if my:
+                        queryset = queryset.filter(user=self.request.user)
+                elif key == "filter[user]" and not my:
+                    user_text = value[0]
+                    if user_text:
+                        queryset = queryset.filter(user__username__icontains=user_text)
                 else:
                     params[key] = value
             if filter_status:
