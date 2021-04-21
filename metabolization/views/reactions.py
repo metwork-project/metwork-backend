@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+from django.db.models import Q
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from collections import defaultdict
 from metabolization.models import Reaction
@@ -72,6 +72,10 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
             for key, value in self.request.query_params.lists():
                 if key == "filter[status][]":
                     filter_status = [int(v) for v in value]
+                elif key == "filter[text]":
+                    text = value[0]
+                    if text:
+                        queryset = queryset.filter(Q(name__icontains=text) | Q(tags__name__icontains=text))
                 else:
                     params[key] = value
             if filter_status:
