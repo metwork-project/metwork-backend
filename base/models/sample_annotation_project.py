@@ -206,8 +206,7 @@ class SampleAnnotationProject(Project):
 
     def add_items(self, dataLabel, item_ids):
         if dataLabel == "reactions":
-            reaction_ids = self.reaction_ids() + item_ids
-            self.change_reactions(reaction_ids)
+            self.change_reactions(item_ids)
         if dataLabel == "annotations":
             for id in item_ids:
                 annot = FragAnnotationDB.objects.get(id=id)

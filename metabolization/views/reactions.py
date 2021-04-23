@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.db.models import Q
+from django.db.models import Q, Prefetch, Count, Min
 from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
 from collections import defaultdict
 from metabolization.models import Reaction
@@ -48,46 +48,40 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
 
     def get_queryset(self):
         queryset = Reaction.objects.all()
-        project_id = self.request.query_params.get("project_id", None)
-        if project_id is not None:
+        project_id = self.request.query_params.get("filter[project_id]", None)
+        selected = self.request.query_params.get("filter[selected]", None)
+        if project_id:
+            project_id = project_id[0]
             from base.models import SampleAnnotationProject
 
-            selected = self.request.query_params.get("selected", None)
-            if selected is not None:
-                if selected == "true":
-                    if project_id != "":
-                        queryset = SampleAnnotationProject.objects.get(
-                            id=project_id
-                        ).all_reactions()
-                    else:
-                        queryset = Reaction.objects.none()
-                else:
-                    if project_id != "":
-                        queryset = SampleAnnotationProject.objects.get(
-                            id=project_id
-                        ).reactions_not_selected()
-        else:
-            params = defaultdict(dict)
-            filter_status = []
-            for key, value in self.request.query_params.lists():
-                if key == "filter[status][]":
-                    filter_status = [int(v) for v in value]
-                elif key == "filter[text]":
-                    text = value[0]
-                    if text:
-                        queryset = queryset.filter(Q(name__icontains=text) | Q(tags__name__icontains=text))
-                elif key == "filter[my]":
-                    my = value[0].lower() == 'true'
-                    if my:
-                        queryset = queryset.filter(user=self.request.user)
-                elif key == "filter[user]" and not my:
-                    user_text = value[0]
-                    if user_text:
-                        queryset = queryset.filter(user__username__icontains=user_text)
-                else:
-                    params[key] = value
-            if filter_status:
-                queryset = queryset.filter(status_code__in=filter_status)
+            if selected == "selected":
+                queryset = SampleAnnotationProject.objects.get(
+                    id=project_id
+                ).all_reactions()
+
+        params = defaultdict(dict)
+        filter_status = []
+        for key, value in self.request.query_params.lists():
+            if key == "filter[status][]":
+                filter_status = [int(v) for v in value]
+            elif key == "filter[text]":
+                text = value[0]
+                if text:
+                    queryset = queryset.filter(
+                        Q(name__icontains=text) | Q(tags__name__icontains=text)
+                    )
+            elif key == "filter[my]":
+                my = value[0].lower() == "true"
+                if my:
+                    queryset = queryset.filter(user=self.request.user)
+            elif key == "filter[user]" and not my:
+                user_text = value[0]
+                if user_text:
+                    queryset = queryset.filter(user__username__icontains=user_text)
+            else:
+                params[key] = value
+        if filter_status:
+            queryset = queryset.filter(status_code__in=filter_status)
         return queryset.order_by("name")
 
     def create(self, request, *args, **kwargs):
