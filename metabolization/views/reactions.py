@@ -47,9 +47,20 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
     permission_classes = (IsOwnerOrPublic,)
 
     def get_queryset(self):
+        queryset = self.filtered_queryset(self.request.query_params)
+        return queryset.order_by("name")
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        queryset = self.filter_queryset(self.get_queryset())
+        ids = [reaction.id for reaction in queryset.all()]
+        response.data["meta"]["ids"] = ids
+        return response
+
+    def filtered_queryset(self, query_params):
         queryset = Reaction.objects.all()
-        project_id = self.request.query_params.get("filter[project_id]", None)
-        selected = self.request.query_params.get("filter[selected]", None)
+        project_id = query_params.get("filter[project_id]", None)
+        selected = query_params.get("filter[selected]", None)
         if project_id:
             project_id = project_id[0]
             from base.models import SampleAnnotationProject
@@ -62,7 +73,8 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
 
         params = defaultdict(dict)
         filter_status = []
-        for key, value in self.request.query_params.lists():
+
+        for key, value in query_params.lists():
             if key == "filter[status][]":
                 filter_status = [int(v) for v in value]
             elif key == "filter[text]":
@@ -83,7 +95,8 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
                 params[key] = value
         if filter_status:
             queryset = queryset.filter(status_code__in=filter_status)
-        return queryset.order_by("name")
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         request.data["user"] = request.user.id
