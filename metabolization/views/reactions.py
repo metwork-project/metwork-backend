@@ -54,10 +54,11 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
             project_id = project_id[0]
             from base.models import SampleAnnotationProject
 
+            queryset_ = SampleAnnotationProject.objects.get(id=project_id)
             if selected == "selected":
-                queryset = SampleAnnotationProject.objects.get(
-                    id=project_id
-                ).all_reactions()
+                queryset = queryset_.all_reactions()
+            if selected == "notselected":
+                queryset = queryset_.reactions_not_selected()
 
         params = defaultdict(dict)
         filter_status = []
