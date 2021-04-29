@@ -6,7 +6,7 @@ from fragmentation.models import FragAnnotationDB
 from rest_framework import serializers
 from rest_framework.response import Response
 from base.modules import JSONSerializerField
-
+from base.modules.queryset import FilteredQueryset
 
 class FragAnnotationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +26,38 @@ class FragAnnotationSerializer(serializers.ModelSerializer):
 
     chemdoodle_json = JSONSerializerField()
 
+class FragAnnotationQueryset(FilteredQueryset):
+
+    def get_all(self, queryset_):
+        return queryset_.all_annotations_init()
+
+    def get_notselected(self, queryset_):
+        return queryset_.frag_annotations_init_not_selected()
+
+    def filter_other(self):
+        queryset = self.queryset
+
+        for key, value in self.request.query_params.lists():
+
+            if key == "filter[text]":
+                text = value[0]
+                if text:
+                    queryset = queryset.filter(
+                        Q(name__icontains=text) | Q(tags__name__icontains=text)
+                    )
+            elif key == "filter[my]":
+                my = value[0].lower() == "true"
+                if my:
+                    queryset = queryset.filter(user=self.request.user)
+            elif key == "filter[user]" and not my:
+                user_text = value[0]
+                if user_text:
+                    queryset = queryset.filter(user__username__icontains=user_text)
+
+        self.queryset = queryset
+
+    def _filter_status(self, filter_status):
+            self.queryset = self.queryset.filter(status_id__in=filter_status)
 
 class FragAnnotationViewSet(ModelAuthViewSet):
 
@@ -33,27 +65,5 @@ class FragAnnotationViewSet(ModelAuthViewSet):
     permission_classes = (IsOwnerOrPublic,)
 
     def get_queryset(self):
-        queryset = FragAnnotationDB.objects.all()
-        if "frag_sample_id" in self.request.query_params:
-            queryset = queryset.filter(
-                frag_mol_sample__frag_sample=self.request.query_params["frag_sample_id"]
-            )
-        project_id = self.request.query_params.get("project_id", None)
-        if project_id is not None:
-            from base.models import SampleAnnotationProject
-
-            selected = self.request.query_params.get("selected", None)
-            if selected is not None:
-                if selected == "true":
-                    if project_id != "":
-                        queryset = SampleAnnotationProject.objects.get(
-                            id=project_id
-                        ).frag_annotations_init.all()
-                    else:
-                        queryset = FragAnnotationDB.objects.none()
-                else:
-                    if project_id != "":
-                        queryset = SampleAnnotationProject.objects.get(
-                            id=project_id
-                        ).frag_annotations_init_not_selected()
+        queryset = FragAnnotationQueryset(self.request, FragAnnotationDB).queryset
         return queryset.order_by("frag_mol_sample__ion_id")

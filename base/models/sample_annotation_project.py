@@ -136,6 +136,14 @@ class SampleAnnotationProject(Project):
         else:
             return self
 
+    def annotation_init_ids(self):
+        return [fa.id for fa in self.all_annotations()]
+
+
+    def all_annotations_init(self):
+        return self.frag_annotations_init.all()
+
+
     def frag_annotations_init_not_selected(self):
         selected_ids = [fs.id for fs in self.frag_annotations_init.all()]
         return FragAnnotationDB.objects.filter(
@@ -180,9 +188,6 @@ class SampleAnnotationProject(Project):
         else:
             self.status_code = 0
         return self
-
-    def annotation_init_ids(self):
-        return [fa.id for fa in self.frag_annotations_init.all()]
 
     def remove_reactions(self):
         self.change_reactions([])

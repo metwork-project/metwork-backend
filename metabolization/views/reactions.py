@@ -12,7 +12,7 @@ from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from base.models import Molecule
 from base.modules import JSONSerializerField, ChemDoodle, TagViewMethods
-from base.views import MoleculeSerializer
+from base.modules.queryset import FilteredQueryset
 
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -41,43 +41,20 @@ class ReactionSerializer(serializers.ModelSerializer):
     chemdoodle_json = JSONSerializerField()
 
 
-class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
-    queryset = Reaction.objects.all().order_by("name")
-    serializer_class = ReactionSerializer
-    permission_classes = (IsOwnerOrPublic,)
+class ReactionQueryset(FilteredQueryset):
 
-    def get_queryset(self):
-        queryset = self.filtered_queryset(self.request.query_params)
-        return queryset.order_by("name")
+    def get_all(self, queryset_):
+        return queryset_.all_reactions()
 
-    def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        queryset = self.filter_queryset(self.get_queryset())
-        ids = [reaction.id for reaction in queryset.all()]
-        response.data["meta"]["ids"] = ids
-        return response
+    def get_notselected(self, queryset_):
+        return queryset_.reactions_not_selected()
 
-    def filtered_queryset(self, query_params):
-        queryset = Reaction.objects.all()
-        project_id = query_params.get("filter[project_id]", None)
-        selected = query_params.get("filter[selected]", None)
-        if project_id:
-            project_id = project_id[0]
-            from base.models import SampleAnnotationProject
+    def filter_other(self):
+        queryset = self.queryset
 
-            queryset_ = SampleAnnotationProject.objects.get(id=project_id)
-            if selected == "selected":
-                queryset = queryset_.all_reactions()
-            if selected == "notselected":
-                queryset = queryset_.reactions_not_selected()
+        for key, value in self.request.query_params.lists():
 
-        params = defaultdict(dict)
-        filter_status = []
-
-        for key, value in query_params.lists():
-            if key == "filter[status][]":
-                filter_status = [int(v) for v in value]
-            elif key == "filter[text]":
+            if key == "filter[text]":
                 text = value[0]
                 if text:
                     queryset = queryset.filter(
@@ -91,12 +68,25 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
                 user_text = value[0]
                 if user_text:
                     queryset = queryset.filter(user__username__icontains=user_text)
-            else:
-                params[key] = value
-        if filter_status:
-            queryset = queryset.filter(status_code__in=filter_status)
 
-        return queryset
+        self.queryset = queryset
+
+
+class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
+    queryset = Reaction.objects.all().order_by("name")
+    serializer_class = ReactionSerializer
+    permission_classes = (IsOwnerOrPublic,)
+
+    def get_queryset(self):
+        queryset = ReactionQueryset(self.request, Reaction).queryset
+        return queryset.order_by("name")
+
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        queryset = self.filter_queryset(self.get_queryset())
+        ids = [reaction.id for reaction in queryset.all()]
+        response.data["meta"]["ids"] = ids
+        return response
 
     def create(self, request, *args, **kwargs):
         request.data["user"] = request.user.id

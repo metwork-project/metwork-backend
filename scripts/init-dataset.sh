@@ -20,8 +20,8 @@ $METWORK_BACKEND_PATH/manage.py migrate
 
 if test -f $METWORK_BACKEND_PATH/reactions_export.tsv
 then
-    echo "Create reactions"
-    echo "from manage_reactions import import_reactions; import_reactions()" | ./manage.py shell
+#    echo "Create reactions"
+#    echo "from manage_reactions import import_reactions; import_reactions()" | ./manage.py shell
 fi
 
 $SCRIPT_DIR/run-docker.sh --stop
