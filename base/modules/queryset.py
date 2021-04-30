@@ -22,7 +22,6 @@ class FilteredQueryset:
         project_id = query_params.get("filter[project_id]", None)
         selected = query_params.get("filter[selected]", None)
         if project_id:
-            project_id = project_id[0]
             from base.models import SampleAnnotationProject
 
             queryset_ = SampleAnnotationProject.objects.get(id=project_id)

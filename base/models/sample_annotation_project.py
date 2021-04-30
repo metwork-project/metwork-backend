@@ -137,7 +137,7 @@ class SampleAnnotationProject(Project):
             return self
 
     def annotation_init_ids(self):
-        return [fa.id for fa in self.all_annotations()]
+        return [fa.id for fa in self.all_annotations_init()]
 
 
     def all_annotations_init(self):
