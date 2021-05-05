@@ -166,10 +166,13 @@ class SampleAnnotationProject(Project):
             ion_charge = "positive"
         return FragSimConf.params_for_ion_charge(ion_charge)
 
-    def add_all_annotations(self):
-        for fa in FragAnnotationDB.objects.filter(
+    def get_all_fragsmaple_annotations(self):
+        return FragAnnotationDB.objects.filter(
             frag_mol_sample__frag_sample=self.frag_sample
-        ):
+        )
+
+    def add_all_annotations(self):
+        for fa in self.get_all_fragsmaple_annotations():
             self.frag_annotations_init.add(fa)
 
     def update_status(self):

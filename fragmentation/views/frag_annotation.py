@@ -28,7 +28,11 @@ class FragAnnotationSerializer(serializers.ModelSerializer):
 
 class FragAnnotationQueryset(FilteredQueryset):
 
+    def get_default(self, queryset_):
+        return queryset_.get_all_fragsmaple_annotations()
+
     def get_all(self, queryset_):
+        print("queryset_", queryset_)
         return queryset_.all_annotations_init()
 
     def get_notselected(self, queryset_):
