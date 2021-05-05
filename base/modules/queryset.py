@@ -10,9 +10,13 @@ class FilteredQueryset:
         self.set_queryset()
 
     def set_queryset(self):
+        self.filter_init()
         self.filter_project_selection()
         self.filter_status()
         self.filter_other()
+
+    def filter_init(self):
+        pass
 
     def filter_project_selection(self):
 

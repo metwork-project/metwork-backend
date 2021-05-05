@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
+from base.views.model_auth import IsOwnerOrPublic
+from base.views.utils import MetaIdsViewSet
 from fragmentation.models import FragAnnotationDB
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -28,8 +29,14 @@ class FragAnnotationSerializer(serializers.ModelSerializer):
 
 class FragAnnotationQueryset(FilteredQueryset):
 
+    def filter_init(self):
+        if "frag_sample_id" in self.request.query_params:
+            self.queryset = self.queryset.filter(
+                frag_mol_sample__frag_sample=self.request.query_params["frag_sample_id"]
+            )
+
     def get_default(self, queryset_):
-        return queryset_.get_all_fragsmaple_annotations()
+        return queryset_.get_all_fragsample_annotations()
 
     def get_all(self, queryset_):
         print("queryset_", queryset_)
@@ -63,7 +70,7 @@ class FragAnnotationQueryset(FilteredQueryset):
     def _filter_status(self, filter_status):
             self.queryset = self.queryset.filter(status_id__in=filter_status)
 
-class FragAnnotationViewSet(ModelAuthViewSet):
+class FragAnnotationViewSet(MetaIdsViewSet):
 
     serializer_class = FragAnnotationSerializer
     permission_classes = (IsOwnerOrPublic,)

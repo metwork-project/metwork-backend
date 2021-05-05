@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db.models import Q, Prefetch, Count, Min
-from base.views.model_auth import ModelAuthViewSet, IsOwnerOrPublic
+from base.views.model_auth import IsOwnerOrPublic
+from base.views.utils import MetaIdsViewSet
 from collections import defaultdict
 from metabolization.models import Reaction
 from rest_framework import serializers
@@ -72,7 +73,7 @@ class ReactionQueryset(FilteredQueryset):
         self.queryset = queryset
 
 
-class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
+class ReactionViewSet(MetaIdsViewSet, TagViewMethods):
     queryset = Reaction.objects.all().order_by("name")
     serializer_class = ReactionSerializer
     permission_classes = (IsOwnerOrPublic,)
@@ -80,13 +81,6 @@ class ReactionViewSet(ModelAuthViewSet, TagViewMethods):
     def get_queryset(self):
         queryset = ReactionQueryset(self.request, Reaction).queryset
         return queryset.order_by("name")
-
-    def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        queryset = self.filter_queryset(self.get_queryset())
-        ids = [reaction.id for reaction in queryset.all()]
-        response.data["meta"]["ids"] = ids
-        return response
 
     def create(self, request, *args, **kwargs):
         request.data["user"] = request.user.id

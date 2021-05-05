@@ -166,13 +166,13 @@ class SampleAnnotationProject(Project):
             ion_charge = "positive"
         return FragSimConf.params_for_ion_charge(ion_charge)
 
-    def get_all_fragsmaple_annotations(self):
+    def get_all_fragsample_annotations(self):
         return FragAnnotationDB.objects.filter(
             frag_mol_sample__frag_sample=self.frag_sample
         )
 
     def add_all_annotations(self):
-        for fa in self.get_all_fragsmaple_annotations():
+        for fa in self.get_all_fragsample_annotations():
             self.frag_annotations_init.add(fa)
 
     def update_status(self):
@@ -215,10 +215,9 @@ class SampleAnnotationProject(Project):
     def add_items(self, dataLabel, item_ids):
         if dataLabel == "reactions":
             self.change_reactions(item_ids)
-        if dataLabel == "annotations":
-            for id in item_ids:
-                annot = FragAnnotationDB.objects.get(id=id)
-                self.frag_annotations_init.add(annot)
+        if dataLabel == "frag-annotation":
+            self.frag_annotations_init.set(FragAnnotationDB.objects.filter(id__in=item_ids))
+            self.save()
         return self
 
     def remove_all(self, dataLabel):
