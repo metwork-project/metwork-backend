@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from base.modules import JSONSerializerField
 from base.modules.queryset import FilteredQueryset
 
+
 class FragAnnotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = FragAnnotationDB
@@ -27,12 +28,15 @@ class FragAnnotationSerializer(serializers.ModelSerializer):
 
     chemdoodle_json = JSONSerializerField()
 
-class FragAnnotationQueryset(FilteredQueryset):
 
+class FragAnnotationQueryset(FilteredQueryset):
     def filter_init(self):
-        if "frag_sample_id" in self.request.query_params:
+        frag_sample_id = self.request.query_params.get("frag_sample_id", None)
+        if not (self.project_id or frag_sample_id):
+            raise Exception
+        if frag_sample_id:
             self.queryset = self.queryset.filter(
-                frag_mol_sample__frag_sample=self.request.query_params["frag_sample_id"]
+                frag_mol_sample__frag_sample=frag_sample_id
             )
 
     def get_default(self, queryset_):
@@ -68,7 +72,8 @@ class FragAnnotationQueryset(FilteredQueryset):
         self.queryset = queryset
 
     def _filter_status(self, filter_status):
-            self.queryset = self.queryset.filter(status_id__in=filter_status)
+        self.queryset = self.queryset.filter(status_id__in=filter_status)
+
 
 class FragAnnotationViewSet(MetaIdsViewSet):
 
@@ -76,5 +81,8 @@ class FragAnnotationViewSet(MetaIdsViewSet):
     permission_classes = (IsOwnerOrPublic,)
 
     def get_queryset(self):
-        queryset = FragAnnotationQueryset(self.request, FragAnnotationDB).queryset
-        return queryset.order_by("frag_mol_sample__ion_id")
+        try:
+            queryset = FragAnnotationQueryset(self.request, FragAnnotationDB).queryset
+            return queryset.order_by("frag_mol_sample__ion_id")
+        except:
+            return FragAnnotationDB.objects.filter(id=0)

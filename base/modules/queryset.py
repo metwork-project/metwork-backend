@@ -3,11 +3,14 @@ from django.db.models import Q
 
 
 class FilteredQueryset:
-
     def __init__(self, request, model):
         self.request = request
         self.queryset = model.objects.all()
+        self.set_project_id()
         self.set_queryset()
+
+    def set_project_id(self):
+        self.project_id = self.request.query_params.get("filter[project_id]", None)
 
     def set_queryset(self):
         self.filter_init()
@@ -20,14 +23,14 @@ class FilteredQueryset:
 
     def filter_project_selection(self):
 
-        query_params = self.request.query_params
         queryset = self.queryset
 
-        project_id = query_params.get("filter[project_id]", None)
-        selected = query_params.get("filter[selected]", None)
+        project_id = self.project_id
+        selected = self.request.query_params.get("filter[selected]", None)
         if project_id:
             from base.models import SampleAnnotationProject
-            queryset_= SampleAnnotationProject.objects.get(id=project_id)
+
+            queryset_ = SampleAnnotationProject.objects.get(id=project_id)
             if selected == "selected":
                 queryset = self.get_all(queryset_)
             elif selected == "notselected":
@@ -57,7 +60,7 @@ class FilteredQueryset:
             self._filter_status(filter_status)
 
     def _filter_status(self, filter_status):
-            self.queryset = self.queryset.filter(status_code__in=filter_status)
+        self.queryset = self.queryset.filter(status_code__in=filter_status)
 
     def filter_other(self):
 
