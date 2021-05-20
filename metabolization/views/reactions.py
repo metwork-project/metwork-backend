@@ -43,7 +43,6 @@ class ReactionSerializer(serializers.ModelSerializer):
 
 
 class ReactionQueryset(FilteredQueryset):
-
     def get_all(self, queryset_):
         return queryset_.all_reactions()
 
@@ -60,7 +59,7 @@ class ReactionQueryset(FilteredQueryset):
                 if text:
                     queryset = queryset.filter(
                         Q(name__icontains=text) | Q(tags__name__icontains=text)
-                    )
+                    ).distinct()
             elif key == "filter[my]":
                 my = value[0].lower() == "true"
                 if my:
