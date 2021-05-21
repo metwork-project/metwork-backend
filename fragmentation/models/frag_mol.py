@@ -9,9 +9,10 @@ from base.modules.rdkit_functions import RDKit
 import hashlib
 from decimal import *
 import time
+from base.models import BaseModel
 
 
-class FragMol(PolymorphicModel):
+class FragMol(PolymorphicModel, BaseModel):
     class JSONAPIMeta:
         resource_name = "fragmol"
 
@@ -40,7 +41,7 @@ class FragMol(PolymorphicModel):
         res += "\n"
         spectrum_query = self.fragmolspectrum_set
         if energy:
-            spectrum_query = spectrum_query.filter(energy=energy)         
+            spectrum_query = spectrum_query.filter(energy=energy)
         if spectrum_query.count() > 0:
             res += (
                 "\n".join(

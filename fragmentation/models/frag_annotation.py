@@ -7,9 +7,10 @@ from polymorphic.models import PolymorphicModel
 from base.models import Molecule
 from fragmentation.models import FragMolSample, FragMolCompare
 from fragmentation.utils import AnnotationStatus
+from base.models import BaseModel
 
 
-class FragAnnotation(PolymorphicModel):
+class FragAnnotation(PolymorphicModel, BaseModel):
 
     frag_mol_sample = models.ForeignKey(
         FragMolSample, on_delete=models.CASCADE, default=None

@@ -14,9 +14,10 @@ from base.models import Tag
 from base.modules import FileManagement, RDKit, ChemDoodle, ChemDoodleJSONError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Count
+from base.models import BaseModel
 
 
-class Reaction(FileManagement, models.Model):
+class Reaction(FileManagement, BaseModel):
     class JSONAPIMeta:
         resource_name = "reactions"
 

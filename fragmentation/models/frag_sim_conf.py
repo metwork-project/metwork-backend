@@ -5,9 +5,10 @@ from pathlib import Path
 from django.db import models
 from django.conf import settings
 from base.modules import ConfManagement
+from base.models import BaseModel
 
 
-class FragSimConf(ConfManagement, models.Model):
+class FragSimConf(ConfManagement, BaseModel):
     class JSONAPIMeta:
         resource_name = "fragsimconf"
 

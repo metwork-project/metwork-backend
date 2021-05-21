@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 from django.db import models
 from fragmentation.models import FragMol
+from base.models import BaseModel
 
 
-class FragMolPeak(models.Model):
+class FragMolPeak(BaseModel):
     class Meta:
         ordering = ("mz",)
 

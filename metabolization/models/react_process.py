@@ -10,9 +10,10 @@ from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 from itertools import chain
 from base.modules.rdkit_functions import RDKit
+from base.models import BaseModel
 
 
-class ReactProcess(models.Model):
+class ReactProcess(BaseModel):
 
     reaction = models.ForeignKey(
         Reaction, on_delete=models.CASCADE, default=None, null=True

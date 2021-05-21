@@ -5,9 +5,10 @@ from django.db import models
 from fragmentation.models import FragMol, FragCompareConf
 from decimal import *
 from django.core.exceptions import FieldError
+from base.models import BaseModel
 
 
-class FragMolCompare(models.Model):
+class FragMolCompare(BaseModel):
 
     frag_compare_conf = models.ForeignKey(
         FragCompareConf, on_delete=models.PROTECT, default=None, blank=True, null=True

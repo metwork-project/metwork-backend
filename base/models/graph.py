@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.core.serializers.json import DjangoJSONEncoder
 from polymorphic.models import PolymorphicModel
 from django.conf import settings
+from base.models import BaseModel
 
 logger = logging.getLogger("django")
 
@@ -18,7 +19,7 @@ class GraphGenerator:
         return self.DEFAULT_DATA
 
 
-class Graph(PolymorphicModel):
+class Graph(PolymorphicModel, BaseModel):
 
     data = JSONField(blank=True, null=True)
 

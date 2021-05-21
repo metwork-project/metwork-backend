@@ -7,9 +7,10 @@ import os.path
 import re
 from base.models import Molecule
 from base.modules import ConfManagement
+from base.models import BaseModel
 
 
-class FragCompareConf(ConfManagement, models.Model):
+class FragCompareConf(ConfManagement, BaseModel):
     class JSONAPIMeta:
         resource_name = "frag-compare-confs"
 

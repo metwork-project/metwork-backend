@@ -15,9 +15,10 @@ from polymorphic.models import PolymorphicModel
 from django.conf import settings
 from base.models import Molecule
 from base.modules import FileManagement
+from base.models import BaseModel
 
 
-class Project(FileManagement, PolymorphicModel):
+class Project(FileManagement, PolymorphicModel, BaseModel):
 
     name = models.CharField(max_length=128, default="")
     description = models.CharField(max_length=255, default="", null=True, blank=True)

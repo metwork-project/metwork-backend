@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 from django.db import models
 from fragmentation.models import FragMol
 from django.contrib.postgres.fields import ArrayField
+from base.models import BaseModel
 
 
-class FragMolSpectrum(models.Model):
+class FragMolSpectrum(BaseModel):
     class JSONAPIMeta:
         resource_name = "fragmolspectrum"
 

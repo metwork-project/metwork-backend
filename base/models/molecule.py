@@ -5,9 +5,10 @@ from django.db import models
 from base.modules import RDKit, ChemDoodle
 from django_rdkit import models as rd_models
 from django.contrib.postgres.fields import JSONField
+from base.models import BaseModel
 
 
-class Molecule(models.Model):
+class Molecule(BaseModel):
 
     name = models.CharField(max_length=255, default="")
     inchi_key = models.CharField(

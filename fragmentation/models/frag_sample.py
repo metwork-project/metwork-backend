@@ -21,9 +21,10 @@ from fragmentation.utils import (
     STATUS_LEVEL_MAPPING,
     LEVEL_STATUS_MAPPING,
 )
+from base.models import BaseModel
 
 
-class FragSample(FileManagement, models.Model, AdductManager):
+class FragSample(FileManagement, BaseModel, AdductManager):
     class JSONAPIMeta:
         resource_name = "fragsamples"
 

@@ -4,9 +4,10 @@ from __future__ import unicode_literals
 from django.db import models
 from metabolization.models import Reaction
 from base.modules import ConfManagement
+from base.models import BaseModel
 
 
-class ReactionsConf(ConfManagement, models.Model):
+class ReactionsConf(ConfManagement, BaseModel):
     class JSONAPIMeta:
         resource_name = "reactconfs"
 
