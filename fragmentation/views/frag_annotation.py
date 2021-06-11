@@ -86,3 +86,9 @@ class FragAnnotationViewSet(MetaIdsViewSet):
             return queryset.order_by("frag_mol_sample__ion_id")
         except:
             return FragAnnotationDB.objects.filter(id=0)
+
+    @action(detail=True, methods=["get"])
+    def get_mgf(self, request, pk=None):
+        frag_annot = self.get_object()
+        mgf = frag_annot.frag_mol_sample.gen_mgf()
+        return JsonResponse({"mgf": mgf}, safe=False)
