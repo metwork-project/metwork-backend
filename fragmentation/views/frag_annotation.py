@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+from django.http import JsonResponse
+from rest_framework import serializers
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from base.views.model_auth import IsOwnerOrPublic
 from base.views.utils import MetaIdsViewSet
 from fragmentation.models import FragAnnotationDB
-from rest_framework import serializers
-from rest_framework.response import Response
 from base.modules import JSONSerializerField
 from base.modules.queryset import FilteredQueryset
 
