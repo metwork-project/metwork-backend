@@ -1,0 +1,7 @@
+name: metwork
+channels:
+  - rdkit
+dependencies:
+  - python=3.6
+  - rdkit=2018.03.3.0
+  - rdkit-postgresql=2018.03.3.0

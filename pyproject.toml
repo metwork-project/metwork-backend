@@ -5,17 +5,28 @@ description = ""
 authors = ["Yann Beauxis <pro@yannbeauxis.net>"]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
-jupyterlab = "^2.2.9"
-pandas = "^1.1.5"
-seaborn = "^0.11.0"
-mkdocs = "^1.1.2"
-mkdocs-material = "6.1.6"
+python = "~3.6"
+numpy="~1.17.0"
+Django = "~2.2.12"
+django-celery-results = "~1.0.1"
+django-cors-headers = "~2.4.0"
+django-polymorphic = "~2.1.2"
+djangorestframework-jsonapi = "~2.5.0"
+djangorestframework = "~3.9.4"
+importlib-metadata = "~4.5.0"
+typing-extensions = "~3.10.0"
+cached-property = "~1.5.2"
+django-extensions = "~3.1.3"
+pyteomics = "~3.4"
+celery = "~4.1.0"
+psycopg2 = "~2.7.5"
+sympy = "~1.3"
+scipy = "~1.1.0"
+python-memcached = "~1.59"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
 rope = "^0.17.0"
-pylint = "^2.5.2"
 
 [build-system]
 requires = ["poetry>=0.12"]

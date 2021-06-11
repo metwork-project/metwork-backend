@@ -20,7 +20,7 @@ then
     echo "Conda $METWORK_ENV env already exist"
 else
     echo "Creating $METWORK_ENV conda env"
-    conda create -y -n $METWORK_ENV python=3.6
+    conda env create -n $METWORK_ENV -f conda-env.yml
 fi
 
 echo "######                       ########"
